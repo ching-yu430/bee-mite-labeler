@@ -120,22 +120,6 @@ const zoomLevelBtns = document.querySelectorAll(".zoom-level-btn");
 photoInput.addEventListener("change", handleFiles);
 exportBtn.addEventListener("click", openExportModal);
 
-if (btnSharpen) {
-  btnSharpen.addEventListener("click", () => {
-    btnSharpen.classList.toggle("is-active");
-    photosContainer.classList.toggle("is-sharpen", btnSharpen.classList.contains("is-active"));
-    showToast(btnSharpen.classList.contains("is-active") ? "⚡ 已開啟蜂體邊緣銳化" : "已關閉銳化");
-  });
-}
-
-if (btnClahe) {
-  btnClahe.addEventListener("click", () => {
-    btnClahe.classList.toggle("is-active");
-    photosContainer.classList.toggle("is-clahe", btnClahe.classList.contains("is-active"));
-    showToast(btnClahe.classList.contains("is-active") ? "🔆 已開啟對比增強" : "已關閉對比增強");
-  });
-}
-
 if (btnClearDb) {
   btnClearDb.addEventListener("click", () => {
     if (confirm("確定要清除瀏覽器本地暫存並重置專案嗎？")) {
@@ -735,6 +719,7 @@ async function addPhoto(file, rows, cols, overlap) {
 
   photosContainer.appendChild(block);
   photo.blockEl = block;
+  applyFilters();
 
   // --- 側欄項目 ---
   const thumbCanvas = document.createElement("canvas");

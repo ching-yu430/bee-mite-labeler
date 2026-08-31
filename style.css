@@ -427,7 +427,7 @@ main#main-workbench {
   background: var(--abnormal-dim);
 }
 
-/* 切格網格置中容器：預留左側 168px 避開懸浮面板，確保照片在剩餘區域自適應等比置中縮放，第一、二欄絕不被遮擋 */
+/* 切格網格置中容器：自然等比置中展示 */
 .tile-grid-wrap {
   flex: 1;
   min-height: 0;
@@ -437,8 +437,7 @@ main#main-workbench {
   overflow: hidden;
   width: 100%;
   height: 100%;
-  padding-left: 168px;
-  padding-right: 20px;
+  padding: 0;
   box-sizing: border-box;
 }
 
@@ -779,19 +778,6 @@ main#main-workbench {
   color: var(--text);
   line-height: 1.2;
   flex-shrink: 0;
-}
-
-/* 影像銳化與對比增強效果 (直接作用於網格，肉眼極其顯著) */
-.photos-container.is-sharpen .tile-grid {
-  filter: brightness(var(--grid-brightness, 1)) contrast(calc(var(--grid-contrast, 1) * 1.3)) saturate(1.2) drop-shadow(0 0 1px rgba(0,0,0,0.95)) !important;
-}
-
-.photos-container.is-clahe .tile-grid {
-  filter: brightness(calc(var(--grid-brightness, 1) * 1.08)) contrast(calc(var(--grid-contrast, 1) * 1.4)) saturate(1.2) !important;
-}
-
-.photos-container.is-sharpen.is-clahe .tile-grid {
-  filter: brightness(calc(var(--grid-brightness, 1) * 1.08)) contrast(calc(var(--grid-contrast, 1) * 1.5)) saturate(1.25) drop-shadow(0 0 1px rgba(0,0,0,0.95)) !important;
 }
 
 /* 點擊精確打點標記 (Point Annotation) */

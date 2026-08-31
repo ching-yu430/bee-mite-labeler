@@ -5,12 +5,13 @@
 const STATE_CYCLE = ["unlabeled", "normal", "abnormal"];
 const STATE_LABEL = { unlabeled: "未標", normal: "正常", abnormal: "異常" };
 
-// 細分異常標籤定義
+// 真實蜂箱照片情境之細分異常標籤定義
 const ABNORMAL_TYPES = {
-  mite: { label: "蜂蟹蟎", emoji: "🪲" },
-  larva: { label: "蜂蛹異常", emoji: "🐛" },
-  cell: { label: "巢房異物", emoji: "🍯" },
-  other: { label: "其他異常", emoji: "❓" }
+  mite: { label: "體表附蟎/落蟎", emoji: "🪲", code: "mite" },
+  dwv: { label: "殘翅/畸形翅(DWV)", emoji: "🪽", code: "dwv" },
+  debris: { label: "蠟屑/雜質", emoji: "🍂", code: "debris" },
+  dead: { label: "死蜂/殘肢黑化", emoji: "💀", code: "dead" },
+  other: { label: "其他可疑異狀", emoji: "❓", code: "other" }
 };
 let currentAbnormalType = "mite";
 let currentZoomLevel = 3.0; // 預設放大鏡倍率
@@ -253,6 +254,11 @@ showPhoto(0);
 document.addEventListener("pointerup", stopPainting);
 document.addEventListener("pointercancel", stopPainting);
 window.addEventListener("blur", stopPainting);
+document.addEventListener("pointermove", (ev) => {
+  if (ev.buttons === 0 && isPainting) {
+    stopPainting();
+  }
+});
 
 // 鍵盤快捷鍵：
 // 1. 滑鼠未停在輸入框時：← / A 上一張、→ / D 下一張、N 一鍵設未標為正常
@@ -468,10 +474,14 @@ async function addPhoto(file, rows, cols, overlap) {
         paintState = next;
         updateSummary();
       });
-      tileEl.addEventListener("pointerenter", () => {
-        if (isPainting && paintState) {
+      tileEl.addEventListener("pointerenter", (ev) => {
+        // 嚴格檢查：只有在滑鼠左鍵確實按住 (ev.buttons === 1) 時才連續塗刷，防止單純滑動誤改
+        if (ev.buttons === 1 && isPainting && paintState) {
           setTileState(tileRecord, tileEl, paintState);
           updateSummary();
+        } else if (ev.buttons === 0) {
+          isPainting = false;
+          paintState = null;
         }
       });
       tileEl.addEventListener("keydown", (ev) => {

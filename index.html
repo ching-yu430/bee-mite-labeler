@@ -14,7 +14,6 @@
     <span class="brand-mark" aria-hidden="true">🍯</span>
     <div class="brand-text">
       <h1>蜂蟹蟎標註工具</h1>
-      <p>把蜂群照片切格、標記正常 / 異常，匯出成 PatchCore 可用的資料集</p>
     </div>
   </div>
   <div class="topbar-actions">
@@ -45,14 +44,15 @@
 
       <div class="toolbar-separator"></div>
 
-      <!-- 細分異常標籤選擇器 -->
+      <!-- 真實蜂箱照片情境之細分異常標籤選擇器 -->
       <div class="label-selector-wrap" title="目前標記的異常細分類別">
         <span class="toolbar-label">異常類別:</span>
         <select id="abnormal-type-select" class="mini-select">
-          <option value="mite">🪲 蜂蟹蟎</option>
-          <option value="larva">🐛 蜂蛹異常</option>
-          <option value="cell">🍯 巢房異物</option>
-          <option value="other">❓ 其他可疑</option>
+          <option value="mite">🪲 體表附蟎 / 底板落蟎 (Mite)</option>
+          <option value="dwv">🪽 殘翅 / 畸形翅 (DWV)</option>
+          <option value="debris">🍂 蠟屑 / 底板雜質 (Debris)</option>
+          <option value="dead">💀 死蜂 / 殘肢黑化 (Dead)</option>
+          <option value="other">❓ 其他可疑異狀 (Other)</option>
         </select>
       </div>
 
@@ -186,12 +186,13 @@
 
       <!-- 區塊 2：細分異常標籤管理 -->
       <section class="settings-section">
-        <h4>🏷️ 細分異常類別設定</h4>
-        <p class="section-desc">標註時可指定異常細分類別，匯出時支援多標籤分類：</p>
+        <h4>🏷️ 真實蜂群照片之異常類別</h4>
+        <p class="section-desc">依蜂箱底板與成蜂常見異常進行多標籤分類：</p>
         <div class="tag-badges-preview">
-          <span class="tag-badge tag-mite">🪲 蜂蟹蟎 (mite)</span>
-          <span class="tag-badge tag-larva">🐛 蜂蛹異常 (larva)</span>
-          <span class="tag-badge tag-cell">🍯 巢房異物 (cell)</span>
+          <span class="tag-badge tag-mite">🪲 體表附蟎 / 落蟎 (mite)</span>
+          <span class="tag-badge tag-dwv">🪽 殘翅 / 畸形翅 (dwv)</span>
+          <span class="tag-badge tag-debris">🍂 蠟屑 / 雜質 (debris)</span>
+          <span class="tag-badge tag-dead">💀 死蜂 / 殘肢 (dead)</span>
           <span class="tag-badge tag-other">❓ 其他可疑 (other)</span>
         </div>
       </section>

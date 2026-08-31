@@ -1245,6 +1245,9 @@ main#main-workbench {
 .zoom-preview-img-wrap {
   position: relative;
   line-height: 0;
+  /* 父層 .zoom-preview 設了 pointer-events: none（讓放大鏡不擋住底下格子的滑鼠事件），
+     這裡單獨把圖片區域開回 auto，讓滑鼠可以移進來、Shift+點擊也才打得到。 */
+  pointer-events: auto;
 }
 
 .zoom-preview img {

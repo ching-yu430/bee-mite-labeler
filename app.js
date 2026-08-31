@@ -41,6 +41,7 @@ const photoInput = document.getElementById("photo-input");
 const rowsInput = document.getElementById("rows-input");
 const colsInput = document.getElementById("cols-input");
 const overlapInput = document.getElementById("overlap-input");
+const exportFormatSelect = document.getElementById("export-format-select");
 const testSplitInput = document.getElementById("test-split-input");
 const augFlipInput = document.getElementById("aug-flip-input");
 const apiEndpointInput = document.getElementById("api-endpoint-input");
@@ -63,6 +64,7 @@ const drawerCloseBtn = document.getElementById("drawer-close-btn");
 const sidebarList = document.getElementById("sidebar-list");
 const sidebarClearAll = document.getElementById("sidebar-clear-all");
 
+const tagBtns = document.querySelectorAll(".tag-btn");
 const shortcutsToggleBtn = document.getElementById("shortcuts-toggle-btn");
 const shortcutsPanel = document.getElementById("shortcuts-panel");
 const shortcutsChevron = document.getElementById("shortcuts-chevron");
@@ -81,11 +83,10 @@ const prevPhotoBtn = document.getElementById("prev-photo-btn");
 const nextPhotoBtn = document.getElementById("next-photo-btn");
 const pagerInfo = document.getElementById("pager-info");
 
-// 濾鏡、放大鏡倍率與細分標籤
+// 濾鏡與放大鏡倍率
 const filterBrightness = document.getElementById("filter-brightness");
 const filterContrast = document.getElementById("filter-contrast");
 const btnResetFilters = document.getElementById("btn-reset-filters");
-const abnormalTypeSelect = document.getElementById("abnormal-type-select");
 const zoomLevelBtns = document.querySelectorAll(".zoom-level-btn");
 
 // 事件綁定
@@ -126,13 +127,21 @@ if (shortcutsToggleBtn && shortcutsPanel) {
   });
 }
 
-// 異常細分類別選擇
-if (abnormalTypeSelect) {
-  abnormalTypeSelect.addEventListener("change", () => {
-    currentAbnormalType = abnormalTypeSelect.value;
-    const typeInfo = ABNORMAL_TYPES[currentAbnormalType] || { label: "異常", emoji: "⚠️" };
-    showToast(`目前異常標籤已切換為：${typeInfo.emoji} ${typeInfo.label}`);
+// 左側異常類別按鈕切換
+tagBtns.forEach(btn => {
+  btn.addEventListener("click", () => {
+    selectAbnormalType(btn.dataset.type);
   });
+});
+
+function selectAbnormalType(typeKey) {
+  if (!ABNORMAL_TYPES[typeKey]) return;
+  currentAbnormalType = typeKey;
+  tagBtns.forEach(b => {
+    b.classList.toggle("is-active", b.dataset.type === typeKey);
+  });
+  const typeInfo = ABNORMAL_TYPES[typeKey];
+  showToast(`已切換異常類別：${typeInfo.emoji} ${typeInfo.label}`);
 }
 
 // 放大鏡倍率按鈕切換
@@ -260,12 +269,25 @@ document.addEventListener("pointermove", (ev) => {
   }
 });
 
+// 快速鍵映射表 (Q/W/E/R/T 對應 5 種異常類別)
+const KEY_TO_ABNORMAL_TYPE = {
+  q: "mite", Q: "mite",
+  w: "dwv", W: "dwv",
+  e: "debris", E: "debris",
+  r: "dead", R: "dead",
+  t: "other", T: "other"
+};
+
 // 鍵盤快捷鍵：
-// 1. 滑鼠未停在輸入框時：← / A 上一張、→ / D 下一張、N 一鍵設未標為正常
-// 2. 滑鼠停在格子上時：1=正常、2=異常、0/Backspace=清除
+// 1. 全域：← / A 上一張、→ / D 下一張、N 一鍵設未標為正常、Q/W/E/R/T 切換異常類別
+// 2. 游標停在格子上時：
+//    - 1=正常
+//    - 2=當前選取的異常
+//    - Q/W/E/R/T=直接設為該特定異常類別！
+//    - 0/Backspace=清除
 document.addEventListener("keydown", (e) => {
   const tag = document.activeElement && document.activeElement.tagName;
-  if (tag === "INPUT" || tag === "TEXTAREA") return;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
 
   if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
     if (currentPhotoIndex > 0) {
@@ -287,17 +309,37 @@ document.addEventListener("keydown", (e) => {
     }
   }
 
-  if (!hoveredTileRecord) return;
+  // 檢查是否為 Q/W/E/R/T 鍵
+  const matchedType = KEY_TO_ABNORMAL_TYPE[e.key];
 
-  let newState = null;
-  if (e.key === "1") newState = "normal";
-  else if (e.key === "2") newState = "abnormal";
-  else if (e.key === "0" || e.key === "Backspace") newState = "unlabeled";
-  if (!newState) return;
+  if (hoveredTileRecord) {
+    if (matchedType) {
+      e.preventDefault();
+      selectAbnormalType(matchedType);
+      hoveredTileRecord.abnormalType = matchedType;
+      setTileState(hoveredTileRecord, hoveredTileRecord.el, "abnormal");
+      updateSummary();
+      showZoomPreview(hoveredTileRecord.el.querySelector("img").src, hoveredTileRecord);
+      return;
+    }
 
-  e.preventDefault();
-  setTileState(hoveredTileRecord, hoveredTileRecord.el, newState);
-  updateSummary();
+    let newState = null;
+    if (e.key === "1") newState = "normal";
+    else if (e.key === "2") newState = "abnormal";
+    else if (e.key === "0" || e.key === "Backspace") newState = "unlabeled";
+
+    if (newState) {
+      e.preventDefault();
+      setTileState(hoveredTileRecord, hoveredTileRecord.el, newState);
+      updateSummary();
+      showZoomPreview(hoveredTileRecord.el.querySelector("img").src, hoveredTileRecord);
+      return;
+    }
+  } else if (matchedType) {
+    // 游標不在格子上時，Q/W/E/R/T 切換左側選取的異常類別
+    e.preventDefault();
+    selectAbnormalType(matchedType);
+  }
 });
 
 // 若已有標記卻不小心重新整理／關閉分頁，跳出瀏覽器確認提示
@@ -449,7 +491,22 @@ async function addPhoto(file, rows, cols, overlap) {
       ctx.drawImage(img, left, top, w, h, 0, 0, w, h);
 
       const blob = await new Promise(res => canvas.toBlob(res, "image/jpeg", 0.92));
-      const tileRecord = { row: r, col: c, blob, state: "unlabeled", abnormalType: null, photoName: baseName };
+      const tileRecord = {
+        row: r,
+        col: c,
+        left,
+        top,
+        right,
+        bottom,
+        w,
+        h,
+        origW: W,
+        origH: H,
+        blob,
+        state: "unlabeled",
+        abnormalType: null,
+        photoName: baseName
+      };
       photo.tiles.push(tileRecord);
 
       const tileEl = document.createElement("div");
@@ -680,8 +737,8 @@ function allTiles() {
 }
 
 function updateSidebarCount() {
-  if (photoBadge) photoBadge.textContent = photos.length;
-  if (drawerCount) drawerCount.textContent = photos.length;
+  if (photoBadge) photoBadge.textContent = String(photos.length);
+  if (drawerCount) drawerCount.textContent = String(photos.length);
   if (photos.length === 0 && !document.getElementById("sidebar-empty-msg")) {
     const li = document.createElement("li");
     li.id = "sidebar-empty-msg";
@@ -693,23 +750,24 @@ function updateSidebarCount() {
 
 function updateSummary() {
   const tiles = allTiles();
+  const total = tiles.length;
   const normal = tiles.filter(t => t.state === "normal").length;
   const abnormal = tiles.filter(t => t.state === "abnormal").length;
-  const unlabeled = tiles.length - normal - abnormal;
+  const unlabeled = tiles.filter(t => t.state === "unlabeled").length;
 
-  document.getElementById("count-total").textContent = tiles.length;
+  document.getElementById("count-total").textContent = total;
   document.getElementById("count-normal").textContent = normal;
   document.getElementById("count-abnormal").textContent = abnormal;
   document.getElementById("count-unlabeled").textContent = unlabeled;
 
-  exportBtn.disabled = (normal + abnormal) === 0;
+  exportBtn.disabled = (normal + abnormal === 0);
 
-  for (const photo of photos) {
-    const total = photo.tiles.length;
-    const labeled = photo.tiles.filter(t => t.state !== "unlabeled").length;
-    const progressEl = photo.sidebarEl.querySelector('[data-role="progress"]');
-    if (progressEl) progressEl.textContent = `${labeled} / ${total} 已標`;
-    photo.sidebarEl.classList.toggle("is-complete", labeled === total && total > 0);
+  for (const p of photos) {
+    const pLabeled = p.tiles.filter(t => t.state !== "unlabeled").length;
+    const pTotal = p.tiles.length;
+    const prog = p.sidebarEl.querySelector('[data-role="progress"]');
+    if (prog) prog.textContent = `${pLabeled} / ${pTotal} 已標`;
+    p.sidebarEl.classList.toggle("is-complete", pLabeled === pTotal && pTotal > 0);
   }
 }
 
@@ -731,6 +789,7 @@ async function createFlippedBlob(blob) {
   });
 }
 
+// 支援 PatchCore / YOLO / JSON 多架構資料集匯出
 async function exportDataset() {
   const tiles = allTiles();
   const normalTiles = tiles.filter(t => t.state === "normal");
@@ -746,42 +805,114 @@ async function exportDataset() {
   exportBtn.textContent = "打包中…";
 
   try {
+    const format = (exportFormatSelect && exportFormatSelect.value) || "patchcore";
     const splitPercent = (testSplitInput && parseFloat(testSplitInput.value)) || 10;
     const splitRatio = Math.max(0, Math.min(50, splitPercent)) / 100;
     const shouldAug = augFlipInput && augFlipInput.checked;
 
-    const shuffled = [...normalTiles].sort(() => Math.random() - 0.5);
-    const testCount = normalTiles.length >= 4 ? Math.max(1, Math.round(normalTiles.length * splitRatio)) : 0;
-    const testNormal = shuffled.slice(0, testCount);
-    const trainNormal = shuffled.slice(testCount);
+    const CLASS_INDEX = { mite: 0, dwv: 1, debris: 2, dead: 3, other: 4 };
+    const CLASS_NAMES = ["mite", "dwv", "debris", "dead", "other"];
 
     const zip = new JSZip();
-    const root = zip.folder("dataset");
 
-    for (const t of trainNormal) {
-      root.folder("train/good").file(tileFileName(t), t.blob);
-      if (shouldAug) {
-        const flippedBlob = await createFlippedBlob(t.blob);
-        root.folder("train/good").file(tileFileName(t, "_hflip"), flippedBlob);
+    // 1. 匯出 PatchCore 格式
+    if (format === "patchcore" || format === "both") {
+      const shuffled = [...normalTiles].sort(() => Math.random() - 0.5);
+      const testCount = normalTiles.length >= 4 ? Math.max(1, Math.round(normalTiles.length * splitRatio)) : 0;
+      const testNormal = shuffled.slice(0, testCount);
+      const trainNormal = shuffled.slice(testCount);
+
+      const pcRoot = format === "both" ? zip.folder("patchcore_dataset") : zip.folder("dataset");
+
+      for (const t of trainNormal) {
+        pcRoot.folder("train/good").file(tileFileName(t), t.blob);
+        if (shouldAug) {
+          const flippedBlob = await createFlippedBlob(t.blob);
+          pcRoot.folder("train/good").file(tileFileName(t, "_hflip"), flippedBlob);
+        }
+      }
+      for (const t of testNormal) {
+        pcRoot.folder("test/good").file(tileFileName(t), t.blob);
+      }
+      for (const t of abnormalTiles) {
+        const subFolder = t.abnormalType ? `abnormal_${t.abnormalType}` : "abnormal";
+        pcRoot.folder(`test/${subFolder}`).file(tileFileName(t), t.blob);
       }
     }
-    for (const t of testNormal) {
-      root.folder("test/good").file(tileFileName(t), t.blob);
+
+    // 2. 匯出 YOLO 格式 (含 data.yaml 與 labels/*.txt 座標標註)
+    if (format === "yolo" || format === "both") {
+      const yoloRoot = format === "both" ? zip.folder("yolo_dataset") : zip;
+
+      // data.yaml
+      const yamlContent = `path: ./dataset\ntrain: images/train\nval: images/train\nnc: 5\nnames: ['mite', 'dwv', 'debris', 'dead', 'other']\n`;
+      yoloRoot.file("data.yaml", yamlContent);
+
+      // 切格層級之 YOLO 標籤與圖片
+      for (const t of [...normalTiles, ...abnormalTiles]) {
+        const base = tileFileName(t).replace(/\.jpg$/, "");
+        yoloRoot.folder("images/train").file(`${base}.jpg`, t.blob);
+
+        if (t.state === "abnormal") {
+          const classId = CLASS_INDEX[t.abnormalType] ?? 0;
+          // 切格本身的正規化邊界框 (置中全覆蓋)
+          const txtLine = `${classId} 0.500000 0.500000 1.000000 1.000000\n`;
+          yoloRoot.folder("labels/train").file(`${base}.txt`, txtLine);
+        } else {
+          // 正常樣本保留空 txt 檔以符合 YOLO 背景負樣本規範
+          yoloRoot.folder("labels/train").file(`${base}.txt`, "");
+        }
+      }
+
+      // 整張大圖在原圖座標下的 YOLO 標註檔 (供整張大圖直接做 YOLO 訓練)
+      for (const p of photos) {
+        const pAbnormals = p.tiles.filter(t => t.state === "abnormal");
+        const lines = [];
+        for (const t of pAbnormals) {
+          const classId = CLASS_INDEX[t.abnormalType] ?? 0;
+          const xCenter = ((t.left + t.w / 2) / t.origW).toFixed(6);
+          const yCenter = ((t.top + t.h / 2) / t.origH).toFixed(6);
+          const widthNorm = (t.w / t.origW).toFixed(6);
+          const heightNorm = (t.h / t.origH).toFixed(6);
+          lines.push(`${classId} ${xCenter} ${yCenter} ${widthNorm} ${heightNorm}`);
+        }
+        yoloRoot.folder("full_image_labels").file(`${p.fileName.replace(/\.[^.]+$/, "")}.txt`, lines.join("\n"));
+      }
     }
-    for (const t of abnormalTiles) {
-      root.folder("test/abnormal").file(tileFileName(t), t.blob);
-    }
+
+    // 3. 通用 JSON 標註檔 (含精確像素與正規化座標)
+    const jsonMetadata = {
+      dataset_version: "2.0",
+      created_at: new Date().toISOString(),
+      classes: ABNORMAL_TYPES,
+      photos: photos.map(p => ({
+        file_name: p.fileName,
+        tiles: p.tiles.map(t => ({
+          row: t.row,
+          col: t.col,
+          state: t.state,
+          abnormal_type: t.abnormalType,
+          pixel_box: { left: t.left, top: t.top, right: t.right, bottom: t.bottom, width: t.w, height: t.h },
+          norm_box: {
+            x_center: (t.left + t.w / 2) / t.origW,
+            y_center: (t.top + t.h / 2) / t.origH,
+            width: t.w / t.origW,
+            height: t.h / t.origH
+          }
+        }))
+      }))
+    };
+    zip.file("annotations_all.json", JSON.stringify(jsonMetadata, null, 2));
 
     const content = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(content);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `mite-dataset-${dateStamp()}.zip`;
+    a.download = `bee-mite-${format}-${dateStamp()}.zip`;
     a.click();
     URL.revokeObjectURL(url);
 
-    const augMsg = shouldAug ? ` (含翻轉增強樣本)` : "";
-    showToast(`已匯出 PatchCore 資料集${augMsg}：train/good ${trainNormal.length * (shouldAug ? 2 : 1)}、test/good ${testNormal.length}、test/abnormal ${abnormalTiles.length}`);
+    showToast(`已成功匯出 ${format.toUpperCase()} 資料集！(正常 ${normalTiles.length}、異常 ${abnormalTiles.length} 格)`);
   } catch (err) {
     console.error(err);
     showToast("匯出失敗，請再試一次");

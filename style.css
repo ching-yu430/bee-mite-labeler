@@ -545,6 +545,92 @@ main#main-workbench {
   border-radius: 10px;
 }
 
+/* 左側懸浮異常類別快速切換卡片 */
+.floating-tag-card {
+  background: rgba(251, 247, 238, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid var(--amber);
+  border-radius: 8px;
+  padding: 6px 8px;
+  box-shadow: 0 4px 14px rgba(43, 33, 24, 0.12);
+  width: 146px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tag-quick-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tag-btn {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 3px 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.1s ease;
+  font-family: inherit;
+  text-align: left;
+}
+
+.tag-btn:hover {
+  border-color: var(--abnormal);
+  color: var(--abnormal);
+  background: var(--abnormal-dim);
+}
+
+.tag-btn.is-active {
+  border-color: var(--abnormal);
+  background: var(--abnormal);
+  color: #fff;
+}
+
+.tag-btn kbd {
+  display: inline-block;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 3px;
+  padding: 0 3px;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  line-height: 1.2;
+}
+
+.tag-btn.is-active kbd {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.tag-btn-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.field-select {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  color: var(--text);
+  cursor: pointer;
+  width: 100%;
+}
+
+.field-select:focus-visible {
+  outline: 2px solid var(--amber);
+}
+
 /* 緊貼在照片清單底下的小懸浮統計視窗（直接可見） */
 .floating-summary-card {
   background: rgba(251, 247, 238, 0.95);

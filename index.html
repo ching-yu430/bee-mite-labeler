@@ -44,20 +44,6 @@
 
       <div class="toolbar-separator"></div>
 
-      <!-- 真實蜂箱照片情境之細分異常標籤選擇器 -->
-      <div class="label-selector-wrap" title="目前標記的異常細分類別">
-        <span class="toolbar-label">異常類別:</span>
-        <select id="abnormal-type-select" class="mini-select">
-          <option value="mite">🪲 體表附蟎 / 底板落蟎 (Mite)</option>
-          <option value="dwv">🪽 殘翅 / 畸形翅 (DWV)</option>
-          <option value="debris">🍂 蠟屑 / 底板雜質 (Debris)</option>
-          <option value="dead">💀 死蜂 / 殘肢黑化 (Dead)</option>
-          <option value="other">❓ 其他可疑異狀 (Other)</option>
-        </select>
-      </div>
-
-      <div class="toolbar-separator"></div>
-
       <!-- 暫時鎖定的 AI 辨識按鈕 -->
       <button id="btn-ai-predict" class="ai-predict-btn is-locked" disabled title="⚡ AI 辨識功能串聯中，即將推出">
         <span>⚡ AI 辨識</span>
@@ -88,13 +74,37 @@
 
   <!-- 左側懸浮面板（位置在檔名下方，絕不遮擋上方檔名！） -->
   <div class="floating-left-panel" id="floating-left-panel">
-    <!-- 摺疊的照片清單按鈕 -->
+    <!-- 1. 摺疊的照片清單按鈕 -->
     <button id="sidebar-open-btn" class="floating-drawer-btn" title="展開照片清單">
       <span>📋 照片清單</span>
       <span id="photo-badge" class="photo-badge">0</span>
     </button>
 
-    <!-- 緊貼在照片清單底下的小懸浮統計視窗 -->
+    <!-- 2. 異常類別快速切換懸浮卡片 (支援快捷鍵 Q/W/E/R/T) -->
+    <div class="floating-tag-card" id="tag-card">
+      <div class="floating-summary-header">
+        <span>🏷️ 異常類別</span>
+      </div>
+      <div class="tag-quick-buttons">
+        <button class="tag-btn is-active" data-type="mite" title="快捷鍵 Q：體表附蟎/落蟎">
+          <span class="tag-btn-text">🪲 附蟎/落蟎</span><kbd>Q</kbd>
+        </button>
+        <button class="tag-btn" data-type="dwv" title="快捷鍵 W：殘翅/畸形翅">
+          <span class="tag-btn-text">🪽 殘翅畸形</span><kbd>W</kbd>
+        </button>
+        <button class="tag-btn" data-type="debris" title="快捷鍵 E：蠟屑/底板雜質">
+          <span class="tag-btn-text">🍂 蠟屑雜質</span><kbd>E</kbd>
+        </button>
+        <button class="tag-btn" data-type="dead" title="快捷鍵 R：死蜂/殘肢黑化">
+          <span class="tag-btn-text">💀 死蜂殘肢</span><kbd>R</kbd>
+        </button>
+        <button class="tag-btn" data-type="other" title="快捷鍵 T：其他可疑異狀">
+          <span class="tag-btn-text">❓ 其他異狀</span><kbd>T</kbd>
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. 緊貼在下方的標註統計視窗 -->
     <div class="floating-summary-card" id="summary-panel">
       <div class="floating-summary-header">
         <span>📊 標註統計</span>
@@ -127,13 +137,17 @@
       <div id="shortcuts-panel" class="floating-shortcuts-panel collapsed">
         <ul class="shortcuts-list">
           <li><kbd>1</kbd> 設為正常格</li>
-          <li><kbd>2</kbd> 設為異常格</li>
+          <li><kbd>2</kbd> 設為當前異常</li>
+          <li><kbd>Q</kbd> 附蟎/落蟎</li>
+          <li><kbd>W</kbd> 殘翅/畸形翅</li>
+          <li><kbd>E</kbd> 蠟屑/雜質</li>
+          <li><kbd>R</kbd> 死蜂/殘肢</li>
+          <li><kbd>T</kbd> 其他異狀</li>
           <li><kbd>0</kbd> / <kbd>⌫</kbd> 清除標記</li>
           <li><kbd>N</kbd> 未標全設正常</li>
           <li><kbd>←</kbd> / <kbd>A</kbd> 上一張</li>
           <li><kbd>→</kbd> / <kbd>D</kbd> 下一張</li>
           <li><kbd>滾輪</kbd> 放大鏡倍率</li>
-          <li><b>拖曳</b> 連續塗刷</li>
         </ul>
       </div>
     </div>
@@ -153,7 +167,7 @@
     </ul>
   </aside>
 
-  <!-- 右側設定抽屜（修正排版、無突兀橫向捲軸、加入細分標籤設定） -->
+  <!-- 右側設定抽屜（支援 PatchCore 與 YOLO 資料集匯出選項） -->
   <aside id="settings-sidebar" class="settings-sidebar collapsed">
     <div class="settings-header">
       <h3>⚙️ 設定與擴充功能</h3>
@@ -184,22 +198,17 @@
         </div>
       </section>
 
-      <!-- 區塊 2：細分異常標籤管理 -->
+      <!-- 區塊 2：資料集匯出格式設定 (PatchCore & YOLO) -->
       <section class="settings-section">
-        <h4>🏷️ 真實蜂群照片之異常類別</h4>
-        <p class="section-desc">依蜂箱底板與成蜂常見異常進行多標籤分類：</p>
-        <div class="tag-badges-preview">
-          <span class="tag-badge tag-mite">🪲 體表附蟎 / 落蟎 (mite)</span>
-          <span class="tag-badge tag-dwv">🪽 殘翅 / 畸形翅 (dwv)</span>
-          <span class="tag-badge tag-debris">🍂 蠟屑 / 雜質 (debris)</span>
-          <span class="tag-badge tag-dead">💀 死蜂 / 殘肢 (dead)</span>
-          <span class="tag-badge tag-other">❓ 其他可疑 (other)</span>
-        </div>
-      </section>
-
-      <!-- 區塊 3：PatchCore 資料集與匯出設定 -->
-      <section class="settings-section">
-        <h4>📦 PatchCore 訓練集匯出設定</h4>
+        <h4>📦 資料集匯出格式 (PatchCore / YOLO)</h4>
+        <label class="field">
+          <span>匯出目標架構格式</span>
+          <select id="export-format-select" class="field-select">
+            <option value="patchcore" selected>📦 PatchCore / Anomalib 格式 (train/test/good/abnormal)</option>
+            <option value="yolo">🎯 YOLO 格式 (images + labels/*.txt 座標)</option>
+            <option value="both">🌟 雙格式打包 (PatchCore + YOLO + JSON)</option>
+          </select>
+        </label>
         <label class="field">
           <span>正常切格 Test 比例 (%)</span>
           <input type="number" id="test-split-input" value="10" min="0" max="50">
@@ -210,7 +219,7 @@
         </label>
       </section>
 
-      <!-- 區塊 4：Tailscale 與 AI 即時辨識串聯 -->
+      <!-- 區塊 3：Tailscale 與 AI 即時辨識串聯 -->
       <section class="settings-section">
         <h4>⚡ Tailscale 即時推論 API 設定</h4>
         <label class="field">

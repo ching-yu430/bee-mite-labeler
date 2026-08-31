@@ -277,7 +277,9 @@ function applyFilters() {
   globalFilter = finalFilter;
   if (zoomPreviewImg) {
     zoomPreviewImg.style.filter = finalFilter;
+    if(zoomPreview) zoomPreview.style.filter = finalFilter;
     zoomPreviewImg.style.webkitFilter = finalFilter;
+    if(zoomPreview) zoomPreview.style.webkitFilter = finalFilter;
   }
 
   // 1. 動態建立或更新 <style id="live-filter-style">，以最高優先級覆蓋所有照片切格、大圖與懸浮放大鏡
@@ -288,7 +290,7 @@ function applyFilters() {
     document.head.appendChild(styleEl);
   }
   styleEl.textContent = `
-    .tile-grid, .tile-grid img, .tile img, .photos-container img, .tile-grid-wrap img, #zoom-preview img, .zoom-preview img, #zoom-preview-img {
+    .tile-grid, .tile-grid img, .tile img, .photos-container img, .tile-grid-wrap img, #zoom-preview, #zoom-preview img, .zoom-preview img, #zoom-preview-img {
       filter: ${finalFilter} !important;
       -webkit-filter: ${finalFilter} !important;
     }
@@ -1407,7 +1409,9 @@ function showZoomPreview(src, tileRecord) {
   zoomPreviewImg.src = src;
   if (globalFilter) {
     zoomPreviewImg.style.filter = globalFilter;
+    if(zoomPreview) zoomPreview.style.filter = globalFilter;
     zoomPreviewImg.style.webkitFilter = globalFilter;
+    if(zoomPreview) zoomPreview.style.webkitFilter = globalFilter;
   }
   let statusText = STATE_LABEL[tileRecord.state] || "未標";
   if (tileRecord.state === "abnormal" && tileRecord.abnormalType) {

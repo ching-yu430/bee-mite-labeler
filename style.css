@@ -766,9 +766,136 @@ main#main-workbench {
   line-height: 1.2;
   flex-shrink: 0;
 }
-  font-size: 0.68rem;
+
+/* 蜂群健康診斷卡片 */
+.health-diagnostic-box {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin: 3px 0 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.diagnostic-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.76rem;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.rate-num {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.88rem;
   color: var(--text);
-  line-height: 1.2;
+}
+
+.diagnostic-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.badge-safe { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+.badge-warning { background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
+.badge-danger { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+
+/* 頂部影像增強按鈕組 */
+.filter-enhance-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.toolbar-toggle-btn {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 7px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s ease;
+}
+
+.toolbar-toggle-btn:hover {
+  border-color: var(--amber);
+  color: var(--amber-strong);
+}
+
+.toolbar-toggle-btn.is-active {
+  background: var(--amber);
+  color: #fff;
+  border-color: var(--amber);
+}
+
+.btn-smart {
+  background: #fff;
+  color: var(--amber-strong);
+  border-color: var(--amber);
+  font-weight: 700;
+}
+
+.btn-smart:hover:not(:disabled) {
+  background: var(--amber);
+  color: #fff;
+}
+
+.btn-smart:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: var(--line);
+  color: var(--text-dim);
+}
+
+/* 影像銳化與 CLAHE 效果 */
+.photos-container.is-sharpen .tile img {
+  filter: contrast(1.15) saturate(1.1) drop-shadow(0 0 0.5px rgba(0,0,0,0.8));
+}
+
+.photos-container.is-clahe .tile img {
+  filter: contrast(1.25) brightness(1.05);
+}
+
+/* 點擊精確打點標記 (Point Annotation) */
+.tile-point-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #ff1744;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  box-shadow: 0 0 6px rgba(255, 23, 68, 0.8), 0 0 0 2px rgba(255, 23, 68, 0.4);
+  z-index: 5;
+  animation: pulseDot 1.2s infinite;
+}
+
+@keyframes pulseDot {
+  0% { box-shadow: 0 0 0 0 rgba(255, 23, 68, 0.7); }
+  70% { box-shadow: 0 0 0 6px rgba(255, 23, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 23, 68, 0); }
+}
+
+/* 智能預標建議 (Active Learning) */
+.tile.is-suggested {
+  box-shadow: inset 0 0 0 2px #ffb300, 0 0 10px rgba(255, 179, 0, 0.5) !important;
+  animation: pulseSuggest 1.5s infinite alternate;
+}
+
+@keyframes pulseSuggest {
+  from { outline: 2px dashed #ffb300; }
+  to { outline: 2px dashed #ff6f00; }
 }
 
 /* 左側覆蓋式照片清單抽屜（點擊【照片清單】展開，不擠壓畫面） */
@@ -784,12 +911,14 @@ main#main-workbench {
   z-index: 50;
   display: flex;
   flex-direction: column;
-  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.22s ease;
+  visibility: visible;
 }
 
 .photo-list-drawer.collapsed {
-  transform: translateX(-100%);
-  pointer-events: none;
+  transform: translateX(-100%) !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 .drawer-header {

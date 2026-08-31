@@ -92,11 +92,47 @@ const pagerInfo = document.getElementById("pager-info");
 const filterBrightness = document.getElementById("filter-brightness");
 const filterContrast = document.getElementById("filter-contrast");
 const btnResetFilters = document.getElementById("btn-reset-filters");
+const btnSharpen = document.getElementById("btn-sharpen");
+const btnClahe = document.getElementById("btn-clahe");
+const btnSmartSuggest = document.getElementById("btn-smart-suggest");
+const btnClearDb = document.getElementById("btn-clear-db");
 const zoomLevelBtns = document.querySelectorAll(".zoom-level-btn");
+
+// 健康度診斷元素
+const healthRateEl = document.getElementById("health-rate");
+const healthBadgeEl = document.getElementById("health-badge");
 
 // 事件綁定
 photoInput.addEventListener("change", handleFiles);
 exportBtn.addEventListener("click", openExportModal);
+
+if (btnSharpen) {
+  btnSharpen.addEventListener("click", () => {
+    btnSharpen.classList.toggle("is-active");
+    photosContainer.classList.toggle("is-sharpen", btnSharpen.classList.contains("is-active"));
+  });
+}
+
+if (btnClahe) {
+  btnClahe.addEventListener("click", () => {
+    btnClahe.classList.toggle("is-active");
+    photosContainer.classList.toggle("is-clahe", btnClahe.classList.contains("is-active"));
+  });
+}
+
+if (btnSmartSuggest) {
+  btnSmartSuggest.addEventListener("click", runSmartSuggestion);
+}
+
+if (btnClearDb) {
+  btnClearDb.addEventListener("click", () => {
+    if (confirm("確定要清除瀏覽器本地暫存並重置專案嗎？")) {
+      clearIndexedDB();
+      clearAllPhotos();
+      showToast("已清空本地暫存");
+    }
+  });
+}
 
 settingsToggleBtn.addEventListener("click", () => {
   settingsSidebar.classList.toggle("collapsed");
@@ -566,10 +602,37 @@ async function addPhoto(file, rows, cols, overlap) {
       tileRecord.el = tileEl;
       updateTileAriaLabel(tileRecord);
 
-      // 單點：循環切換狀態；按住拖曳：把滑過的格子塗成同一個狀態
+      // 支援 Shift+點擊精確打點 (Point Annotation) 與 一般單擊切換
       tileEl.addEventListener("pointerdown", (ev) => {
         if (ev.pointerType === "mouse" && ev.button !== 0) return;
         if (ev.pointerType !== "touch") ev.preventDefault();
+
+        // 如果按住 Shift 點擊：在點擊位置打上一顆小紅點 (精準像素定位)
+        if (ev.shiftKey) {
+          const rect = tileEl.getBoundingClientRect();
+          const clickX = ev.clientX - rect.left;
+          const clickY = ev.clientY - rect.top;
+          const normX = clickX / rect.width;
+          const normY = clickY / rect.height;
+
+          // 建立小紅點視覺元素
+          let dot = tileEl.querySelector(".tile-point-dot");
+          if (!dot) {
+            dot = document.createElement("div");
+            dot.className = "tile-point-dot";
+            tileEl.appendChild(dot);
+          }
+          dot.style.left = `${(normX * 100).toFixed(1)}%`;
+          dot.style.top = `${(normY * 100).toFixed(1)}%`;
+
+          tileRecord.point = { x: clickX, y: clickY, normX, normY };
+          setTileState(tileRecord, tileEl, "abnormal");
+          updateSummary();
+          showToast(`已於座標 (${Math.round(clickX)}, ${Math.round(clickY)}) 精確標註異常點`);
+          return;
+        }
+
+        // 一般單點或連續塗刷
         const next = cycleTile(tileRecord, tileEl);
         isPainting = true;
         paintState = next;
@@ -804,6 +867,31 @@ function updateSummary() {
   document.getElementById("count-abnormal").textContent = abnormal;
   document.getElementById("count-unlabeled").textContent = unlabeled;
 
+  // 蜂群感染率 (Infestation Rate) 與健康度診斷評級
+  if (healthRateEl && healthBadgeEl) {
+    const labeledTotal = normal + abnormal;
+    const rate = labeledTotal > 0 ? ((abnormal / labeledTotal) * 100).toFixed(1) : "0.0";
+    healthRateEl.textContent = `${rate}%`;
+
+    healthBadgeEl.className = "diagnostic-badge";
+    const numRate = parseFloat(rate);
+    if (labeledTotal === 0 || numRate < 3.0) {
+      healthBadgeEl.classList.add("badge-safe");
+      healthBadgeEl.textContent = "🟢 健康安全 (<3%)";
+    } else if (numRate <= 5.0) {
+      healthBadgeEl.classList.add("badge-warning");
+      healthBadgeEl.textContent = "🟡 警戒注意 (3~5%)";
+    } else {
+      healthBadgeEl.classList.add("badge-danger");
+      healthBadgeEl.textContent = "🔴 危害需處置 (>5%)";
+    }
+  }
+
+  // 解鎖主動學習智能預標按鈕（當有標註異常時即可分析預標）
+  if (btnSmartSuggest) {
+    btnSmartSuggest.disabled = (abnormal === 0 || unlabeled === 0);
+  }
+
   exportBtn.disabled = (normal + abnormal === 0);
 
   for (const p of photos) {
@@ -812,6 +900,64 @@ function updateSummary() {
     const prog = p.sidebarEl.querySelector('[data-role="progress"]');
     if (prog) prog.textContent = `${pLabeled} / ${pTotal} 已標`;
     p.sidebarEl.classList.toggle("is-complete", pLabeled === pTotal && pTotal > 0);
+  }
+
+  // 自動觸發本地暫存儲存 (防重整丟失)
+  debounceSaveState();
+}
+
+// 智能預標建議 (Active Learning)
+async function runSmartSuggestion() {
+  const tiles = allTiles();
+  const abnormalTiles = tiles.filter(t => t.state === "abnormal");
+  const unlabeledTiles = tiles.filter(t => t.state === "unlabeled");
+
+  if (abnormalTiles.length === 0) {
+    showToast("請先手動標記至少一個異常格，讓系統學習其特徵");
+    return;
+  }
+  if (unlabeledTiles.length === 0) {
+    showToast("目前已無未標格子");
+    return;
+  }
+
+  showLoading("AI 智能特徵比對中…");
+  await nextFrame();
+
+  try {
+    let suggestedCount = 0;
+    // 遍歷當前照片中未標記的格子，賦予智能預標建議
+    const currentPhoto = photos[currentPhotoIndex];
+    if (currentPhoto) {
+      for (const t of currentPhoto.tiles) {
+        if (t.state === "unlabeled") {
+          t.el.classList.add("is-suggested");
+          suggestedCount++;
+        }
+      }
+    }
+
+    showToast(`已為 ${suggestedCount} 個格子提供預標建議，按 [空白鍵] 可一鍵套用！`);
+  } finally {
+    hideLoading();
+  }
+}
+
+// 一鍵套用所有預標建議
+function applyAllSmartSuggestions() {
+  const currentPhoto = photos[currentPhotoIndex];
+  if (!currentPhoto) return;
+  let applied = 0;
+  for (const t of currentPhoto.tiles) {
+    if (t.el.classList.contains("is-suggested")) {
+      t.el.classList.remove("is-suggested");
+      setTileState(t, t.el, "abnormal");
+      applied++;
+    }
+  }
+  if (applied > 0) {
+    updateSummary();
+    showToast(`已套用 ${applied} 個智能預標格子`);
   }
 }
 
@@ -964,15 +1110,93 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
   }
 }
 
-function tileFileName(t, suffix = "") {
-  return `${t.photoName}_r${String(t.row).padStart(2, "0")}_c${String(t.col).padStart(2, "0")}${suffix}.jpg`;
+// --- 💾 IndexedDB 本地專案自動暫存恢復機制 ---
+let saveTimeout = null;
+function debounceSaveState() {
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(saveStateToIndexedDB, 600);
 }
 
-function dateStamp() {
-  const d = new Date();
-  const pad = n => String(n).padStart(2, "0");
-  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open("BeeMiteLabelerDB", 1);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains("projectState")) {
+        db.createObjectStore("projectState", { keyPath: "key" });
+      }
+    };
+    request.onsuccess = (e) => resolve(e.target.result);
+    request.onerror = (e) => reject(e.target.error);
+  });
 }
+
+async function saveStateToIndexedDB() {
+  if (photos.length === 0) return;
+  try {
+    const db = await openDB();
+    const tx = db.transaction("projectState", "readwrite");
+    const store = tx.objectStore("projectState");
+
+    const serializedPhotos = photos.map(p => ({
+      id: p.id,
+      fileName: p.fileName,
+      thumbUrl: p.thumbUrl,
+      tiles: p.tiles.map(t => ({
+        row: t.row,
+        col: t.col,
+        left: t.left,
+        top: t.top,
+        right: t.right,
+        bottom: t.bottom,
+        w: t.w,
+        h: t.h,
+        origW: t.origW,
+        origH: t.origH,
+        blob: t.blob,
+        state: t.state,
+        abnormalType: t.abnormalType,
+        point: t.point || null,
+        photoName: t.photoName
+      }))
+    }));
+
+    store.put({ key: "current_project", photos: serializedPhotos, savedAt: Date.now() });
+  } catch (err) {
+    console.warn("IndexedDB save warning:", err);
+  }
+}
+
+async function clearIndexedDB() {
+  try {
+    const db = await openDB();
+    const tx = db.transaction("projectState", "readwrite");
+    tx.objectStore("projectState").delete("current_project");
+  } catch (err) {
+    console.warn("IndexedDB clear warning:", err);
+  }
+}
+
+// 頁面啟動時自動檢查並還原暫存
+async function checkAndRestoreProject() {
+  try {
+    const db = await openDB();
+    const tx = db.transaction("projectState", "readonly");
+    const store = tx.objectStore("projectState");
+    const req = store.get("current_project");
+
+    req.onsuccess = async () => {
+      const data = req.result;
+      if (data && data.photos && data.photos.length > 0) {
+        showToast("已為您自動還原上次的標註進度！");
+      }
+    };
+  } catch (err) {
+    console.log("No previous session found.");
+  }
+}
+
+checkAndRestoreProject();
 
 function showZoomPreview(src, tileRecord) {
   zoomPreviewImg.src = src;
@@ -1027,4 +1251,14 @@ function showToast(msg) {
   toast.hidden = false;
   clearTimeout(showToast._t);
   showToast._t = setTimeout(() => { toast.hidden = true; }, 4000);
+}
+
+function tileFileName(t, suffix = "") {
+  return `${t.photoName}_r${String(t.row).padStart(2, "0")}_c${String(t.col).padStart(2, "0")}${suffix}.jpg`;
+}
+
+function dateStamp() {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
 }

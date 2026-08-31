@@ -45,14 +45,30 @@ const sidebarCount = document.getElementById("sidebar-count");
 const sidebarClearAll = document.getElementById("sidebar-clear-all");
 const loadingOverlay = document.getElementById("loading-overlay");
 const loadingText = document.getElementById("loading-text");
-const photoNavBar = document.getElementById("photo-nav-bar");
+const settingsSidebar = document.getElementById("settings-sidebar");
+const settingsToggleBtn = document.getElementById("settings-toggle-btn");
+const settingsCloseBtn = document.getElementById("settings-close-btn");
+const emptyState = document.getElementById("empty-state");
+const emptyUploadBtn = document.getElementById("empty-upload-btn");
+const floatingPager = document.getElementById("floating-pager");
 const prevPhotoBtn = document.getElementById("prev-photo-btn");
 const nextPhotoBtn = document.getElementById("next-photo-btn");
-const photoNavCounter = document.getElementById("photo-nav-counter");
-const photoNavName = document.getElementById("photo-nav-name");
+const pagerInfo = document.getElementById("pager-info");
 
 photoInput.addEventListener("change", handleFiles);
 exportBtn.addEventListener("click", exportDataset);
+settingsToggleBtn.addEventListener("click", () => {
+  settingsSidebar.classList.toggle("collapsed");
+});
+settingsCloseBtn.addEventListener("click", () => {
+  settingsSidebar.classList.add("collapsed");
+});
+if (emptyUploadBtn) {
+  emptyUploadBtn.addEventListener("click", () => {
+    settingsSidebar.classList.remove("collapsed");
+    photoInput.click();
+  });
+}
 prevPhotoBtn.addEventListener("click", () => {
   if (currentPhotoIndex > 0) showPhoto(currentPhotoIndex - 1);
 });
@@ -74,6 +90,7 @@ if (window.matchMedia(MOBILE_QUERY).matches) {
   sidebar.classList.add("collapsed");
 }
 syncSidebarOpenBtn();
+showPhoto(0);
 
 // 拖曳塗刷結束偵測（放開滑鼠 / 觸控、游標離開視窗都要結束）
 document.addEventListener("pointerup", stopPainting);
@@ -132,15 +149,16 @@ function stopPainting() {
 
 function showPhoto(index) {
   if (photos.length === 0) {
-    photoNavBar.hidden = true;
+    if (emptyState) emptyState.hidden = false;
+    floatingPager.hidden = true;
     currentPhotoIndex = 0;
     return;
   }
 
+  if (emptyState) emptyState.hidden = true;
   currentPhotoIndex = Math.max(0, Math.min(index, photos.length - 1));
-  photoNavBar.hidden = false;
-  photoNavCounter.textContent = `第 ${currentPhotoIndex + 1} / ${photos.length} 張`;
-  photoNavName.textContent = photos[currentPhotoIndex].fileName;
+  floatingPager.hidden = false;
+  pagerInfo.textContent = `${currentPhotoIndex + 1} / ${photos.length}`;
 
   prevPhotoBtn.disabled = (currentPhotoIndex <= 0);
   nextPhotoBtn.disabled = (currentPhotoIndex >= photos.length - 1);
@@ -183,6 +201,7 @@ async function handleFiles(e) {
   }
 
   photoInput.value = "";
+  settingsSidebar.classList.add("collapsed");
   showPhoto(prevTotal < photos.length ? prevTotal : 0);
   updateSummary();
 }
@@ -236,11 +255,15 @@ async function addPhoto(file, rows, cols, overlap) {
   head.appendChild(actions);
   block.appendChild(head);
 
+  const gridWrap = document.createElement("div");
+  gridWrap.className = "tile-grid-wrap";
   const grid = document.createElement("div");
   grid.className = "tile-grid";
   grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-  grid.style.setProperty("--tile-aspect", `${W / cols} / ${H / rows}`);
-  block.appendChild(grid);
+  grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+  grid.style.setProperty("--grid-aspect", `${W} / ${H}`);
+  gridWrap.appendChild(grid);
+  block.appendChild(gridWrap);
 
   const tileW = W / cols;
   const tileH = H / rows;

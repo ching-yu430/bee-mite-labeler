@@ -59,9 +59,11 @@ const summaryPanel = document.getElementById("summary-panel");
 const exportBtn = document.getElementById("export-btn");
 const toast = document.getElementById("toast");
 const zoomPreview = document.getElementById("zoom-preview");
+const zoomPreviewImgWrap = document.getElementById("zoom-preview-img-wrap");
 const zoomPreviewImg = document.getElementById("zoom-preview-img");
 const zoomPreviewCaption = document.getElementById("zoom-preview-caption");
 const zoomBadge = document.getElementById("zoom-badge");
+const zoomShiftHint = document.getElementById("zoom-shift-hint");
 
 const sidebarOpenBtn = document.getElementById("sidebar-open-btn");
 const photoBadge = document.getElementById("photo-badge");
@@ -747,23 +749,14 @@ function createTileElement(tileRecord) {
     if (ev.pointerType === "mouse" && ev.button !== 0) return;
     if (ev.pointerType !== "touch") ev.preventDefault();
 
-    // 如果按住 Shift 點擊：在點擊處標記精確座標，並記錄原圖像素座標
+    // 如果按住 Shift 點擊：在點擊處標記精確座標（提示改用放大鏡點擊可更精準）
     if (ev.shiftKey) {
       const rect = tileEl.getBoundingClientRect();
       const clickX = Math.min(rect.width, Math.max(0, ev.clientX - rect.left));
       const clickY = Math.min(rect.height, Math.max(0, ev.clientY - rect.top));
       const normX = rect.width > 0 ? clickX / rect.width : 0.5;
       const normY = rect.height > 0 ? clickY / rect.height : 0.5;
-      // 換算成這個切格自身的像素座標（切格與原圖比例 1:1，無縮放）
-      const tileX = normX * tileRecord.w;
-      const tileY = normY * tileRecord.h;
-      // 換算成原圖的絕對像素座標
-      const origX = Math.round(tileRecord.left + tileX);
-      const origY = Math.round(tileRecord.top + tileY);
-
-      setTileState(tileRecord, tileEl, "abnormal", false, { normX, normY, origX, origY });
-      updateSummary();
-      showToast(`📍 已標記精確點 (原圖座標 ${origX}, ${origY})，匯出 YOLO 時將以此為中心產生 20×20px 邊界框`);
+      applyPointAnnotation(tileRecord, normX, normY);
       return;
     }
 
@@ -792,13 +785,14 @@ function createTileElement(tileRecord) {
   });
 
   tileEl.addEventListener("mouseenter", () => {
+    cancelHideZoomPreview();
     hoveredTileRecord = tileRecord;
     showZoomPreview(imgEl.src, tileRecord);
   });
   tileEl.addEventListener("mousemove", positionZoomPreview);
   tileEl.addEventListener("mouseleave", () => {
-    if (hoveredTileRecord === tileRecord) hoveredTileRecord = null;
-    hideZoomPreview();
+    // 延遲隱藏：讓滑鼠有機會移到放大鏡上方，於放大影像精確打點
+    scheduleHideZoomPreview();
   });
 
   // 滾輪直接調整放大鏡倍率
@@ -1579,6 +1573,91 @@ async function checkAndRestoreProject() {
 
 checkAndRestoreProject();
 
+// 放大鏡懸浮預覽的「延遲隱藏」機制：讓使用者可以把滑鼠從格子移到放大鏡上，
+// 在按住 Shift 時直接對放大鏡本身精確點擊打點，而不會因為滑鼠短暫離開格子就被關閉。
+let zoomHideTimer = null;
+function scheduleHideZoomPreview() {
+  clearTimeout(zoomHideTimer);
+  zoomHideTimer = setTimeout(() => {
+    hideZoomPreview();
+    hoveredTileRecord = null;
+  }, 220);
+}
+function cancelHideZoomPreview() {
+  clearTimeout(zoomHideTimer);
+}
+
+// 全域 Shift 按鍵狀態：按住 Shift 時，放大鏡圖片開放點擊（精確打點），並顯示提示徽章
+let shiftKeyActive = false;
+function setShiftUIState(active) {
+  if (shiftKeyActive === active) return;
+  shiftKeyActive = active;
+  if (zoomPreviewImgWrap) zoomPreviewImgWrap.classList.toggle("shift-clickable", active);
+  if (zoomShiftHint) zoomShiftHint.hidden = !(active && hoveredTileRecord);
+}
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Shift") setShiftUIState(true);
+});
+document.addEventListener("keyup", (e) => {
+  if (e.key === "Shift") setShiftUIState(false);
+});
+window.addEventListener("blur", () => setShiftUIState(false));
+
+if (zoomPreviewImg) {
+  zoomPreviewImg.addEventListener("mouseenter", cancelHideZoomPreview);
+  zoomPreviewImg.addEventListener("mouseleave", scheduleHideZoomPreview);
+
+  // 在放大鏡的放大影像上 Shift+點擊，等同在原格子上點擊同一相對位置，
+  // 但因為畫面被放大，使用者可以點得更準確。
+  zoomPreviewImg.addEventListener("pointerdown", (ev) => {
+    if (!ev.shiftKey || !hoveredTileRecord) return;
+    if (ev.pointerType === "mouse" && ev.button !== 0) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    const rect = zoomPreviewImg.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    const clickX = Math.min(rect.width, Math.max(0, ev.clientX - rect.left));
+    const clickY = Math.min(rect.height, Math.max(0, ev.clientY - rect.top));
+    applyPointAnnotation(hoveredTileRecord, clickX / rect.width, clickY / rect.height);
+  });
+}
+
+/**
+ * 依 normX/normY（0~1，相對於切格自身）在指定的 tileRecord 上放置精確標註點，
+ * 同步更新格子本身與放大鏡中的視覺標記。供格子直接點擊與放大鏡點擊共用。
+ */
+function applyPointAnnotation(tileRecord, normX, normY) {
+  normX = clamp01(normX);
+  normY = clamp01(normY);
+  const tileX = normX * tileRecord.w;
+  const tileY = normY * tileRecord.h;
+  const origX = Math.round(tileRecord.left + tileX);
+  const origY = Math.round(tileRecord.top + tileY);
+
+  setTileState(tileRecord, tileRecord.el, "abnormal", false, { normX, normY, origX, origY });
+  updateSummary();
+  if (hoveredTileRecord === tileRecord) {
+    renderZoomPointMarker(tileRecord);
+  }
+  showToast(`📍 已標記精確點 (原圖座標 ${origX}, ${origY})，匯出 YOLO 時將以此為中心產生 20×20px 邊界框`);
+}
+
+/**
+ * 在放大鏡預覽內畫出（或移除）與格子上相同的精確標記點，方便使用者放大核對位置。
+ */
+function renderZoomPointMarker(tileRecord) {
+  if (!zoomPreviewImgWrap) return;
+  const old = zoomPreviewImgWrap.querySelector(".tile-point-marker");
+  if (old) old.remove();
+  if (!tileRecord || !tileRecord.point) return;
+  const marker = document.createElement("div");
+  marker.className = "tile-point-marker";
+  marker.style.left = `${(tileRecord.point.normX * 100).toFixed(2)}%`;
+  marker.style.top = `${(tileRecord.point.normY * 100).toFixed(2)}%`;
+  marker.innerHTML = `<span class="point-ring"></span><span class="point-pin">📍</span>`;
+  zoomPreviewImgWrap.appendChild(marker);
+}
+
 function showZoomPreview(src, tileRecord) {
   zoomPreviewImg.src = src;
   if (globalFilter) {
@@ -1594,6 +1673,8 @@ function showZoomPreview(src, tileRecord) {
   }
   zoomPreviewCaption.textContent = `${tileRecord.photoName}_r${String(tileRecord.row).padStart(2, "0")}_c${String(tileRecord.col).padStart(2, "0")}  (${statusText})`;
   if (zoomBadge) zoomBadge.textContent = `${currentZoomLevel.toFixed(1)}x`;
+  if (zoomShiftHint) zoomShiftHint.hidden = !shiftKeyActive;
+  renderZoomPointMarker(tileRecord);
   zoomPreview.hidden = false;
 }
 
@@ -1618,6 +1699,7 @@ function positionZoomPreview(e) {
 
 function hideZoomPreview() {
   zoomPreview.hidden = true;
+  if (zoomShiftHint) zoomShiftHint.hidden = true;
 }
 
 function showLoading(msg) {

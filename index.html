@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>蜂蟹蟎標註工具</title>
 <link rel="stylesheet" href="fonts/css/vf.css">
-<link rel="stylesheet" href="style.css?v=20260831_9">
+<link rel="stylesheet" href="style.css?v=20260831_10">
 </head>
 <body>
 
@@ -307,7 +307,7 @@
         <div class="shortcut-item"><kbd>T</kbd><span>❓ 其他可疑異狀</span></div>
         <div class="shortcut-item"><kbd>0</kbd> / <kbd>⌫</kbd><span>清除該格標記 (重置為未標)</span></div>
         <div class="shortcut-item"><kbd>N</kbd><span>將這張照片所有未標全設為正常</span></div>
-        <div class="shortcut-item"><kbd>Shift + 點擊</kbd><span>在格子精確位置打點標註 (Point)</span></div>
+        <div class="shortcut-item"><kbd>Shift + 點擊</kbd><span>精確打點標註 (Point)，建議在懸浮放大鏡上點擊以獲得更高精準度</span></div>
         <div class="shortcut-item"><kbd>←</kbd> / <kbd>A</kbd><span>切換至上一張照片</span></div>
         <div class="shortcut-item"><kbd>→</kbd> / <kbd>D</kbd><span>切換至下一張照片</span></div>
         <div class="shortcut-item"><kbd>滑鼠滾輪</kbd><span>懸停於格子上時調整放大鏡倍率</span></div>
@@ -339,17 +339,20 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<!-- 懸浮放大鏡（支援倍率顯示與微調） -->
+<!-- 懸浮放大鏡（支援倍率顯示與微調，按住 Shift 並點擊放大鏡可精確打點） -->
 <div id="zoom-preview" class="zoom-preview" hidden>
   <div class="zoom-preview-header">
     <span class="zoom-badge" id="zoom-badge">3.0x</span>
+    <span class="zoom-shift-hint" id="zoom-shift-hint" hidden>📍 Shift+點擊打點</span>
   </div>
-  <img id="zoom-preview-img" src="" alt="">
+  <div class="zoom-preview-img-wrap" id="zoom-preview-img-wrap">
+    <img id="zoom-preview-img" src="" alt="">
+  </div>
   <div class="zoom-caption" id="zoom-preview-caption"></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="app.js?v=20260831_9"></script>
+<script src="app.js?v=20260831_10"></script>
 </body>
 </html>

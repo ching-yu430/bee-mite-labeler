@@ -1209,6 +1209,9 @@ main#main-workbench {
   top: 6px;
   right: 6px;
   z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .zoom-badge {
@@ -1222,13 +1225,48 @@ main#main-workbench {
   backdrop-filter: blur(4px);
 }
 
+.zoom-shift-hint {
+  background: rgba(224, 49, 49, 0.85);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  backdrop-filter: blur(4px);
+  white-space: nowrap;
+  animation: shiftHintFade 1.4s ease-in-out infinite;
+}
+
+@keyframes shiftHintFade {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+.zoom-preview-img-wrap {
+  position: relative;
+  line-height: 0;
+}
+
 .zoom-preview img {
   display: block;
   width: 100%;
   height: auto;
-  
-  
   transition: filter 0.05s ease;
+}
+
+/* Shift 鍵按住時，放大鏡圖片可直接精確點擊打點 */
+.zoom-preview-img-wrap.shift-clickable img {
+  cursor: crosshair;
+}
+
+/* 放大鏡內的標記點依放大鏡比例放大顯示，方便使用者精確核對位置 */
+.zoom-preview-img-wrap .tile-point-marker .point-ring {
+  width: 16px;
+  height: 16px;
+  border-width: 3px;
+}
+.zoom-preview-img-wrap .tile-point-marker .point-pin {
+  font-size: 24px;
 }
 
 .zoom-preview .zoom-caption {

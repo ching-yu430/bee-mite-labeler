@@ -664,46 +664,6 @@ async function addPhoto(file, rows, cols, overlap) {
     photo.originalBlob = file.slice();
   } catch (ignored) {}
 
-  // --- 主要區塊：切格網格 ---
-  const block = document.createElement("div");
-  block.className = "photo-block";
-  block.id = `block-${photoId}`;
-
-  const head = document.createElement("div");
-  head.className = "photo-block-head";
-  const heading = document.createElement("h2");
-  heading.textContent = `${file.name}　(${W}×${H}，切成 ${rows}×${cols} = ${rows * cols} 格)`;
-  head.appendChild(heading);
-
-  const actions = document.createElement("div");
-  actions.className = "photo-actions";
-  const markNormalBtn = document.createElement("button");
-  markNormalBtn.type = "button";
-  markNormalBtn.className = "mini-btn";
-  markNormalBtn.textContent = "未標→全設正常";
-  markNormalBtn.title = "把這張照片所有「未標」的格子一次設為正常，剩下手動點出異常格即可";
-  markNormalBtn.addEventListener("click", () => markPhotoAllNormal(photo));
-  const resetBtn = document.createElement("button");
-  resetBtn.type = "button";
-  resetBtn.className = "mini-btn mini-btn-danger";
-  resetBtn.textContent = "清除標記";
-  resetBtn.title = "把這張照片的標記全部清空";
-  resetBtn.addEventListener("click", () => resetPhotoLabels(photo));
-  actions.appendChild(markNormalBtn);
-  actions.appendChild(resetBtn);
-  head.appendChild(actions);
-  block.appendChild(head);
-
-  const gridWrap = document.createElement("div");
-  gridWrap.className = "tile-grid-wrap";
-  const grid = document.createElement("div");
-  grid.className = "tile-grid";
-  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-  grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
-  grid.style.setProperty("--grid-aspect", `${W} / ${H}`);
-  gridWrap.appendChild(grid);
-  block.appendChild(gridWrap);
-
   const tileW = W / cols;
   const tileH = H / rows;
 
@@ -737,106 +697,14 @@ async function addPhoto(file, rows, cols, overlap) {
         blob,
         state: "unlabeled",
         abnormalType: null,
+        point: null,
         photoName: baseName
       };
       photo.tiles.push(tileRecord);
-
-      const tileEl = document.createElement("div");
-      tileEl.className = "tile";
-      tileEl.dataset.state = "unlabeled";
-      tileEl.tabIndex = 0;
-      tileEl.setAttribute("role", "button");
-      const imgEl = document.createElement("img");
-      imgEl.src = URL.createObjectURL(blob);
-      imgEl.alt = "";
-      imgEl.draggable = false;
-      tileEl.appendChild(imgEl);
-      tileRecord.el = tileEl;
-      updateTileAriaLabel(tileRecord);
-
-      // 支援 Shift+點擊精確打點 (Point Annotation) 與 一般單擊切換
-      tileEl.addEventListener("pointerdown", (ev) => {
-        if (ev.pointerType === "mouse" && ev.button !== 0) return;
-        if (ev.pointerType !== "touch") ev.preventDefault();
-
-        // 如果按住 Shift 點擊：在點擊位置打上一顆小紅點 (精準像素定位)
-        if (ev.shiftKey) {
-          const rect = tileEl.getBoundingClientRect();
-          const clickX = ev.clientX - rect.left;
-          const clickY = ev.clientY - rect.top;
-          const normX = clickX / rect.width;
-          const normY = clickY / rect.height;
-
-          // 建立小紅點視覺元素
-          let dot = tileEl.querySelector(".tile-point-dot");
-          if (!dot) {
-            dot = document.createElement("div");
-            dot.className = "tile-point-dot";
-            tileEl.appendChild(dot);
-          }
-          dot.style.left = `${(normX * 100).toFixed(1)}%`;
-          dot.style.top = `${(normY * 100).toFixed(1)}%`;
-
-          tileRecord.point = { x: clickX, y: clickY, normX, normY };
-          setTileState(tileRecord, tileEl, "abnormal");
-          updateSummary();
-          showToast(`已於座標 (${Math.round(clickX)}, ${Math.round(clickY)}) 精確標註異常點`);
-          return;
-        }
-
-        // 一般單點或連續塗刷
-        const next = cycleTile(tileRecord, tileEl);
-        isPainting = true;
-        paintState = next;
-        updateSummary();
-      });
-      tileEl.addEventListener("pointerenter", (ev) => {
-        // 嚴格檢查：只有在滑鼠左鍵確實按住 (ev.buttons === 1) 時才連續塗刷，防止單純滑動誤改
-        if (ev.buttons === 1 && isPainting && paintState) {
-          setTileState(tileRecord, tileEl, paintState);
-          updateSummary();
-        } else if (ev.buttons === 0) {
-          isPainting = false;
-          paintState = null;
-        }
-      });
-      tileEl.addEventListener("keydown", (ev) => {
-        if (ev.key === "Enter" || ev.key === " ") {
-          ev.preventDefault();
-          cycleTile(tileRecord, tileEl);
-          updateSummary();
-        }
-      });
-
-      tileEl.addEventListener("mouseenter", () => {
-        hoveredTileRecord = tileRecord;
-        showZoomPreview(imgEl.src, tileRecord);
-      });
-      tileEl.addEventListener("mousemove", positionZoomPreview);
-      tileEl.addEventListener("mouseleave", () => {
-        if (hoveredTileRecord === tileRecord) hoveredTileRecord = null;
-        hideZoomPreview();
-      });
-
-      // 滾輪直接調整放大鏡倍率
-      tileEl.addEventListener("wheel", (ev) => {
-        ev.preventDefault();
-        const delta = ev.deltaY < 0 ? 0.5 : -0.5;
-        setZoomLevel(currentZoomLevel + delta);
-        if (hoveredTileRecord === tileRecord) {
-          positionZoomPreview(ev);
-        }
-      }, { passive: false });
-
-      grid.appendChild(tileEl);
     }
   }
 
-  photosContainer.appendChild(block);
-  photo.blockEl = block;
-  applyFilters();
-
-  // --- 側欄項目 ---
+  // --- 側欄縮圖 ---
   const thumbCanvas = document.createElement("canvas");
   const thumbSize = 80;
   thumbCanvas.width = thumbSize;
@@ -847,18 +715,190 @@ async function addPhoto(file, rows, cols, overlap) {
   tctx.drawImage(img, (thumbSize - dw) / 2, (thumbSize - dh) / 2, dw, dh);
   photo.thumbUrl = thumbCanvas.toDataURL("image/jpeg", 0.8);
 
+  finalizePhotoDOM(photo, W, H, rows, cols);
+  photos.push(photo);
+  updateSidebarCount();
+}
+
+/**
+ * 依 tileRecord 建立單一格子 DOM 元素（點擊塗刷、Shift+點擊精確打點、
+ * 懸浮放大鏡、滾輪調整倍率等互動事件皆在此綁定）。
+ * 供新上傳照片與 IndexedDB 還原共用，確保行為一致。
+ */
+function createTileElement(tileRecord) {
+  const tileEl = document.createElement("div");
+  tileEl.className = "tile";
+  tileEl.dataset.state = tileRecord.state || "unlabeled";
+  tileEl.tabIndex = 0;
+  tileEl.setAttribute("role", "button");
+
+  const imgEl = document.createElement("img");
+  imgEl.src = URL.createObjectURL(tileRecord.blob);
+  imgEl.alt = "";
+  imgEl.draggable = false;
+  tileEl.appendChild(imgEl);
+
+  tileRecord.el = tileEl;
+  updateTileAriaLabel(tileRecord);
+  renderPointMarker(tileRecord, tileEl);
+
+  // 支援 Shift+點擊精確打點 (Point Annotation) 與 一般單擊切換
+  tileEl.addEventListener("pointerdown", (ev) => {
+    if (ev.pointerType === "mouse" && ev.button !== 0) return;
+    if (ev.pointerType !== "touch") ev.preventDefault();
+
+    // 如果按住 Shift 點擊：在點擊處標記精確座標，並記錄原圖像素座標
+    if (ev.shiftKey) {
+      const rect = tileEl.getBoundingClientRect();
+      const clickX = Math.min(rect.width, Math.max(0, ev.clientX - rect.left));
+      const clickY = Math.min(rect.height, Math.max(0, ev.clientY - rect.top));
+      const normX = rect.width > 0 ? clickX / rect.width : 0.5;
+      const normY = rect.height > 0 ? clickY / rect.height : 0.5;
+      // 換算成這個切格自身的像素座標（切格與原圖比例 1:1，無縮放）
+      const tileX = normX * tileRecord.w;
+      const tileY = normY * tileRecord.h;
+      // 換算成原圖的絕對像素座標
+      const origX = Math.round(tileRecord.left + tileX);
+      const origY = Math.round(tileRecord.top + tileY);
+
+      setTileState(tileRecord, tileEl, "abnormal", false, { normX, normY, origX, origY });
+      updateSummary();
+      showToast(`📍 已標記精確點 (原圖座標 ${origX}, ${origY})，匯出 YOLO 時將以此為中心產生 20×20px 邊界框`);
+      return;
+    }
+
+    // 一般單點或連續塗刷
+    const next = cycleTile(tileRecord, tileEl);
+    isPainting = true;
+    paintState = next;
+    updateSummary();
+  });
+  tileEl.addEventListener("pointerenter", (ev) => {
+    // 嚴格檢查：只有在滑鼠左鍵確實按住 (ev.buttons === 1) 時才連續塗刷，防止單純滑動誤改
+    if (ev.buttons === 1 && isPainting && paintState) {
+      setTileState(tileRecord, tileEl, paintState);
+      updateSummary();
+    } else if (ev.buttons === 0) {
+      isPainting = false;
+      paintState = null;
+    }
+  });
+  tileEl.addEventListener("keydown", (ev) => {
+    if (ev.key === "Enter" || ev.key === " ") {
+      ev.preventDefault();
+      cycleTile(tileRecord, tileEl);
+      updateSummary();
+    }
+  });
+
+  tileEl.addEventListener("mouseenter", () => {
+    hoveredTileRecord = tileRecord;
+    showZoomPreview(imgEl.src, tileRecord);
+  });
+  tileEl.addEventListener("mousemove", positionZoomPreview);
+  tileEl.addEventListener("mouseleave", () => {
+    if (hoveredTileRecord === tileRecord) hoveredTileRecord = null;
+    hideZoomPreview();
+  });
+
+  // 滾輪直接調整放大鏡倍率
+  tileEl.addEventListener("wheel", (ev) => {
+    ev.preventDefault();
+    const delta = ev.deltaY < 0 ? 0.5 : -0.5;
+    setZoomLevel(currentZoomLevel + delta);
+    if (hoveredTileRecord === tileRecord) {
+      positionZoomPreview(ev);
+    }
+  }, { passive: false });
+
+  return tileEl;
+}
+
+/**
+ * 依 tileRecord.point 在格子上畫出（或移除）紅色動態光圈精確標記點。
+ */
+function renderPointMarker(tileRecord, tileEl) {
+  const old = tileEl.querySelector(".tile-point-marker");
+  if (old) old.remove();
+  if (!tileRecord.point) return;
+  const marker = document.createElement("div");
+  marker.className = "tile-point-marker";
+  marker.style.left = `${(tileRecord.point.normX * 100).toFixed(2)}%`;
+  marker.style.top = `${(tileRecord.point.normY * 100).toFixed(2)}%`;
+  marker.title = `精確標註點（原圖座標 ${tileRecord.point.origX}, ${tileRecord.point.origY}）`;
+  marker.innerHTML = `<span class="point-ring"></span><span class="point-pin">📍</span>`;
+  tileEl.appendChild(marker);
+}
+
+/**
+ * 建立照片的網格 DOM 區塊與左側清單項目。
+ * photo.tiles 必須已備妥（含 blob），此函式會補建缺少的 tileEl 並組裝畫面。
+ * 供新上傳照片 (addPhoto) 與 IndexedDB 自動還原 (rebuildPhotoFromStored) 共用。
+ */
+function finalizePhotoDOM(photo, W, H, rows, cols) {
+  for (const t of photo.tiles) {
+    if (!t.el) createTileElement(t);
+  }
+
+  const block = document.createElement("div");
+  block.className = "photo-block";
+  block.id = `block-${photo.id}`;
+
+  const head = document.createElement("div");
+  head.className = "photo-block-head";
+  const heading = document.createElement("h2");
+  heading.textContent = `${photo.fileName}　(${W}×${H}，切成 ${rows}×${cols} = ${rows * cols} 格)`;
+  head.appendChild(heading);
+
+  const actions = document.createElement("div");
+  actions.className = "photo-actions";
+  const markNormalBtn = document.createElement("button");
+  markNormalBtn.type = "button";
+  markNormalBtn.className = "mini-btn";
+  markNormalBtn.textContent = "未標→全設正常";
+  markNormalBtn.title = "把這張照片所有「未標」的格子一次設為正常，剩下手動點出異常格即可";
+  markNormalBtn.addEventListener("click", () => markPhotoAllNormal(photo));
+  const resetBtn = document.createElement("button");
+  resetBtn.type = "button";
+  resetBtn.className = "mini-btn mini-btn-danger";
+  resetBtn.textContent = "清除標記";
+  resetBtn.title = "把這張照片的標記全部清空";
+  resetBtn.addEventListener("click", () => resetPhotoLabels(photo));
+  actions.appendChild(markNormalBtn);
+  actions.appendChild(resetBtn);
+  head.appendChild(actions);
+  block.appendChild(head);
+
+  const gridWrap = document.createElement("div");
+  gridWrap.className = "tile-grid-wrap";
+  const grid = document.createElement("div");
+  grid.className = "tile-grid";
+  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+  grid.style.setProperty("--grid-aspect", `${W} / ${H}`);
+  for (const t of photo.tiles) {
+    grid.appendChild(t.el);
+  }
+  gridWrap.appendChild(grid);
+  block.appendChild(gridWrap);
+
+  photosContainer.appendChild(block);
+  photo.blockEl = block;
+  applyFilters();
+
+  // --- 側欄項目 ---
   const li = document.createElement("li");
   li.className = "sidebar-item";
   li.innerHTML = `
-    <img class="sidebar-thumb" src="${photo.thumbUrl}" alt="">
+    <img class="sidebar-thumb" src="${photo.thumbUrl || ""}" alt="">
     <div class="sidebar-info">
-      <div class="sidebar-name">${escapeHtml(file.name)}</div>
+      <div class="sidebar-name">${escapeHtml(photo.fileName)}</div>
       <div class="sidebar-progress" data-role="progress">0 / ${rows * cols} 已標</div>
     </div>
     <button class="sidebar-remove" title="移除這張照片" aria-label="移除">✕</button>
   `;
   li.querySelector(".sidebar-info").addEventListener("click", () => {
-    const idx = photos.findIndex(p => p.id === photoId);
+    const idx = photos.findIndex(p => p.id === photo.id);
     if (idx !== -1) {
       showPhoto(idx);
     }
@@ -867,17 +907,66 @@ async function addPhoto(file, rows, cols, overlap) {
   li.querySelector(".sidebar-remove").addEventListener("click", (ev) => {
     ev.stopPropagation();
     const labeled = photo.tiles.filter(t => t.state !== "unlabeled").length;
-    if (labeled > 0 && !confirm(`「${file.name}」已經標記了 ${labeled} 格，確定要移除這張照片並捨棄這些標記嗎？`)) {
+    if (labeled > 0 && !confirm(`「${photo.fileName}」已經標記了 ${labeled} 格，確定要移除這張照片並捨棄這些標記嗎？`)) {
       return;
     }
-    removePhoto(photoId);
+    removePhoto(photo.id);
   });
 
   const emptyMsg = document.getElementById("sidebar-empty-msg");
   if (emptyMsg) emptyMsg.remove();
   sidebarList.appendChild(li);
   photo.sidebarEl = li;
+}
 
+/**
+ * 由 IndexedDB 還原的資料重建一張照片（含所有切格 blob、狀態與精確點）。
+ */
+async function rebuildPhotoFromStored(pd) {
+  if (!pd || !pd.tiles || pd.tiles.length === 0) return;
+  const first = pd.tiles[0];
+  const W = first.origW;
+  const H = first.origH;
+  let rows = 0, cols = 0;
+  for (const t of pd.tiles) {
+    rows = Math.max(rows, t.row + 1);
+    cols = Math.max(cols, t.col + 1);
+  }
+  const baseName = pd.fileName.replace(/\.[^.]+$/, "");
+  const photoId = `p${++photoCounter}`;
+
+  const photo = {
+    id: photoId,
+    fileName: pd.fileName,
+    tiles: [],
+    originalBlob: pd.originalBlob || null,
+    thumbUrl: pd.thumbUrl || ""
+  };
+
+  for (const t of pd.tiles) {
+    if (!t.blob) continue; // 沒有影像資料的切格無法還原，略過
+    photo.tiles.push({
+      row: t.row,
+      col: t.col,
+      left: t.left,
+      top: t.top,
+      right: t.right,
+      bottom: t.bottom,
+      w: t.w,
+      h: t.h,
+      origW: t.origW,
+      origH: t.origH,
+      blob: t.blob,
+      state: t.state || "unlabeled",
+      abnormalType: t.abnormalType || null,
+      point: t.point || null,
+      photoName: t.photoName || baseName
+    });
+  }
+
+  if (photo.tiles.length === 0) return;
+
+  finalizePhotoDOM(photo, W, H, rows, cols);
   photos.push(photo);
   updateSidebarCount();
 }
@@ -888,14 +977,30 @@ function cycleTile(tileRecord, tileEl) {
   return next;
 }
 
-function setTileState(tileRecord, tileEl, state, skipUndo = false) {
+function setTileState(tileRecord, tileEl, state, skipUndo = false, newPointData = undefined) {
+  const oldPoint = tileRecord.point ? { ...tileRecord.point } : null;
+  // newPointData === undefined 表示「沿用既有 point 邏輯」：
+  //   - 離開 abnormal 狀態時自動清除標記點
+  //   - 其餘情況下維持原本的 point 不變
+  // newPointData 顯式傳入物件或 null 時，以該值為準（用於 Shift+點擊 / 匯入還原）
+  let finalPoint;
+  if (newPointData !== undefined) {
+    finalPoint = newPointData;
+  } else if (state !== "abnormal") {
+    finalPoint = null;
+  } else {
+    finalPoint = oldPoint;
+  }
+
   if (!skipUndo) {
     undoStack.push({
       tile: tileRecord,
       oldState: tileRecord.state,
       oldAbnormalType: tileRecord.abnormalType,
+      oldPoint,
       newState: state,
-      newAbnormalType: state === "abnormal" ? (tileRecord.abnormalType || currentAbnormalType) : null
+      newAbnormalType: state === "abnormal" ? (tileRecord.abnormalType || currentAbnormalType) : null,
+      newPoint: finalPoint
     });
     if (undoStack.length > MAX_UNDO) undoStack.shift();
     redoStack.length = 0; // 新動作清空 redo
@@ -907,6 +1012,8 @@ function setTileState(tileRecord, tileEl, state, skipUndo = false) {
   } else {
     tileRecord.abnormalType = null;
   }
+  tileRecord.point = finalPoint || null;
+  renderPointMarker(tileRecord, tileEl);
   updateTileAriaLabel(tileRecord);
 }
 
@@ -916,7 +1023,9 @@ function performUndo() {
   redoStack.push(action);
   action.tile.state = action.oldState;
   action.tile.abnormalType = action.oldAbnormalType;
+  action.tile.point = action.oldPoint || null;
   action.tile.el.dataset.state = action.oldState;
+  renderPointMarker(action.tile, action.tile.el);
   updateTileAriaLabel(action.tile);
   updateSummary();
   showToast("↩ 已撤銷");
@@ -928,7 +1037,9 @@ function performRedo() {
   undoStack.push(action);
   action.tile.state = action.newState;
   action.tile.abnormalType = action.newAbnormalType;
+  action.tile.point = action.newPoint || null;
   action.tile.el.dataset.state = action.newState;
+  renderPointMarker(action.tile, action.tile.el);
   updateTileAriaLabel(action.tile);
   updateSummary();
   showToast("↪ 已重做");
@@ -1151,6 +1262,9 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
       const yamlContent = `path: ./dataset\ntrain: images/train\nval: images/train\nnc: 5\nnames: ['mite', 'dwv', 'debris', 'dead', 'other']\n`;
       yoloRoot.file("data.yaml", yamlContent);
 
+      // POINT_BOX_PX：Shift+點擊精確打點時，自動以該點為中心產生的邊界框邊長 (px)
+      const POINT_BOX_PX = 20;
+
       // 切格層級之 YOLO 標籤與圖片
       for (const t of [...normalTiles, ...abnormalTiles]) {
         const base = tileFileName(t).replace(/\.jpg$/, "");
@@ -1158,8 +1272,18 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
 
         if (t.state === "abnormal") {
           const classId = CLASS_INDEX[t.abnormalType] ?? 0;
-          // 切格本身的正規化邊界框 (置中全覆蓋)
-          const txtLine = `${classId} 0.500000 0.500000 1.000000 1.000000\n`;
+          let txtLine;
+          if (t.point) {
+            // 精確打點：以點擊處為中心，產生 20×20px 精準框（換算成切格自身的正規化座標）
+            const xCenter = clamp01(t.point.normX);
+            const yCenter = clamp01(t.point.normY);
+            const wNorm = clamp01(POINT_BOX_PX / t.w);
+            const hNorm = clamp01(POINT_BOX_PX / t.h);
+            txtLine = `${classId} ${xCenter.toFixed(6)} ${yCenter.toFixed(6)} ${wNorm.toFixed(6)} ${hNorm.toFixed(6)}\n`;
+          } else {
+            // 未打點：沿用切格本身的正規化邊界框 (置中全覆蓋)
+            txtLine = `${classId} 0.500000 0.500000 1.000000 1.000000\n`;
+          }
           yoloRoot.folder("labels/train").file(`${base}.txt`, txtLine);
         } else {
           // 正常樣本保留空 txt 檔以符合 YOLO 背景負樣本規範
@@ -1173,11 +1297,23 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
         const lines = [];
         for (const t of pAbnormals) {
           const classId = CLASS_INDEX[t.abnormalType] ?? 0;
-          const xCenter = ((t.left + t.w / 2) / t.origW).toFixed(6);
-          const yCenter = ((t.top + t.h / 2) / t.origH).toFixed(6);
-          const widthNorm = (t.w / t.origW).toFixed(6);
-          const heightNorm = (t.h / t.origH).toFixed(6);
-          lines.push(`${classId} ${xCenter} ${yCenter} ${widthNorm} ${heightNorm}`);
+          let xCenter, yCenter, widthNorm, heightNorm;
+          if (t.point) {
+            // 精確打點：以原圖絕對像素座標為中心，產生 20×20px 精準框
+            const origX = t.point.origX ?? (t.left + t.point.normX * t.w);
+            const origY = t.point.origY ?? (t.top + t.point.normY * t.h);
+            xCenter = origX / t.origW;
+            yCenter = origY / t.origH;
+            widthNorm = clamp01(POINT_BOX_PX / t.origW);
+            heightNorm = clamp01(POINT_BOX_PX / t.origH);
+          } else {
+            // 未打點：沿用整個切格範圍作為邊界框
+            xCenter = (t.left + t.w / 2) / t.origW;
+            yCenter = (t.top + t.h / 2) / t.origH;
+            widthNorm = t.w / t.origW;
+            heightNorm = t.h / t.origH;
+          }
+          lines.push(`${classId} ${xCenter.toFixed(6)} ${yCenter.toFixed(6)} ${widthNorm.toFixed(6)} ${heightNorm.toFixed(6)}`);
         }
         yoloRoot.folder("full_image_labels").file(`${p.fileName.replace(/\.[^.]+$/, "")}.txt`, lines.join("\n"));
       }
@@ -1254,7 +1390,19 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
             y_center: (t.top + t.h / 2) / t.origH,
             width: t.w / t.origW,
             height: t.h / t.origH
-          }
+          },
+          point: t.point ? {
+            orig_x: t.point.origX,
+            orig_y: t.point.origY,
+            tile_norm_x: t.point.normX,
+            tile_norm_y: t.point.normY,
+            yolo_box_20x20: {
+              x_center_norm: +(t.point.origX / t.origW).toFixed(6),
+              y_center_norm: +(t.point.origY / t.origH).toFixed(6),
+              width_norm: +clamp01(20 / t.origW).toFixed(6),
+              height_norm: +clamp01(20 / t.origH).toFixed(6)
+            }
+          } : null
         }))
       }))
     };
@@ -1302,7 +1450,10 @@ if (btnImportJson && importJsonInput) {
           const localTile = localPhoto.tiles.find(t => t.row === jt.row && t.col === jt.col);
           if (localTile) {
             localTile.abnormalType = jt.abnormal_type || null;
-            setTileState(localTile, localTile.el, jt.state, true);
+            const importedPoint = jt.point
+              ? { normX: jt.point.tile_norm_x, normY: jt.point.tile_norm_y, origX: jt.point.orig_x, origY: jt.point.orig_y }
+              : null;
+            setTileState(localTile, localTile.el, jt.state, true, importedPoint);
             matched++;
           }
         }
@@ -1349,6 +1500,7 @@ async function saveStateToIndexedDB() {
       id: p.id,
       fileName: p.fileName,
       thumbUrl: p.thumbUrl,
+      originalBlob: p.originalBlob || null,
       tiles: p.tiles.map(t => ({
         row: t.row,
         col: t.col,
@@ -1384,22 +1536,44 @@ async function clearIndexedDB() {
   }
 }
 
-// 頁面啟動時自動檢查並還原暫存
+// 頁面啟動時自動檢查並還原暫存（實際重建照片格子、標註狀態與精確標記點）
 async function checkAndRestoreProject() {
   try {
     const db = await openDB();
     const tx = db.transaction("projectState", "readonly");
     const store = tx.objectStore("projectState");
-    const req = store.get("current_project");
 
-    req.onsuccess = async () => {
-      const data = req.result;
-      if (data && data.photos && data.photos.length > 0) {
-        showToast("已為您自動還原上次的標註進度！");
+    const data = await new Promise((resolve) => {
+      const req = store.get("current_project");
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => resolve(null);
+    });
+
+    if (!data || !data.photos || data.photos.length === 0) return;
+
+    showLoading("正在還原上次的標註進度…");
+    await nextFrame();
+
+    let restoredCount = 0;
+    for (const pd of data.photos) {
+      try {
+        await rebuildPhotoFromStored(pd);
+        restoredCount++;
+      } catch (err) {
+        console.error("還原照片失敗：", pd && pd.fileName, err);
       }
-    };
+    }
+
+    hideLoading();
+
+    if (restoredCount > 0) {
+      showPhoto(0);
+      updateSummary();
+      showToast(`已為您自動還原上次的標註進度！(${restoredCount} 張照片)`);
+    }
   } catch (err) {
-    console.log("No previous session found.");
+    console.log("No previous session found.", err);
+    hideLoading();
   }
 }
 
@@ -1464,6 +1638,10 @@ function showToast(msg) {
   toast.hidden = false;
   clearTimeout(showToast._t);
   showToast._t = setTimeout(() => { toast.hidden = true; }, 4000);
+}
+
+function clamp01(v) {
+  return Math.min(1, Math.max(0, v));
 }
 
 function tileFileName(t, suffix = "") {

@@ -94,13 +94,8 @@ const filterContrast = document.getElementById("filter-contrast");
 const btnResetFilters = document.getElementById("btn-reset-filters");
 const btnSharpen = document.getElementById("btn-sharpen");
 const btnClahe = document.getElementById("btn-clahe");
-const btnSmartSuggest = document.getElementById("btn-smart-suggest");
 const btnClearDb = document.getElementById("btn-clear-db");
 const zoomLevelBtns = document.querySelectorAll(".zoom-level-btn");
-
-// 健康度診斷元素
-const healthRateEl = document.getElementById("health-rate");
-const healthBadgeEl = document.getElementById("health-badge");
 
 // 事件綁定
 photoInput.addEventListener("change", handleFiles);
@@ -110,6 +105,7 @@ if (btnSharpen) {
   btnSharpen.addEventListener("click", () => {
     btnSharpen.classList.toggle("is-active");
     photosContainer.classList.toggle("is-sharpen", btnSharpen.classList.contains("is-active"));
+    showToast(btnSharpen.classList.contains("is-active") ? "⚡ 已開啟蜂體邊緣銳化" : "已關閉銳化");
   });
 }
 
@@ -117,11 +113,8 @@ if (btnClahe) {
   btnClahe.addEventListener("click", () => {
     btnClahe.classList.toggle("is-active");
     photosContainer.classList.toggle("is-clahe", btnClahe.classList.contains("is-active"));
+    showToast(btnClahe.classList.contains("is-active") ? "🔆 已開啟對比增強" : "已關閉對比增強");
   });
-}
-
-if (btnSmartSuggest) {
-  btnSmartSuggest.addEventListener("click", runSmartSuggestion);
 }
 
 if (btnClearDb) {
@@ -259,9 +252,17 @@ if (filterBrightness && filterContrast) {
     btnResetFilters.addEventListener("click", () => {
       filterBrightness.value = 100;
       filterContrast.value = 100;
+      if (btnSharpen) {
+        btnSharpen.classList.remove("is-active");
+        photosContainer.classList.remove("is-sharpen");
+      }
+      if (btnClahe) {
+        btnClahe.classList.remove("is-active");
+        photosContainer.classList.remove("is-clahe");
+      }
       applyFilters();
       setZoomLevel(3.0);
-      showToast("已重設影像亮度、對比度與放大鏡倍率");
+      showToast("已重設影像亮度、對比度與濾鏡");
     });
   }
 }
@@ -867,31 +868,6 @@ function updateSummary() {
   document.getElementById("count-abnormal").textContent = abnormal;
   document.getElementById("count-unlabeled").textContent = unlabeled;
 
-  // 蜂群感染率 (Infestation Rate) 與健康度診斷評級
-  if (healthRateEl && healthBadgeEl) {
-    const labeledTotal = normal + abnormal;
-    const rate = labeledTotal > 0 ? ((abnormal / labeledTotal) * 100).toFixed(1) : "0.0";
-    healthRateEl.textContent = `${rate}%`;
-
-    healthBadgeEl.className = "diagnostic-badge";
-    const numRate = parseFloat(rate);
-    if (labeledTotal === 0 || numRate < 3.0) {
-      healthBadgeEl.classList.add("badge-safe");
-      healthBadgeEl.textContent = "🟢 健康安全 (<3%)";
-    } else if (numRate <= 5.0) {
-      healthBadgeEl.classList.add("badge-warning");
-      healthBadgeEl.textContent = "🟡 警戒注意 (3~5%)";
-    } else {
-      healthBadgeEl.classList.add("badge-danger");
-      healthBadgeEl.textContent = "🔴 危害需處置 (>5%)";
-    }
-  }
-
-  // 解鎖主動學習智能預標按鈕（當有標註異常時即可分析預標）
-  if (btnSmartSuggest) {
-    btnSmartSuggest.disabled = (abnormal === 0 || unlabeled === 0);
-  }
-
   exportBtn.disabled = (normal + abnormal === 0);
 
   for (const p of photos) {
@@ -904,61 +880,6 @@ function updateSummary() {
 
   // 自動觸發本地暫存儲存 (防重整丟失)
   debounceSaveState();
-}
-
-// 智能預標建議 (Active Learning)
-async function runSmartSuggestion() {
-  const tiles = allTiles();
-  const abnormalTiles = tiles.filter(t => t.state === "abnormal");
-  const unlabeledTiles = tiles.filter(t => t.state === "unlabeled");
-
-  if (abnormalTiles.length === 0) {
-    showToast("請先手動標記至少一個異常格，讓系統學習其特徵");
-    return;
-  }
-  if (unlabeledTiles.length === 0) {
-    showToast("目前已無未標格子");
-    return;
-  }
-
-  showLoading("AI 智能特徵比對中…");
-  await nextFrame();
-
-  try {
-    let suggestedCount = 0;
-    // 遍歷當前照片中未標記的格子，賦予智能預標建議
-    const currentPhoto = photos[currentPhotoIndex];
-    if (currentPhoto) {
-      for (const t of currentPhoto.tiles) {
-        if (t.state === "unlabeled") {
-          t.el.classList.add("is-suggested");
-          suggestedCount++;
-        }
-      }
-    }
-
-    showToast(`已為 ${suggestedCount} 個格子提供預標建議，按 [空白鍵] 可一鍵套用！`);
-  } finally {
-    hideLoading();
-  }
-}
-
-// 一鍵套用所有預標建議
-function applyAllSmartSuggestions() {
-  const currentPhoto = photos[currentPhotoIndex];
-  if (!currentPhoto) return;
-  let applied = 0;
-  for (const t of currentPhoto.tiles) {
-    if (t.el.classList.contains("is-suggested")) {
-      t.el.classList.remove("is-suggested");
-      setTileState(t, t.el, "abnormal");
-      applied++;
-    }
-  }
-  if (applied > 0) {
-    updateSummary();
-    showToast(`已套用 ${applied} 個智能預標格子`);
-  }
 }
 
 // 產生翻轉資料增強影像

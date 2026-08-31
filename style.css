@@ -140,19 +140,42 @@ body {
   accent-color: var(--amber);
 }
 
-.toolbar-icon-btn {
-  background: none;
+/* 頂部通用按鈕樣式（高度 28px，琥珀色質感統一） */
+.topbar-btn {
+  background: #fff;
   border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 2px 6px;
+  border-radius: 6px;
+  padding: 0 10px;
+  height: 28px;
   font-size: 0.78rem;
-  cursor: pointer;
+  font-weight: 600;
   color: var(--text-dim);
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  transition: all 0.12s ease;
 }
 
-.toolbar-icon-btn:hover {
+.topbar-btn:hover {
   border-color: var(--amber);
   color: var(--amber-strong);
+  background: #fffdf9;
+}
+
+.topbar-btn.is-active {
+  background: var(--amber);
+  color: #fff;
+  border-color: var(--amber);
+  box-shadow: 0 1px 4px rgba(201, 134, 47, 0.3);
+}
+
+.filter-enhance-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 /* 放大鏡倍率按鈕組 */
@@ -168,17 +191,23 @@ body {
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 1px;
+  height: 28px;
+  align-items: center;
 }
 
 .zoom-level-btn {
   background: none;
   border: none;
   border-radius: 4px;
-  padding: 2px 6px;
+  padding: 0 7px;
+  height: 24px;
   font-size: 0.72rem;
   font-family: var(--mono);
   color: var(--text-dim);
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.1s ease;
 }
 
@@ -192,65 +221,40 @@ body {
   font-weight: 700;
 }
 
-/* 異常細分類別選擇器 */
-.label-selector-wrap {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.mini-select {
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 2px 6px;
-  font-size: 0.76rem;
-  font-family: inherit;
-  color: var(--text);
-  cursor: pointer;
-}
-
-.mini-select:focus-visible {
-  outline: 2px solid var(--amber);
-}
-
 /* AI 辨識按鈕（已鎖定） */
 .ai-predict-btn {
-  background: #3949ab;
-  color: #fff;
-  border: none;
+  background: #e9ecef;
+  color: #868e96;
+  border: 1px solid var(--line);
   border-radius: 6px;
-  padding: 4px 9px;
+  padding: 0 10px;
+  height: 28px;
   font-size: 0.76rem;
   font-weight: 600;
-  cursor: pointer;
+  cursor: not-allowed;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  transition: background 0.12s;
-}
-
-.ai-predict-btn.is-locked {
-  background: #8e99a2 !important;
-  color: #f1f3f5 !important;
-  cursor: not-allowed !important;
-  opacity: 0.75;
+  gap: 6px;
+  opacity: 0.85;
 }
 
 .badge-locked {
-  font-size: 0.64rem;
-  background: rgba(0, 0, 0, 0.25);
-  padding: 1px 4px;
+  font-size: 0.65rem;
+  background: rgba(0, 0, 0, 0.08);
+  color: #495057;
+  padding: 1px 5px;
   border-radius: 4px;
+  font-weight: normal;
 }
 
 .settings-trigger-btn {
   background: var(--amber);
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 7px 15px;
-  font-size: 0.85rem;
+  border-radius: 6px;
+  padding: 0 14px;
+  height: 32px;
+  font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
@@ -278,7 +282,7 @@ body {
   position: relative;
 }
 
-/* 中間工作區：100% 滿版自適應、絕無捲軸 */
+/* 中間工作區：左側預留 178px 安全間隔，照片永遠居中展示且 100% 不被遮擋 */
 .content {
   flex: 1;
   width: 100%;
@@ -286,7 +290,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding: 10px 16px;
+  padding: 10px 20px 10px 178px;
   position: relative;
   background: var(--bg);
 }
@@ -705,10 +709,10 @@ main#main-workbench {
 }
 
 .shortcuts-dropdown-content {
-  max-height: 185px;
+  max-height: 240px;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 6px 8px;
+  padding: 6px 6px 14px 6px;
   border-top: 1px solid var(--line);
   scrollbar-width: thin;
   scrollbar-color: var(--amber) transparent;
@@ -734,16 +738,17 @@ main#main-workbench {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .shortcuts-list li {
-  font-size: 0.72rem;
+  font-size: 0.71rem;
   color: var(--text-dim);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 4px;
+  gap: 3px;
+  padding: 1px 0;
 }
 
 .shortcuts-list li span {
@@ -759,9 +764,9 @@ main#main-workbench {
   border: 1px solid var(--line);
   border-bottom-width: 2px;
   border-radius: 3px;
-  padding: 0 4px;
+  padding: 0 3px;
   font-family: var(--mono);
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   color: var(--text);
   line-height: 1.2;
   flex-shrink: 0;
@@ -853,17 +858,17 @@ main#main-workbench {
 .btn-smart:disabled {
   opacity: 0.45;
   cursor: not-allowed;
-  border-color: var(--line);
-  color: var(--text-dim);
+/* 影像銳化與對比增強效果 (直接作用於網格，肉眼極其顯著) */
+.photos-container.is-sharpen .tile-grid {
+  filter: brightness(var(--grid-brightness, 1)) contrast(calc(var(--grid-contrast, 1) * 1.3)) saturate(1.2) drop-shadow(0 0 1px rgba(0,0,0,0.95)) !important;
 }
 
-/* 影像銳化與 CLAHE 效果 */
-.photos-container.is-sharpen .tile img {
-  filter: contrast(1.15) saturate(1.1) drop-shadow(0 0 0.5px rgba(0,0,0,0.8));
+.photos-container.is-clahe .tile-grid {
+  filter: brightness(calc(var(--grid-brightness, 1) * 1.08)) contrast(calc(var(--grid-contrast, 1) * 1.4)) saturate(1.2) !important;
 }
 
-.photos-container.is-clahe .tile img {
-  filter: contrast(1.25) brightness(1.05);
+.photos-container.is-sharpen.is-clahe .tile-grid {
+  filter: brightness(calc(var(--grid-brightness, 1) * 1.08)) contrast(calc(var(--grid-contrast, 1) * 1.5)) saturate(1.25) drop-shadow(0 0 1px rgba(0,0,0,0.95)) !important;
 }
 
 /* 點擊精確打點標記 (Point Annotation) */
@@ -887,17 +892,6 @@ main#main-workbench {
   100% { box-shadow: 0 0 0 0 rgba(255, 23, 68, 0); }
 }
 
-/* 智能預標建議 (Active Learning) */
-.tile.is-suggested {
-  box-shadow: inset 0 0 0 2px #ffb300, 0 0 10px rgba(255, 179, 0, 0.5) !important;
-  animation: pulseSuggest 1.5s infinite alternate;
-}
-
-@keyframes pulseSuggest {
-  from { outline: 2px dashed #ffb300; }
-  to { outline: 2px dashed #ff6f00; }
-}
-
 /* 左側覆蓋式照片清單抽屜（點擊【照片清單】展開，不擠壓畫面） */
 .photo-list-drawer {
   position: fixed;
@@ -908,16 +902,16 @@ main#main-workbench {
   background: var(--card-bg);
   border-right: 1px solid var(--line);
   box-shadow: 4px 0 20px rgba(43, 33, 24, 0.18);
-  z-index: 50;
+  z-index: 100;
   display: flex;
   flex-direction: column;
-  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.22s ease;
-  visibility: visible;
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .photo-list-drawer.collapsed {
-  transform: translateX(-100%) !important;
+  display: none !important;
   visibility: hidden !important;
+  transform: translateX(-100%) !important;
   pointer-events: none !important;
 }
 

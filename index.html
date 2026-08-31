@@ -27,14 +27,14 @@
         <span>🌓</span>
         <input type="range" id="filter-contrast" min="60" max="180" value="100" class="mini-slider">
       </label>
-      <button id="btn-reset-filters" class="toolbar-icon-btn" title="重設亮度與對比">↺</button>
+      <button id="btn-reset-filters" class="topbar-btn" title="重設亮度與對比">↺ 重設</button>
       
       <div class="toolbar-separator"></div>
 
       <!-- 💡 影像細節增強濾鏡 (銳化 / CLAHE) -->
       <div class="filter-enhance-group">
-        <button id="btn-sharpen" class="toolbar-toggle-btn" title="開啟/關閉蜂體邊緣銳化濾鏡 (凸顯蟎蟲背甲與毛髮紋理)">⚡ 銳化</button>
-        <button id="btn-clahe" class="toolbar-toggle-btn" title="開啟/關閉 CLAHE 自適應對比增強 (去除陰影暗角)">🔆 對比增強</button>
+        <button id="btn-sharpen" class="topbar-btn" title="開啟/關閉蜂體邊緣銳化濾鏡 (凸顯蟎蟲背甲與毛髮紋理)">⚡ 銳化</button>
+        <button id="btn-clahe" class="topbar-btn" title="開啟/關閉對比增強 (去除陰影暗角)">🔆 對比增強</button>
       </div>
 
       <div class="toolbar-separator"></div>
@@ -49,13 +49,6 @@
           <button class="zoom-level-btn" data-zoom="6">6x</button>
         </div>
       </div>
-
-      <div class="toolbar-separator"></div>
-
-      <!-- 🤖 主動學習智能預標按鈕 -->
-      <button id="btn-smart-suggest" class="toolbar-icon-btn btn-smart" title="根據已標註之異常特徵，為後續未標照片提供智能建議標記" disabled>
-        <span>🤖 智能預標</span>
-      </button>
 
       <div class="toolbar-separator"></div>
 
@@ -74,7 +67,7 @@
 
 <div class="layout">
 
-  <!-- 中間主要標註工作區（100% 滿版無擠壓，完全在視窗內，無上下左右捲軸） -->
+  <!-- 中間主要標註工作區（預留左側安全間隔，整張照片完整居中展示，絕不被遮擋） -->
   <div class="content">
     <main id="main-workbench">
       <div id="empty-state" class="empty-state">
@@ -87,7 +80,7 @@
     </main>
   </div>
 
-  <!-- 左側懸浮面板（位置在檔名下方，寬度 146px 完美貼合，絕不遮擋照片！） -->
+  <!-- 左側懸浮面板（寬度 146px 完美貼合） -->
   <div class="floating-left-panel" id="floating-left-panel">
     <!-- 1. 摺疊的照片清單按鈕 -->
     <button id="sidebar-open-btn" class="floating-drawer-btn" title="展開照片清單">
@@ -95,7 +88,7 @@
       <span id="photo-badge" class="photo-badge">0</span>
     </button>
 
-    <!-- 2. 異常類別下拉式選單 (等寬 146px，絕不溢出) -->
+    <!-- 2. 異常類別下拉式選單 (等寬 146px) -->
     <div class="floating-dropdown-card" id="tag-card">
       <div class="floating-summary-header">
         <span>🏷️ 異常類別</span>
@@ -109,10 +102,10 @@
       </select>
     </div>
 
-    <!-- 3. 標註統計與蜂群健康度診斷視窗 -->
+    <!-- 3. 簡潔標註統計視窗 (已移除感染率) -->
     <div class="floating-summary-card" id="summary-panel">
       <div class="floating-summary-header">
-        <span>📊 標註與健康診斷</span>
+        <span>📊 標註統計</span>
       </div>
       <div class="summary-item-row">
         <span class="summary-label">總格數</span>
@@ -130,27 +123,18 @@
         <span class="summary-label">未標</span>
         <span class="summary-num" id="count-unlabeled">0</span>
       </div>
-      
-      <!-- 蜂群感染率與健康等級 -->
-      <div class="health-diagnostic-box" id="health-box">
-        <div class="diagnostic-row">
-          <span>感染率</span>
-          <span id="health-rate" class="rate-num">0.0%</span>
-        </div>
-        <div class="diagnostic-badge badge-safe" id="health-badge">🟢 健康安全</div>
-      </div>
 
       <button id="export-btn" class="primary-btn export-btn-full" disabled>匯出資料集 (.zip)</button>
     </div>
 
-    <!-- 4. 單獨獨立的快速鍵指南下拉懸浮卡片 (可上下滑動捲動) -->
+    <!-- 4. 單獨獨立的快速鍵指南下拉懸浮卡片 (完整顯示，平滑滾動) -->
     <div class="floating-shortcuts-card" id="shortcuts-card">
       <button id="shortcuts-toggle-btn" class="shortcuts-card-btn" title="展開/收合快速鍵指南">
         <span>⌨️ 快速鍵指南</span>
         <span id="shortcuts-chevron">▾</span>
       </button>
 
-      <!-- 快速鍵指南內容 (獨立上下滾動視窗，保證完整顯示) -->
+      <!-- 快速鍵指南內容 -->
       <div id="shortcuts-panel" class="shortcuts-dropdown-content collapsed">
         <ul class="shortcuts-list">
           <li><kbd>1</kbd> <span>設為正常格</span></li>
@@ -162,7 +146,6 @@
           <li><kbd>T</kbd> <span>❓ 其他異狀</span></li>
           <li><kbd>0</kbd> / <kbd>⌫</kbd> <span>清除標記</span></li>
           <li><kbd>N</kbd> <span>未標全設正常</span></li>
-          <li><kbd>Space</kbd> <span>套用智能建議</span></li>
           <li><kbd>Shift+點</kbd> <span>精準打點標註</span></li>
           <li><kbd>←</kbd> / <kbd>A</kbd> <span>上一張照片</span></li>
           <li><kbd>→</kbd> / <kbd>D</kbd> <span>下一張照片</span></li>
@@ -173,73 +156,75 @@
     </div>
   </div>
 
-  <!-- 照片清單覆蓋抽屜（點擊【📋 照片清單】時從左側浮出，不擠壓畫面） -->
-  <aside id="photo-list-drawer" class="photo-list-drawer collapsed">
-    <div class="drawer-header">
-      <span class="drawer-title">照片清單 (<span id="drawer-count">0</span>)</span>
-      <div class="drawer-actions">
-        <button id="sidebar-clear-all" class="sidebar-icon-btn" title="清除全部照片" aria-label="清除全部照片">🗑</button>
-        <button id="drawer-close-btn" class="sidebar-icon-btn" title="收合照片清單" aria-label="收合照片清單">✕</button>
+</div>
+
+<!-- 照片清單覆蓋抽屜（獨立 fixed 浮層，收合時完全消失） -->
+<aside id="photo-list-drawer" class="photo-list-drawer collapsed">
+  <div class="drawer-header">
+    <span class="drawer-title">照片清單 (<span id="drawer-count">0</span>)</span>
+    <div class="drawer-actions">
+      <button id="sidebar-clear-all" class="sidebar-icon-btn" title="清除全部照片" aria-label="清除全部照片">🗑</button>
+      <button id="drawer-close-btn" class="sidebar-icon-btn" title="收合照片清單" aria-label="收合照片清單">✕</button>
+    </div>
+  </div>
+  <ul id="sidebar-list" class="sidebar-list">
+    <li id="sidebar-empty-msg" class="sidebar-empty">尚未上傳照片</li>
+  </ul>
+</aside>
+
+<!-- 右側設定抽屜（獨立 fixed 浮層） -->
+<aside id="settings-sidebar" class="settings-sidebar collapsed">
+  <div class="settings-header">
+    <h3>⚙️ 設定與擴充功能</h3>
+    <button id="settings-close-btn" class="sidebar-icon-btn" title="收合設定" aria-label="收合設定">✕</button>
+  </div>
+  <div class="settings-body">
+    
+    <!-- 區塊 1：照片上傳與網格切分 -->
+    <section class="settings-section">
+      <h4>📁 上傳照片與網格切分</h4>
+      <label class="field">
+        <span class="field-title">選擇照片檔案</span>
+        <input type="file" id="photo-input" accept="image/*" multiple>
+      </label>
+      <div class="settings-grid">
+        <label class="field">
+          <span class="field-label-compact">列數 (Rows)</span>
+          <input type="number" id="rows-input" value="4" min="1" max="16">
+        </label>
+        <label class="field">
+          <span class="field-label-compact">欄數 (Cols)</span>
+          <input type="number" id="cols-input" value="8" min="1" max="16">
+        </label>
+        <label class="field">
+          <span class="field-label-compact">重疊 (px)</span>
+          <input type="number" id="overlap-input" value="15" min="0" max="100">
+        </label>
       </div>
-    </div>
-    <ul id="sidebar-list" class="sidebar-list">
-      <li id="sidebar-empty-msg" class="sidebar-empty">尚未上傳照片</li>
-    </ul>
-  </aside>
+    </section>
 
-  <!-- 右側設定抽屜 -->
-  <aside id="settings-sidebar" class="settings-sidebar collapsed">
-    <div class="settings-header">
-      <h3>⚙️ 設定與擴充功能</h3>
-      <button id="settings-close-btn" class="sidebar-icon-btn" title="收合設定" aria-label="收合設定">✕</button>
-    </div>
-    <div class="settings-body">
-      
-      <!-- 區塊 1：照片上傳與網格切分 -->
-      <section class="settings-section">
-        <h4>📁 上傳照片與網格切分</h4>
-        <label class="field">
-          <span class="field-title">選擇照片檔案</span>
-          <input type="file" id="photo-input" accept="image/*" multiple>
-        </label>
-        <div class="settings-grid">
-          <label class="field">
-            <span class="field-label-compact">列數 (Rows)</span>
-            <input type="number" id="rows-input" value="4" min="1" max="16">
-          </label>
-          <label class="field">
-            <span class="field-label-compact">欄數 (Cols)</span>
-            <input type="number" id="cols-input" value="8" min="1" max="16">
-          </label>
-          <label class="field">
-            <span class="field-label-compact">重疊 (px)</span>
-            <input type="number" id="overlap-input" value="15" min="0" max="100">
-          </label>
-        </div>
-      </section>
+    <!-- 區塊 2：本地暫存管理 (IndexedDB) -->
+    <section class="settings-section">
+      <h4>💾 本地進度自動儲存 (IndexedDB)</h4>
+      <p class="section-desc">已開啟自動儲存，重整或關閉網頁不會遺失標註進度。</p>
+      <button id="btn-clear-db" class="mini-btn mini-btn-danger" style="width: 100%; padding: 6px;">🗑️ 清空本地快取並重置專案</button>
+    </section>
 
-      <!-- 區塊 2：本地暫存管理 (IndexedDB) -->
-      <section class="settings-section">
-        <h4>💾 本地進度自動儲存 (IndexedDB)</h4>
-        <p class="section-desc">已開啟自動儲存，重整或關閉網頁不會遺失標註進度。</p>
-        <button id="btn-clear-db" class="mini-btn mini-btn-danger" style="width: 100%; padding: 6px;">🗑️ 清空本地快取並重置專案</button>
-      </section>
+    <!-- 區塊 3：Tailscale 與 AI 即時辨識串聯 -->
+    <section class="settings-section">
+      <h4>⚡ Tailscale 即時推論 API 設定</h4>
+      <label class="field">
+        <span>後端推論伺服器網址 (Tailscale IP / URL)</span>
+        <input type="text" id="api-endpoint-input" placeholder="http://100.x.x.x:8000/predict" value="http://localhost:8000/predict">
+      </label>
+      <label class="field">
+        <span>異常置信度門檻值 (0.0 ~ 1.0)</span>
+        <input type="number" id="anomaly-threshold-input" value="0.5" step="0.05" min="0" max="1">
+      </label>
+    </section>
 
-      <!-- 區塊 3：Tailscale 與 AI 即時辨識串聯 -->
-      <section class="settings-section">
-        <h4>⚡ Tailscale 即時推論 API 設定</h4>
-        <label class="field">
-          <span>後端推論伺服器網址 (Tailscale IP / URL)</span>
-          <input type="text" id="api-endpoint-input" placeholder="http://100.x.x.x:8000/predict" value="http://localhost:8000/predict">
-        </label>
-        <label class="field">
-          <span>異常置信度門檻值 (0.0 ~ 1.0)</span>
-          <input type="number" id="anomaly-threshold-input" value="0.5" step="0.05" min="0" max="1">
-        </label>
-      </section>
-
-    </div>
-  </aside>
+  </div>
+</aside>
 
 </div>
 

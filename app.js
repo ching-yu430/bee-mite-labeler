@@ -63,8 +63,27 @@ const sidebarClearAll = document.getElementById("sidebar-clear-all");
 
 const abnormalTypeSelect = document.getElementById("abnormal-type-select");
 const shortcutsToggleBtn = document.getElementById("shortcuts-toggle-btn");
-const shortcutsPanel = document.getElementById("shortcuts-panel");
-const shortcutsChevron = document.getElementById("shortcuts-chevron");
+const shortcutsModal = document.getElementById("shortcuts-modal");
+const shortcutsCloseBtn = document.getElementById("shortcuts-close-btn");
+const shortcutsConfirmBtn = document.getElementById("shortcuts-confirm-btn");
+
+if (shortcutsToggleBtn && shortcutsModal) {
+  shortcutsToggleBtn.addEventListener("click", () => {
+    shortcutsModal.hidden = false;
+  });
+}
+
+function closeShortcutsModal() {
+  if (shortcutsModal) shortcutsModal.hidden = true;
+}
+
+if (shortcutsCloseBtn) shortcutsCloseBtn.addEventListener("click", closeShortcutsModal);
+if (shortcutsConfirmBtn) shortcutsConfirmBtn.addEventListener("click", closeShortcutsModal);
+if (shortcutsModal) {
+  shortcutsModal.addEventListener("click", (e) => {
+    if (e.target === shortcutsModal) closeShortcutsModal();
+  });
+}
 
 // 匯出彈出視窗元素
 const exportModal = document.getElementById("export-modal");

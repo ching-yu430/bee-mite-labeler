@@ -15,6 +15,7 @@ const ABNORMAL_TYPES = {
 };
 let currentAbnormalType = "mite";
 let currentZoomLevel = 3.0; // 預設放大鏡倍率
+let globalFilter = ""; // 用來記錄目前的濾鏡參數，讓放大鏡強制套用
 
 // A: 撤銷/重做堆疊
 const undoStack = [];
@@ -273,6 +274,11 @@ function applyFilters() {
   }
 
   const finalFilter = filterParts.join(" ");
+  globalFilter = finalFilter;
+  if (zoomPreviewImg) {
+    zoomPreviewImg.style.filter = finalFilter;
+    zoomPreviewImg.style.webkitFilter = finalFilter;
+  }
 
   // 1. 動態建立或更新 <style id="live-filter-style">，以最高優先級覆蓋所有照片切格、大圖與懸浮放大鏡
   let styleEl = document.getElementById("live-filter-style");
@@ -1399,6 +1405,10 @@ checkAndRestoreProject();
 
 function showZoomPreview(src, tileRecord) {
   zoomPreviewImg.src = src;
+  if (globalFilter) {
+    zoomPreviewImg.style.filter = globalFilter;
+    zoomPreviewImg.style.webkitFilter = globalFilter;
+  }
   let statusText = STATE_LABEL[tileRecord.state] || "未標";
   if (tileRecord.state === "abnormal" && tileRecord.abnormalType) {
     const typeInfo = ABNORMAL_TYPES[tileRecord.abnormalType] || { label: "異常", emoji: "⚠️" };

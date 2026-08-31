@@ -102,15 +102,29 @@ body {
   flex-shrink: 0;
 }
 
-/* 影像濾鏡工具列 */
+/* 影像濾鏡與放大鏡工具列 */
 .filter-toolbar {
   display: flex;
   align-items: center;
   gap: 8px;
   background: var(--card-bg);
   border: 1px solid var(--line);
-  padding: 3px 8px;
+  padding: 3px 10px;
   border-radius: 8px;
+}
+
+.toolbar-separator {
+  width: 1px;
+  height: 18px;
+  background: var(--line);
+  margin: 0 2px;
+}
+
+.toolbar-label {
+  font-size: 0.76rem;
+  color: var(--text-dim);
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .toolbar-item {
@@ -121,7 +135,7 @@ body {
 }
 
 .mini-slider {
-  width: 50px;
+  width: 46px;
   cursor: pointer;
   accent-color: var(--amber);
 }
@@ -141,6 +155,66 @@ body {
   color: var(--amber-strong);
 }
 
+/* 放大鏡倍率按鈕組 */
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.zoom-btn-group {
+  display: inline-flex;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px;
+}
+
+.zoom-level-btn {
+  background: none;
+  border: none;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.72rem;
+  font-family: var(--mono);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.zoom-level-btn:hover {
+  color: var(--amber-strong);
+}
+
+.zoom-level-btn.is-active {
+  background: var(--amber);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* 異常細分類別選擇器 */
+.label-selector-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mini-select {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 0.76rem;
+  font-family: inherit;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.mini-select:focus-visible {
+  outline: 2px solid var(--amber);
+}
+
+/* AI 辨識按鈕（已鎖定） */
 .ai-predict-btn {
   background: #3949ab;
   color: #fff;
@@ -150,11 +224,24 @@ body {
   font-size: 0.76rem;
   font-weight: 600;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   transition: background 0.12s;
 }
 
-.ai-predict-btn:hover {
-  background: #283593;
+.ai-predict-btn.is-locked {
+  background: #8e99a2 !important;
+  color: #f1f3f5 !important;
+  cursor: not-allowed !important;
+  opacity: 0.75;
+}
+
+.badge-locked {
+  font-size: 0.64rem;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 1px 4px;
+  border-radius: 4px;
 }
 
 .settings-trigger-btn {
@@ -466,7 +553,7 @@ main#main-workbench {
   border-radius: 8px;
   padding: 8px 10px;
   box-shadow: 0 4px 14px rgba(43, 33, 24, 0.12);
-  width: 140px;
+  width: 146px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -524,6 +611,80 @@ main#main-workbench {
   padding: 6px 8px;
   font-size: 0.82rem;
   text-align: center;
+}
+
+/* 匯出下方：快速鍵摺疊按鈕與面板 */
+.shortcuts-toggle-btn {
+  background: #fff;
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 3px;
+  font-family: inherit;
+  transition: all 0.12s ease;
+}
+
+.shortcuts-toggle-btn:hover {
+  border-color: var(--amber);
+  color: var(--amber-strong);
+  background: #fffdf9;
+}
+
+.floating-shortcuts-panel {
+  max-height: 240px;
+  overflow: hidden;
+  transition: max-height 0.22s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.18s ease;
+  opacity: 1;
+  border-top: 1px solid var(--line);
+  margin-top: 4px;
+  padding-top: 4px;
+}
+
+.floating-shortcuts-panel.collapsed {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+  padding-top: 0;
+  border-top-color: transparent;
+  pointer-events: none;
+}
+
+.shortcuts-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.shortcuts-list li {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.shortcuts-list kbd {
+  display: inline-block;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 3px;
+  padding: 0 3px;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--text);
+  line-height: 1.2;
 }
 
 /* 左側覆蓋式照片清單抽屜（點擊【照片清單】展開，不擠壓畫面） */
@@ -687,13 +848,14 @@ main#main-workbench {
   color: var(--abnormal);
 }
 
-/* 右側設定抽屜 */
+/* 右側設定抽屜（修復排版與水平捲軸） */
 .settings-sidebar {
   position: fixed;
   right: 0;
   top: var(--topbar-h);
   height: calc(100vh - var(--topbar-h));
-  width: 320px;
+  width: 350px;
+  max-width: 90vw;
   background: var(--card-bg);
   border-left: 1px solid var(--line);
   box-shadow: -4px 0 20px rgba(43, 33, 24, 0.12);
@@ -702,6 +864,8 @@ main#main-workbench {
   flex-direction: column;
   transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .settings-sidebar.collapsed {
@@ -726,10 +890,11 @@ main#main-workbench {
 }
 
 .settings-body {
-  padding: 18px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
+  box-sizing: border-box;
 }
 
 .settings-section {
@@ -740,12 +905,20 @@ main#main-workbench {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .settings-section h4 {
-  margin: 0 0 4px;
+  margin: 0 0 2px;
   font-size: 0.84rem;
   color: var(--text);
+}
+
+.section-desc {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-dim);
 }
 
 .field {
@@ -754,11 +927,20 @@ main#main-workbench {
   gap: 4px;
   font-size: 0.8rem;
   color: var(--text-dim);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .field-title {
   font-weight: 600;
   color: var(--text);
+}
+
+.field-label-compact {
+  font-size: 0.74rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .checkbox-field {
@@ -775,14 +957,23 @@ main#main-workbench {
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 6px 8px;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
 }
 
+/* 緊湊網格排版（修復超出突出的問題） */
 .settings-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.settings-grid .field {
+  min-width: 0;
 }
 
 .field input[type="number"],
@@ -790,10 +981,14 @@ main#main-workbench {
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 6px;
-  padding: 6px 8px;
-  font-size: 0.85rem;
+  padding: 6px 4px;
+  font-size: 0.88rem;
   font-family: inherit;
   color: var(--text);
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  text-align: center;
 }
 
 .field input:focus-visible {
@@ -801,27 +996,26 @@ main#main-workbench {
   outline-offset: 1px;
 }
 
-.settings-shortcuts {
-  margin: 0;
-  padding-left: 18px;
-  font-size: 0.78rem;
-  color: var(--text-dim);
+/* 細分標籤預覽徽章 */
+.tag-badges-preview {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-.settings-shortcuts kbd {
-  display: inline-block;
-  background: #fbf7ee;
-  border: 1px solid var(--line);
-  border-bottom-width: 2px;
-  border-radius: 4px;
-  padding: 0 4px;
-  font-family: var(--mono);
+.tag-badge {
   font-size: 0.72rem;
+  padding: 3px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  background: var(--card-bg);
   color: var(--text);
 }
+
+.tag-badge.tag-mite { border-color: #e57373; background: #ffebee; color: #c62828; }
+.tag-badge.tag-larva { border-color: #ffb74d; background: #fff3e0; color: #e65100; }
+.tag-badge.tag-cell { border-color: #ba68c8; background: #f3e5f5; color: #6a1b9a; }
+.tag-badge.tag-other { border-color: #90a4ae; background: #eceff1; color: #37474f; }
 
 /* 右下角浮動翻頁按鈕 */
 .floating-pager {
@@ -884,7 +1078,7 @@ main#main-workbench {
   position: fixed;
   z-index: 60;
   pointer-events: none;
-  width: 300px;
+  width: 320px;
   border-radius: 10px;
   overflow: hidden;
   border: 2px solid var(--amber);
@@ -892,11 +1086,30 @@ main#main-workbench {
   background: #fff;
 }
 
+.zoom-preview-header {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 5;
+}
+
+.zoom-badge {
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  backdrop-filter: blur(4px);
+}
+
 .zoom-preview img {
   display: block;
   width: 100%;
   height: auto;
   image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 .zoom-preview .zoom-caption {

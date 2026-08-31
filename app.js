@@ -5,6 +5,16 @@
 const STATE_CYCLE = ["unlabeled", "normal", "abnormal"];
 const STATE_LABEL = { unlabeled: "未標", normal: "正常", abnormal: "異常" };
 
+// 細分異常標籤定義
+const ABNORMAL_TYPES = {
+  mite: { label: "蜂蟹蟎", emoji: "🪲" },
+  larva: { label: "蜂蛹異常", emoji: "🐛" },
+  cell: { label: "巢房異物", emoji: "🍯" },
+  other: { label: "其他異常", emoji: "❓" }
+};
+let currentAbnormalType = "mite";
+let currentZoomLevel = 3.0; // 預設放大鏡倍率
+
 /**
  * photos: {
  *   id: string,
@@ -12,7 +22,7 @@ const STATE_LABEL = { unlabeled: "未標", normal: "正常", abnormal: "異常" 
  *   blockEl: HTMLElement,
  *   sidebarEl: HTMLElement,
  *   thumbUrl: string,
- *   tiles: {row, col, blob, state, el, photoName}[]
+ *   tiles: {row, col, blob, state, abnormalType, el, photoName}[]
  * }[]
  */
 let photos = [];
@@ -42,6 +52,7 @@ const toast = document.getElementById("toast");
 const zoomPreview = document.getElementById("zoom-preview");
 const zoomPreviewImg = document.getElementById("zoom-preview-img");
 const zoomPreviewCaption = document.getElementById("zoom-preview-caption");
+const zoomBadge = document.getElementById("zoom-badge");
 
 const sidebarOpenBtn = document.getElementById("sidebar-open-btn");
 const photoBadge = document.getElementById("photo-badge");
@@ -50,6 +61,10 @@ const drawerCount = document.getElementById("drawer-count");
 const drawerCloseBtn = document.getElementById("drawer-close-btn");
 const sidebarList = document.getElementById("sidebar-list");
 const sidebarClearAll = document.getElementById("sidebar-clear-all");
+
+const shortcutsToggleBtn = document.getElementById("shortcuts-toggle-btn");
+const shortcutsPanel = document.getElementById("shortcuts-panel");
+const shortcutsChevron = document.getElementById("shortcuts-chevron");
 
 const loadingOverlay = document.getElementById("loading-overlay");
 const loadingText = document.getElementById("loading-text");
@@ -65,11 +80,12 @@ const prevPhotoBtn = document.getElementById("prev-photo-btn");
 const nextPhotoBtn = document.getElementById("next-photo-btn");
 const pagerInfo = document.getElementById("pager-info");
 
-// 濾鏡與 AI 按鈕
+// 濾鏡、放大鏡倍率與細分標籤
 const filterBrightness = document.getElementById("filter-brightness");
 const filterContrast = document.getElementById("filter-contrast");
 const btnResetFilters = document.getElementById("btn-reset-filters");
-const btnAiPredict = document.getElementById("btn-ai-predict");
+const abnormalTypeSelect = document.getElementById("abnormal-type-select");
+const zoomLevelBtns = document.querySelectorAll(".zoom-level-btn");
 
 // 事件綁定
 photoInput.addEventListener("change", handleFiles);
@@ -99,6 +115,44 @@ if (emptyUploadBtn) {
   });
 }
 
+// 快速鍵折疊面板控制
+if (shortcutsToggleBtn && shortcutsPanel) {
+  shortcutsToggleBtn.addEventListener("click", () => {
+    shortcutsPanel.classList.toggle("collapsed");
+    if (shortcutsChevron) {
+      shortcutsChevron.textContent = shortcutsPanel.classList.contains("collapsed") ? "▾" : "▴";
+    }
+  });
+}
+
+// 異常細分類別選擇
+if (abnormalTypeSelect) {
+  abnormalTypeSelect.addEventListener("change", () => {
+    currentAbnormalType = abnormalTypeSelect.value;
+    const typeInfo = ABNORMAL_TYPES[currentAbnormalType] || { label: "異常", emoji: "⚠️" };
+    showToast(`目前異常標籤已切換為：${typeInfo.emoji} ${typeInfo.label}`);
+  });
+}
+
+// 放大鏡倍率按鈕切換
+zoomLevelBtns.forEach(btn => {
+  btn.addEventListener("click", () => {
+    const level = parseFloat(btn.dataset.zoom) || 3.0;
+    setZoomLevel(level);
+  });
+});
+
+function setZoomLevel(level) {
+  currentZoomLevel = Math.max(1.5, Math.min(8.0, level));
+  zoomLevelBtns.forEach(b => {
+    b.classList.toggle("is-active", Math.abs(parseFloat(b.dataset.zoom) - currentZoomLevel) < 0.1);
+  });
+  if (zoomBadge) zoomBadge.textContent = `${currentZoomLevel.toFixed(1)}x`;
+  if (zoomPreview) {
+    zoomPreview.style.width = `${Math.round(100 * currentZoomLevel + 20)}px`;
+  }
+}
+
 prevPhotoBtn.addEventListener("click", () => {
   if (currentPhotoIndex > 0) showPhoto(currentPhotoIndex - 1);
 });
@@ -116,7 +170,8 @@ if (filterBrightness && filterContrast) {
       filterBrightness.value = 100;
       filterContrast.value = 100;
       applyFilters();
-      showToast("已重設影像亮度與對比度");
+      setZoomLevel(3.0);
+      showToast("已重設影像亮度、對比度與放大鏡倍率");
     });
   }
 }
@@ -388,7 +443,7 @@ async function addPhoto(file, rows, cols, overlap) {
       ctx.drawImage(img, left, top, w, h, 0, 0, w, h);
 
       const blob = await new Promise(res => canvas.toBlob(res, "image/jpeg", 0.92));
-      const tileRecord = { row: r, col: c, blob, state: "unlabeled", photoName: baseName };
+      const tileRecord = { row: r, col: c, blob, state: "unlabeled", abnormalType: null, photoName: baseName };
       photo.tiles.push(tileRecord);
 
       const tileEl = document.createElement("div");
@@ -436,6 +491,16 @@ async function addPhoto(file, rows, cols, overlap) {
         if (hoveredTileRecord === tileRecord) hoveredTileRecord = null;
         hideZoomPreview();
       });
+
+      // 滾輪直接調整放大鏡倍率
+      tileEl.addEventListener("wheel", (ev) => {
+        ev.preventDefault();
+        const delta = ev.deltaY < 0 ? 0.5 : -0.5;
+        setZoomLevel(currentZoomLevel + delta);
+        if (hoveredTileRecord === tileRecord) {
+          positionZoomPreview(ev);
+        }
+      }, { passive: false });
 
       grid.appendChild(tileEl);
     }
@@ -499,13 +564,23 @@ function cycleTile(tileRecord, tileEl) {
 function setTileState(tileRecord, tileEl, state) {
   tileRecord.state = state;
   tileEl.dataset.state = state;
+  if (state === "abnormal") {
+    if (!tileRecord.abnormalType) tileRecord.abnormalType = currentAbnormalType;
+  } else {
+    tileRecord.abnormalType = null;
+  }
   updateTileAriaLabel(tileRecord);
 }
 
 function updateTileAriaLabel(tileRecord) {
+  let labelText = STATE_LABEL[tileRecord.state];
+  if (tileRecord.state === "abnormal" && tileRecord.abnormalType) {
+    const typeInfo = ABNORMAL_TYPES[tileRecord.abnormalType] || { label: "異常", emoji: "⚠️" };
+    labelText += ` [${typeInfo.emoji} ${typeInfo.label}]`;
+  }
   tileRecord.el.setAttribute(
     "aria-label",
-    `第 ${tileRecord.row + 1} 列第 ${tileRecord.col + 1} 欄，狀態：${STATE_LABEL[tileRecord.state]}`
+    `第 ${tileRecord.row + 1} 列第 ${tileRecord.col + 1} 欄，狀態：${labelText}`
   );
 }
 
@@ -718,7 +793,13 @@ function dateStamp() {
 
 function showZoomPreview(src, tileRecord) {
   zoomPreviewImg.src = src;
-  zoomPreviewCaption.textContent = `${tileRecord.photoName}_r${String(tileRecord.row).padStart(2, "0")}_c${String(tileRecord.col).padStart(2, "0")}`;
+  let statusText = STATE_LABEL[tileRecord.state] || "未標";
+  if (tileRecord.state === "abnormal" && tileRecord.abnormalType) {
+    const typeInfo = ABNORMAL_TYPES[tileRecord.abnormalType] || { label: "異常", emoji: "⚠️" };
+    statusText += ` [${typeInfo.emoji} ${typeInfo.label}]`;
+  }
+  zoomPreviewCaption.textContent = `${tileRecord.photoName}_r${String(tileRecord.row).padStart(2, "0")}_c${String(tileRecord.col).padStart(2, "0")}  (${statusText})`;
+  if (zoomBadge) zoomBadge.textContent = `${currentZoomLevel.toFixed(1)}x`;
   zoomPreview.hidden = false;
 }
 

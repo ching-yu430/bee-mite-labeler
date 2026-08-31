@@ -669,46 +669,69 @@ main#main-workbench {
   text-align: center;
 }
 
-/* 匯出下方：快速鍵摺疊按鈕與面板 */
-.shortcuts-toggle-btn {
-  background: #fff;
-  border: 1px dashed var(--line);
-  border-radius: 6px;
-  padding: 4px 6px;
-  font-size: 0.74rem;
-  font-weight: 600;
-  color: var(--text-dim);
+/* 獨立快速鍵指南下拉懸浮卡片 (可上下捲動) */
+.floating-shortcuts-card {
+  background: rgba(251, 247, 238, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid var(--amber);
+  border-radius: 8px;
+  width: 146px;
+  box-sizing: border-box;
+  box-shadow: 0 4px 14px rgba(43, 33, 24, 0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.12s ease;
+}
+
+.shortcuts-card-btn {
+  background: none;
+  border: none;
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  margin-top: 3px;
   font-family: inherit;
   transition: all 0.12s ease;
 }
 
-.shortcuts-toggle-btn:hover {
-  border-color: var(--amber);
-  color: var(--amber-strong);
+.shortcuts-card-btn:hover {
   background: #fffdf9;
+  color: var(--amber-strong);
 }
 
-.floating-shortcuts-panel {
-  max-height: 240px;
-  overflow: hidden;
-  transition: max-height 0.22s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.18s ease;
-  opacity: 1;
+.shortcuts-dropdown-content {
+  max-height: 190px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 6px 8px;
   border-top: 1px solid var(--line);
-  margin-top: 4px;
-  padding-top: 4px;
+  transition: max-height 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease, padding 0.2s ease;
+  opacity: 1;
+  scrollbar-width: thin;
+  scrollbar-color: var(--amber) transparent;
+  background: #fff;
 }
 
-.floating-shortcuts-panel.collapsed {
+.shortcuts-dropdown-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.shortcuts-dropdown-content::-webkit-scrollbar-thumb {
+  background: var(--amber);
+  border-radius: 4px;
+}
+
+.shortcuts-dropdown-content.collapsed {
   max-height: 0;
   opacity: 0;
-  margin-top: 0;
   padding-top: 0;
+  padding-bottom: 0;
   border-top-color: transparent;
   pointer-events: none;
 }
@@ -719,7 +742,7 @@ main#main-workbench {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 
 .shortcuts-list li {
@@ -727,17 +750,30 @@ main#main-workbench {
   color: var(--text-dim);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 4px;
+}
+
+.shortcuts-list li span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
 }
 
 .shortcuts-list kbd {
   display: inline-block;
-  background: #fff;
+  background: #fbf7ee;
   border: 1px solid var(--line);
   border-bottom-width: 2px;
   border-radius: 3px;
-  padding: 0 3px;
+  padding: 0 4px;
   font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--text);
+  line-height: 1.2;
+  flex-shrink: 0;
+}
   font-size: 0.68rem;
   color: var(--text);
   line-height: 1.2;

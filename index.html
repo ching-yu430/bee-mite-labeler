@@ -116,28 +116,31 @@
         <span class="summary-num" id="count-unlabeled">0</span>
       </div>
       <button id="export-btn" class="primary-btn export-btn-full" disabled>匯出資料集 (.zip)</button>
+    </div>
 
-      <!-- 匯出資料集下方：快速鍵摺疊按鈕 -->
-      <button id="shortcuts-toggle-btn" class="shortcuts-toggle-btn" title="展開/收合快速鍵指南">
+    <!-- 4. 單獨獨立的快速鍵指南下拉懸浮卡片 (可上下滑動捲動) -->
+    <div class="floating-shortcuts-card" id="shortcuts-card">
+      <button id="shortcuts-toggle-btn" class="shortcuts-card-btn" title="展開/收合快速鍵指南">
         <span>⌨️ 快速鍵指南</span>
         <span id="shortcuts-chevron">▾</span>
       </button>
 
-      <!-- 快速鍵指南內容卡片 -->
-      <div id="shortcuts-panel" class="floating-shortcuts-panel collapsed">
+      <!-- 快速鍵指南內容 (獨立上下滾動視窗) -->
+      <div id="shortcuts-panel" class="shortcuts-dropdown-content collapsed">
         <ul class="shortcuts-list">
-          <li><kbd>1</kbd> 設為正常格</li>
-          <li><kbd>2</kbd> 設為當前異常</li>
-          <li><kbd>Q</kbd> 附蟎/落蟎</li>
-          <li><kbd>W</kbd> 殘翅/畸形翅</li>
-          <li><kbd>E</kbd> 蠟屑/雜質</li>
-          <li><kbd>R</kbd> 死蜂/殘肢</li>
-          <li><kbd>T</kbd> 其他異狀</li>
-          <li><kbd>0</kbd> / <kbd>⌫</kbd> 清除標記</li>
-          <li><kbd>N</kbd> 未標全設正常</li>
-          <li><kbd>←</kbd> / <kbd>A</kbd> 上一張</li>
-          <li><kbd>→</kbd> / <kbd>D</kbd> 下一張</li>
-          <li><kbd>滾輪</kbd> 放大鏡倍率</li>
+          <li><kbd>1</kbd> <span>設為正常格</span></li>
+          <li><kbd>2</kbd> <span>設為當前異常</span></li>
+          <li><kbd>Q</kbd> <span>🪲 附蟎/落蟎</span></li>
+          <li><kbd>W</kbd> <span>🪽 殘翅畸形</span></li>
+          <li><kbd>E</kbd> <span>🍂 蠟屑雜質</span></li>
+          <li><kbd>R</kbd> <span>💀 死蜂殘肢</span></li>
+          <li><kbd>T</kbd> <span>❓ 其他異狀</span></li>
+          <li><kbd>0</kbd> / <kbd>⌫</kbd> <span>清除標記</span></li>
+          <li><kbd>N</kbd> <span>未標全設正常</span></li>
+          <li><kbd>←</kbd> / <kbd>A</kbd> <span>上一張照片</span></li>
+          <li><kbd>→</kbd> / <kbd>D</kbd> <span>下一張照片</span></li>
+          <li><kbd>滾輪</kbd> <span>放大鏡倍率</span></li>
+          <li><kbd>拖曳</kbd> <span>連續塗刷標記</span></li>
         </ul>
       </div>
     </div>

@@ -378,10 +378,16 @@ main {
   position: fixed;
   inset: 0;
   background: rgba(43, 33, 24, 0.35);
+  z-index: 100;
+}
+
+/* 一定要用 :not([hidden]) 才給 display:flex，
+   否則這條規則跟瀏覽器內建的 [hidden]{display:none} 特異度打平時，
+   author 樣式會贏，導致就算有 hidden 屬性遮罩還是會一直顯示 */
+.loading-overlay:not([hidden]) {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
 }
 
 .loading-box {

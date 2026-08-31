@@ -32,6 +32,28 @@
     <ul id="sidebar-list" class="sidebar-list">
       <li id="sidebar-empty-msg" class="sidebar-empty">尚未上傳照片</li>
     </ul>
+
+    <div class="sidebar-summary" id="summary-panel">
+      <div class="summary-vertical">
+        <div class="summary-row">
+          <span class="summary-label">總格數</span>
+          <span class="summary-num" id="count-total">0</span>
+        </div>
+        <div class="summary-row is-normal">
+          <span class="summary-label">正常</span>
+          <span class="summary-num" id="count-normal">0</span>
+        </div>
+        <div class="summary-row is-abnormal">
+          <span class="summary-label">異常</span>
+          <span class="summary-num" id="count-abnormal">0</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">未標</span>
+          <span class="summary-num" id="count-unlabeled">0</span>
+        </div>
+      </div>
+      <button id="export-btn" class="primary-btn export-btn-full" disabled>匯出資料集 (.zip)</button>
+    </div>
   </aside>
 
   <button id="sidebar-open" class="sidebar-open-btn" title="展開照片清單" aria-label="展開照片清單" hidden>▸ 照片清單</button>
@@ -61,32 +83,19 @@
     </div>
     <p class="hint">
       上傳一張或多張照片，會依上面設定的網格自動切格。<br>
-      點一下格子在「未標 → 正常 → 異常」之間循環；<b>按住拖曳</b>可以一次刷過多個格子塗上同一個狀態；滑鼠移到格子上按 <kbd>1</kbd>=正常、<kbd>2</kbd>=異常、<kbd>0</kbd>=清除，可以更快標註。<br>
-      每張照片標題旁的按鈕可以一鍵把「未標」的格子全部設成正常，你只要挑出異常的格子點掉就好。
+      點一下格子在「未標 → 正常 → 異常」之間循環；<b>按住拖曳</b>可以一次刷過多個格子塗上同一個狀態；滑鼠移到格子上按 <kbd>1</kbd>=正常、<kbd>2</kbd>=異常、<kbd>0</kbd>=清除。<br>
+      多張照片時可用上方【上一張／下一張】按鈕或按鍵盤 <kbd>←</kbd> / <kbd>→</kbd> 切換照片。
     </p>
   </section>
 
-  <section class="panel" id="summary-panel" hidden>
-    <div class="summary">
-      <div class="summary-item">
-        <span class="summary-num" id="count-total">0</span>
-        <span class="summary-label">總格數</span>
-      </div>
-      <div class="summary-item is-normal">
-        <span class="summary-num" id="count-normal">0</span>
-        <span class="summary-label">正常</span>
-      </div>
-      <div class="summary-item is-abnormal">
-        <span class="summary-num" id="count-abnormal">0</span>
-        <span class="summary-label">異常</span>
-      </div>
-      <div class="summary-item">
-        <span class="summary-num" id="count-unlabeled">0</span>
-        <span class="summary-label">未標</span>
-      </div>
+  <div class="photo-nav-bar panel" id="photo-nav-bar" hidden>
+    <button id="prev-photo-btn" class="nav-arrow-btn" title="上一張照片 (快捷鍵 ← 或 A)" aria-label="上一張照片">◂ 上一張</button>
+    <div class="photo-nav-info">
+      <span class="photo-nav-counter" id="photo-nav-counter">第 0 / 0 張</span>
+      <span class="photo-nav-name" id="photo-nav-name"></span>
     </div>
-    <button id="export-btn" class="primary-btn">匯出資料集 (.zip)</button>
-  </section>
+    <button id="next-photo-btn" class="nav-arrow-btn" title="下一張照片 (快捷鍵 → 或 D)" aria-label="下一張照片">下一張 ▸</button>
+  </div>
 
   <section id="photos-container"></section>
 

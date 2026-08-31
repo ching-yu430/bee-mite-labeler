@@ -18,6 +18,7 @@ const MOBILE_QUERY = "(max-width: 760px)";
  */
 let photos = [];
 let photoCounter = 0;
+let currentPhotoIndex = 0;
 
 // 拖曳塗刷標註用的狀態
 let isPainting = false;
@@ -44,9 +45,20 @@ const sidebarCount = document.getElementById("sidebar-count");
 const sidebarClearAll = document.getElementById("sidebar-clear-all");
 const loadingOverlay = document.getElementById("loading-overlay");
 const loadingText = document.getElementById("loading-text");
+const photoNavBar = document.getElementById("photo-nav-bar");
+const prevPhotoBtn = document.getElementById("prev-photo-btn");
+const nextPhotoBtn = document.getElementById("next-photo-btn");
+const photoNavCounter = document.getElementById("photo-nav-counter");
+const photoNavName = document.getElementById("photo-nav-name");
 
 photoInput.addEventListener("change", handleFiles);
 exportBtn.addEventListener("click", exportDataset);
+prevPhotoBtn.addEventListener("click", () => {
+  if (currentPhotoIndex > 0) showPhoto(currentPhotoIndex - 1);
+});
+nextPhotoBtn.addEventListener("click", () => {
+  if (currentPhotoIndex < photos.length - 1) showPhoto(currentPhotoIndex + 1);
+});
 sidebarToggle.addEventListener("click", () => {
   sidebar.classList.toggle("collapsed");
   syncSidebarOpenBtn();
@@ -68,11 +80,28 @@ document.addEventListener("pointerup", stopPainting);
 document.addEventListener("pointercancel", stopPainting);
 window.addEventListener("blur", stopPainting);
 
-// 滑鼠停在格子上時，數字鍵快速標註：1=正常、2=異常、0/Backspace=清除
+// 鍵盤快捷鍵：
+// 1. 滑鼠未停在輸入框時：← / A 上一張、→ / D 下一張
+// 2. 滑鼠停在格子上時：1=正常、2=異常、0/Backspace=清除
 document.addEventListener("keydown", (e) => {
-  if (!hoveredTileRecord) return;
   const tag = document.activeElement && document.activeElement.tagName;
   if (tag === "INPUT" || tag === "TEXTAREA") return;
+
+  if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
+    if (currentPhotoIndex > 0) {
+      e.preventDefault();
+      showPhoto(currentPhotoIndex - 1);
+      return;
+    }
+  } else if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") {
+    if (currentPhotoIndex < photos.length - 1) {
+      e.preventDefault();
+      showPhoto(currentPhotoIndex + 1);
+      return;
+    }
+  }
+
+  if (!hoveredTileRecord) return;
 
   let newState = null;
   if (e.key === "1") newState = "normal";
@@ -101,10 +130,35 @@ function stopPainting() {
   paintState = null;
 }
 
+function showPhoto(index) {
+  if (photos.length === 0) {
+    photoNavBar.hidden = true;
+    currentPhotoIndex = 0;
+    return;
+  }
+
+  currentPhotoIndex = Math.max(0, Math.min(index, photos.length - 1));
+  photoNavBar.hidden = false;
+  photoNavCounter.textContent = `第 ${currentPhotoIndex + 1} / ${photos.length} 張`;
+  photoNavName.textContent = photos[currentPhotoIndex].fileName;
+
+  prevPhotoBtn.disabled = (currentPhotoIndex <= 0);
+  nextPhotoBtn.disabled = (currentPhotoIndex >= photos.length - 1);
+
+  photos.forEach((p, i) => {
+    const isActive = (i === currentPhotoIndex);
+    p.blockEl.hidden = !isActive;
+    p.sidebarEl.classList.toggle("is-active", isActive);
+  });
+
+  photos[currentPhotoIndex].sidebarEl.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+
 async function handleFiles(e) {
   const files = Array.from(e.target.files || []);
   if (!files.length) return;
 
+  const prevTotal = photos.length;
   const rows = clampInt(rowsInput.value, 1, 16, 4);
   const cols = clampInt(colsInput.value, 1, 16, 8);
   const overlap = clampInt(overlapInput.value, 0, 100, 15);
@@ -129,7 +183,7 @@ async function handleFiles(e) {
   }
 
   photoInput.value = "";
-  summaryPanel.hidden = false;
+  showPhoto(prevTotal < photos.length ? prevTotal : 0);
   updateSummary();
 }
 
@@ -285,7 +339,10 @@ async function addPhoto(file, rows, cols, overlap) {
     <button class="sidebar-remove" title="移除這張照片" aria-label="移除">✕</button>
   `;
   li.querySelector(".sidebar-info").addEventListener("click", () => {
-    block.scrollIntoView({ behavior: "smooth", block: "start" });
+    const idx = photos.findIndex(p => p.id === photoId);
+    if (idx !== -1) {
+      showPhoto(idx);
+    }
     if (window.matchMedia(MOBILE_QUERY).matches) {
       sidebar.classList.add("collapsed");
       syncSidebarOpenBtn();
@@ -369,6 +426,12 @@ function removePhoto(photoId) {
   photos.splice(idx, 1);
   updateSidebarCount();
   updateSummary();
+
+  if (photos.length === 0) {
+    showPhoto(0);
+  } else {
+    showPhoto(Math.min(currentPhotoIndex, photos.length - 1));
+  }
 }
 
 function clearAllPhotos() {
@@ -380,6 +443,8 @@ function clearAllPhotos() {
   if (!confirm(msg)) return;
   const ids = photos.map(p => p.id);
   for (const id of ids) removePhoto(id);
+  currentPhotoIndex = 0;
+  showPhoto(0);
 }
 
 function loadImage(file) {

@@ -142,39 +142,72 @@ main {
   color: var(--text);
 }
 
-#summary-panel {
-  position: sticky;
-  top: 88px;
-  z-index: 20;
-}
-
-.summary {
+/* 照片切換導覽列 */
+.photo-nav-bar {
   display: flex;
-  gap: 28px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 18px;
+  margin-bottom: 20px;
 }
 
-.summary-item {
+.photo-nav-bar[hidden] {
+  display: none !important;
+}
+
+.photo-nav-info {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  text-align: center;
 }
 
-.summary-num {
-  font-size: 1.6rem;
+.photo-nav-counter {
+  font-size: 0.85rem;
   font-weight: 700;
-  font-family: var(--mono);
-  color: var(--amber);
-  font-variant-numeric: tabular-nums;
+  color: var(--amber-strong);
 }
 
-.summary-label {
+.photo-nav-name {
   font-size: 0.78rem;
+  font-family: var(--mono);
   color: var(--text-dim);
+  max-width: 360px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.summary-item.is-normal .summary-num { color: var(--green); }
-.summary-item.is-abnormal .summary-num { color: var(--abnormal); }
+.nav-arrow-btn {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.nav-arrow-btn:hover:not(:disabled) {
+  background: var(--bg-header);
+  border-color: var(--amber);
+  color: var(--amber-strong);
+}
+
+.nav-arrow-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
 
 .primary-btn {
   background: var(--amber);
@@ -437,6 +470,10 @@ main {
   overflow: hidden;
 }
 
+.sidebar.collapsed .sidebar-summary {
+  display: none;
+}
+
 .sidebar-header {
   display: flex;
   align-items: center;
@@ -519,7 +556,9 @@ main {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  width: var(--sidebar-w);
+  width: 100%;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .sidebar-empty {
@@ -538,14 +577,27 @@ main {
   border-radius: 8px;
   padding: 8px;
   cursor: pointer;
-  transition: border-color 0.12s ease;
+  transition: border-color 0.12s ease, background-color 0.12s ease, box-shadow 0.12s ease;
 }
 
-.sidebar-item:hover { border-color: var(--amber); }
+.sidebar-item:hover {
+  border-color: var(--amber);
+}
+
+.sidebar-item.is-active {
+  border-color: var(--amber);
+  background: #fdf5ea;
+  box-shadow: 0 0 0 1.5px var(--amber);
+}
 
 .sidebar-item.is-complete {
   border-color: var(--card-ok-border);
   background: var(--card-ok-bg);
+}
+
+.sidebar-item.is-complete.is-active {
+  border-color: var(--green);
+  box-shadow: 0 0 0 1.5px var(--green);
 }
 
 .sidebar-thumb {
@@ -594,6 +646,56 @@ main {
 .sidebar-remove:hover {
   background: var(--abnormal-dim);
   color: var(--abnormal);
+}
+
+/* 側欄底部的總統計與匯出面板 */
+.sidebar-summary {
+  border-top: 1px solid var(--line);
+  padding: 14px 14px;
+  background: var(--bg-header);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+}
+
+.summary-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+
+.summary-row .summary-num {
+  font-size: 1.12rem;
+  font-weight: 700;
+  font-family: var(--mono);
+  color: var(--amber);
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-row.is-normal .summary-num { color: var(--green); }
+.summary-row.is-abnormal .summary-num { color: var(--abnormal); }
+
+.export-btn-full {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 0.88rem;
+  text-align: center;
 }
 
 .content {

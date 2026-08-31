@@ -72,7 +72,7 @@
     </main>
   </div>
 
-  <!-- 左側懸浮面板（位置在檔名下方，絕不遮擋上方檔名！） -->
+  <!-- 左側懸浮面板（位置在檔名下方，寬度 146px 完美貼合，絕不遮擋照片！） -->
   <div class="floating-left-panel" id="floating-left-panel">
     <!-- 1. 摺疊的照片清單按鈕 -->
     <button id="sidebar-open-btn" class="floating-drawer-btn" title="展開照片清單">
@@ -80,28 +80,18 @@
       <span id="photo-badge" class="photo-badge">0</span>
     </button>
 
-    <!-- 2. 異常類別快速切換懸浮卡片 (支援快捷鍵 Q/W/E/R/T) -->
-    <div class="floating-tag-card" id="tag-card">
+    <!-- 2. 異常類別下拉式選單 (等寬 146px，絕不溢出) -->
+    <div class="floating-dropdown-card" id="tag-card">
       <div class="floating-summary-header">
         <span>🏷️ 異常類別</span>
       </div>
-      <div class="tag-quick-buttons">
-        <button class="tag-btn is-active" data-type="mite" title="快捷鍵 Q：體表附蟎/落蟎">
-          <span class="tag-btn-text">🪲 附蟎/落蟎</span><kbd>Q</kbd>
-        </button>
-        <button class="tag-btn" data-type="dwv" title="快捷鍵 W：殘翅/畸形翅">
-          <span class="tag-btn-text">🪽 殘翅畸形</span><kbd>W</kbd>
-        </button>
-        <button class="tag-btn" data-type="debris" title="快捷鍵 E：蠟屑/底板雜質">
-          <span class="tag-btn-text">🍂 蠟屑雜質</span><kbd>E</kbd>
-        </button>
-        <button class="tag-btn" data-type="dead" title="快捷鍵 R：死蜂/殘肢黑化">
-          <span class="tag-btn-text">💀 死蜂殘肢</span><kbd>R</kbd>
-        </button>
-        <button class="tag-btn" data-type="other" title="快捷鍵 T：其他可疑異狀">
-          <span class="tag-btn-text">❓ 其他異狀</span><kbd>T</kbd>
-        </button>
-      </div>
+      <select id="abnormal-type-select" class="floating-select" title="選擇預設異常類別 (亦可直接在格子上按 Q/W/E/R/T 盲打)">
+        <option value="mite" selected>🪲 附蟎/落蟎 (Q)</option>
+        <option value="dwv">🪽 殘翅畸形 (W)</option>
+        <option value="debris">🍂 蠟屑雜質 (E)</option>
+        <option value="dead">💀 死蜂殘肢 (R)</option>
+        <option value="other">❓ 其他異狀 (T)</option>
+      </select>
     </div>
 
     <!-- 3. 緊貼在下方的標註統計視窗 -->
@@ -167,7 +157,7 @@
     </ul>
   </aside>
 
-  <!-- 右側設定抽屜（支援 PatchCore 與 YOLO 資料集匯出選項） -->
+  <!-- 右側設定抽屜 -->
   <aside id="settings-sidebar" class="settings-sidebar collapsed">
     <div class="settings-header">
       <h3>⚙️ 設定與擴充功能</h3>
@@ -198,28 +188,7 @@
         </div>
       </section>
 
-      <!-- 區塊 2：資料集匯出格式設定 (PatchCore & YOLO) -->
-      <section class="settings-section">
-        <h4>📦 資料集匯出格式 (PatchCore / YOLO)</h4>
-        <label class="field">
-          <span>匯出目標架構格式</span>
-          <select id="export-format-select" class="field-select">
-            <option value="patchcore" selected>📦 PatchCore / Anomalib 格式 (train/test/good/abnormal)</option>
-            <option value="yolo">🎯 YOLO 格式 (images + labels/*.txt 座標)</option>
-            <option value="both">🌟 雙格式打包 (PatchCore + YOLO + JSON)</option>
-          </select>
-        </label>
-        <label class="field">
-          <span>正常切格 Test 比例 (%)</span>
-          <input type="number" id="test-split-input" value="10" min="0" max="50">
-        </label>
-        <label class="checkbox-field">
-          <input type="checkbox" id="aug-flip-input">
-          <span>資料增強（匯出時包含水平翻轉樣本以增加資料量）</span>
-        </label>
-      </section>
-
-      <!-- 區塊 3：Tailscale 與 AI 即時辨識串聯 -->
+      <!-- 區塊 2：Tailscale 與 AI 即時辨識串聯 -->
       <section class="settings-section">
         <h4>⚡ Tailscale 即時推論 API 設定</h4>
         <label class="field">
@@ -234,6 +203,66 @@
 
     </div>
   </aside>
+
+</div>
+
+<!-- 匯出格式選擇彈出視窗 (Modal) -->
+<div id="export-modal" class="modal-overlay" hidden>
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>📦 選擇資料集匯出格式</h3>
+      <button id="modal-close-btn" class="modal-close-btn" title="關閉視窗">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-desc">請選擇要匯出的模型訓練格式與設定：</p>
+      
+      <div class="export-options-list">
+        <label class="export-option-card">
+          <input type="radio" name="export-format-choice" value="patchcore" checked>
+          <div class="option-content">
+            <div class="option-title">📦 PatchCore / Anomalib 格式 <span class="option-badge">推薦</span></div>
+            <div class="option-detail">標準 MVTec 異常檢測目錄結構 (train/good, test/good, test/abnormal)，適用於 PatchCore、FastFlow、PaDiM 等無監督異常檢測。</div>
+          </div>
+        </label>
+
+        <label class="export-option-card">
+          <input type="radio" name="export-format-choice" value="yolo">
+          <div class="option-content">
+            <div class="option-title">🎯 YOLO 物件偵測格式</div>
+            <div class="option-detail">包含 data.yaml、images/train 與 labels/train/*.txt (正規化 Bounding Box 座標)，支援 YOLOv8、YOLOv11 訓練。</div>
+          </div>
+        </label>
+
+        <label class="export-option-card">
+          <input type="radio" name="export-format-choice" value="both">
+          <div class="option-content">
+            <div class="option-title">🌟 雙格式全包 (PatchCore + YOLO + JSON)</div>
+            <div class="option-detail">同時打包 PatchCore、YOLO 結構與 annotations_all.json 完整像素座標，資料永久保存。</div>
+          </div>
+        </label>
+      </div>
+
+      <div class="modal-settings-grid">
+        <label class="modal-field">
+          <span>正常切格 Test 比例:</span>
+          <div class="modal-input-wrap">
+            <input type="number" id="modal-test-split" value="10" min="0" max="50" class="mini-number-input">
+            <span class="unit">%</span>
+          </div>
+        </label>
+        <label class="modal-checkbox">
+          <input type="checkbox" id="modal-aug-flip">
+          <span>包含水平翻轉增強樣本</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button id="modal-cancel-btn" class="btn-secondary">取消</button>
+      <button id="modal-confirm-export-btn" class="primary-btn">🚀 確定下載 (.zip)</button>
+    </div>
+  </div>
+</div>
 
 </div>
 

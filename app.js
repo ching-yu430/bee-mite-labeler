@@ -41,9 +41,6 @@ const photoInput = document.getElementById("photo-input");
 const rowsInput = document.getElementById("rows-input");
 const colsInput = document.getElementById("cols-input");
 const overlapInput = document.getElementById("overlap-input");
-const exportFormatSelect = document.getElementById("export-format-select");
-const testSplitInput = document.getElementById("test-split-input");
-const augFlipInput = document.getElementById("aug-flip-input");
 const apiEndpointInput = document.getElementById("api-endpoint-input");
 const anomalyThresholdInput = document.getElementById("anomaly-threshold-input");
 
@@ -64,10 +61,18 @@ const drawerCloseBtn = document.getElementById("drawer-close-btn");
 const sidebarList = document.getElementById("sidebar-list");
 const sidebarClearAll = document.getElementById("sidebar-clear-all");
 
-const tagBtns = document.querySelectorAll(".tag-btn");
+const abnormalTypeSelect = document.getElementById("abnormal-type-select");
 const shortcutsToggleBtn = document.getElementById("shortcuts-toggle-btn");
 const shortcutsPanel = document.getElementById("shortcuts-panel");
 const shortcutsChevron = document.getElementById("shortcuts-chevron");
+
+// 匯出彈出視窗元素
+const exportModal = document.getElementById("export-modal");
+const modalCloseBtn = document.getElementById("modal-close-btn");
+const modalCancelBtn = document.getElementById("modal-cancel-btn");
+const modalConfirmExportBtn = document.getElementById("modal-confirm-export-btn");
+const modalTestSplit = document.getElementById("modal-test-split");
+const modalAugFlip = document.getElementById("modal-aug-flip");
 
 const loadingOverlay = document.getElementById("loading-overlay");
 const loadingText = document.getElementById("loading-text");
@@ -91,7 +96,7 @@ const zoomLevelBtns = document.querySelectorAll(".zoom-level-btn");
 
 // 事件綁定
 photoInput.addEventListener("change", handleFiles);
-exportBtn.addEventListener("click", exportDataset);
+exportBtn.addEventListener("click", openExportModal);
 
 settingsToggleBtn.addEventListener("click", () => {
   settingsSidebar.classList.toggle("collapsed");
@@ -127,21 +132,60 @@ if (shortcutsToggleBtn && shortcutsPanel) {
   });
 }
 
-// 左側異常類別按鈕切換
-tagBtns.forEach(btn => {
-  btn.addEventListener("click", () => {
-    selectAbnormalType(btn.dataset.type);
+// 左側異常類別下拉選單
+if (abnormalTypeSelect) {
+  abnormalTypeSelect.addEventListener("change", () => {
+    selectAbnormalType(abnormalTypeSelect.value, false);
   });
-});
+}
 
-function selectAbnormalType(typeKey) {
+function selectAbnormalType(typeKey, syncSelect = true) {
   if (!ABNORMAL_TYPES[typeKey]) return;
   currentAbnormalType = typeKey;
-  tagBtns.forEach(b => {
-    b.classList.toggle("is-active", b.dataset.type === typeKey);
-  });
+  if (syncSelect && abnormalTypeSelect) {
+    abnormalTypeSelect.value = typeKey;
+  }
   const typeInfo = ABNORMAL_TYPES[typeKey];
   showToast(`已切換異常類別：${typeInfo.emoji} ${typeInfo.label}`);
+}
+
+// 匯出彈出視窗（Modal）事件綁定
+function openExportModal() {
+  const tiles = allTiles();
+  const normalTiles = tiles.filter(t => t.state === "normal");
+  const abnormalTiles = tiles.filter(t => t.state === "abnormal");
+  if (normalTiles.length === 0 && abnormalTiles.length === 0) {
+    showToast("還沒有標記任何格子");
+    return;
+  }
+  if (exportModal) {
+    exportModal.hidden = false;
+  }
+}
+
+function closeExportModal() {
+  if (exportModal) {
+    exportModal.hidden = true;
+  }
+}
+
+if (modalCloseBtn) modalCloseBtn.addEventListener("click", closeExportModal);
+if (modalCancelBtn) modalCancelBtn.addEventListener("click", closeExportModal);
+if (exportModal) {
+  exportModal.addEventListener("click", (e) => {
+    if (e.target === exportModal) closeExportModal();
+  });
+}
+if (modalConfirmExportBtn) {
+  modalConfirmExportBtn.addEventListener("click", () => {
+    const checkedRadio = document.querySelector('input[name="export-format-choice"]:checked');
+    const format = checkedRadio ? checkedRadio.value : "patchcore";
+    const splitPercent = modalTestSplit ? parseFloat(modalTestSplit.value) || 10 : 10;
+    const shouldAug = modalAugFlip ? modalAugFlip.checked : false;
+
+    closeExportModal();
+    doExportDataset(format, splitPercent, shouldAug);
+  });
 }
 
 // 放大鏡倍率按鈕切換
@@ -790,7 +834,8 @@ async function createFlippedBlob(blob) {
 }
 
 // 支援 PatchCore / YOLO / JSON 多架構資料集匯出
-async function exportDataset() {
+// 支援 PatchCore / YOLO / JSON 多架構資料集匯出
+async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAug = false) {
   const tiles = allTiles();
   const normalTiles = tiles.filter(t => t.state === "normal");
   const abnormalTiles = tiles.filter(t => t.state === "abnormal");
@@ -805,10 +850,7 @@ async function exportDataset() {
   exportBtn.textContent = "打包中…";
 
   try {
-    const format = (exportFormatSelect && exportFormatSelect.value) || "patchcore";
-    const splitPercent = (testSplitInput && parseFloat(testSplitInput.value)) || 10;
     const splitRatio = Math.max(0, Math.min(50, splitPercent)) / 100;
-    const shouldAug = augFlipInput && augFlipInput.checked;
 
     const CLASS_INDEX = { mite: 0, dwv: 1, debris: 2, dead: 3, other: 4 };
     const CLASS_NAMES = ["mite", "dwv", "debris", "dead", "other"];

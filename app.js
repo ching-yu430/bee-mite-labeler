@@ -155,15 +155,8 @@ if (emptyUploadBtn) {
   });
 }
 
-// 快速鍵折疊面板控制
-if (shortcutsToggleBtn && shortcutsPanel) {
-  shortcutsToggleBtn.addEventListener("click", () => {
-    shortcutsPanel.classList.toggle("collapsed");
-    if (shortcutsChevron) {
-      shortcutsChevron.textContent = shortcutsPanel.classList.contains("collapsed") ? "▾" : "▴";
-    }
-  });
-}
+// 快速鍵折疊面板控制（已改用 shortcuts-modal 彈出視窗，不再使用舊的折疊面板）
+// shortcutsPanel / shortcutsChevron 已移除，快速鍵指南改由 shortcutsModal 彈出顯示
 
 // 左側異常類別下拉選單
 if (abnormalTypeSelect) {

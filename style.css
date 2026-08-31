@@ -1328,6 +1328,7 @@ main#main-workbench {
   border-radius: 12px;
   width: 100%;
   max-width: 520px;
+  max-height: 90vh;
   box-shadow: 0 16px 40px rgba(43, 33, 24, 0.28);
   border: 1.5px solid var(--amber);
   display: flex;
@@ -1384,6 +1385,7 @@ main#main-workbench {
   flex-direction: column;
   gap: 14px;
   background: #fdfaf4;
+  overflow-y: auto;
 }
 
 .modal-desc {

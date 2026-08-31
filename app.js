@@ -271,14 +271,9 @@ if (filterBrightness && filterContrast) {
     btnResetFilters.addEventListener("click", () => {
       filterBrightness.value = 100;
       filterContrast.value = 100;
-      if (btnSharpen) {
-        btnSharpen.classList.remove("is-active");
-        photosContainer.classList.remove("is-sharpen");
-      }
-      if (btnClahe) {
-        btnClahe.classList.remove("is-active");
-        photosContainer.classList.remove("is-clahe");
-      }
+      if (btnSharpen) btnSharpen.classList.remove("is-active");
+      if (btnClahe) btnClahe.classList.remove("is-active");
+      photosContainer.classList.remove("is-sharpen", "is-clahe");
       applyFilters();
       setZoomLevel(3.0);
       showToast("已重設影像亮度、對比度與濾鏡");
@@ -286,11 +281,48 @@ if (filterBrightness && filterContrast) {
   }
 }
 
+if (btnSharpen) {
+  btnSharpen.addEventListener("click", () => {
+    btnSharpen.classList.toggle("is-active");
+    photosContainer.classList.toggle("is-sharpen", btnSharpen.classList.contains("is-active"));
+    applyFilters();
+    showToast(btnSharpen.classList.contains("is-active") ? "⚡ 已開啟蜂體邊緣銳化" : "已關閉銳化");
+  });
+}
+
+if (btnClahe) {
+  btnClahe.addEventListener("click", () => {
+    btnClahe.classList.toggle("is-active");
+    photosContainer.classList.toggle("is-clahe", btnClahe.classList.contains("is-active"));
+    applyFilters();
+    showToast(btnClahe.classList.contains("is-active") ? "🔆 已開啟對比增強" : "已關閉對比增強");
+  });
+}
+
 function applyFilters() {
-  const b = (filterBrightness.value / 100).toFixed(2);
-  const c = (filterContrast.value / 100).toFixed(2);
+  const b = filterBrightness ? (filterBrightness.value / 100).toFixed(2) : "1.00";
+  const c = filterContrast ? (filterContrast.value / 100).toFixed(2) : "1.00";
+  const isSharpen = btnSharpen && btnSharpen.classList.contains("is-active");
+  const isClahe = btnClahe && btnClahe.classList.contains("is-active");
+
+  let computedContrast = parseFloat(c);
+  let computedBrightness = parseFloat(b);
+  if (isClahe) {
+    computedContrast *= 1.35;
+    computedBrightness *= 1.05;
+  }
+
+  let filterStr = `brightness(${computedBrightness.toFixed(2)}) contrast(${computedContrast.toFixed(2)})`;
+  if (isSharpen) {
+    filterStr += ` saturate(1.2) drop-shadow(0 0 1px rgba(0,0,0,0.95))`;
+  }
+
   photosContainer.style.setProperty("--grid-brightness", b);
   photosContainer.style.setProperty("--grid-contrast", c);
+
+  document.querySelectorAll(".tile-grid").forEach(grid => {
+    grid.style.filter = filterStr;
+  });
 }
 
 // AI 即時推論 (Tailscale / API)
@@ -476,6 +508,7 @@ function showPhoto(index) {
     p.sidebarEl.classList.toggle("is-active", isActive);
   });
 
+  applyFilters();
   photos[currentPhotoIndex].sidebarEl.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 

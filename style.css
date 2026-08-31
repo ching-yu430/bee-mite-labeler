@@ -20,7 +20,13 @@
   --topbar-h: 52px;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
+
+*, button, input, select, textarea, kbd, option {
+  font-family: var(--font-tc);
+}
 
 html, body {
   height: 100%;
@@ -32,7 +38,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-tc);
-  font-weight: 380;
+  font-weight: 400;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   display: flex;
@@ -282,7 +288,7 @@ body {
   position: relative;
 }
 
-/* 中間工作區：左側預留 178px 安全間隔，照片永遠居中展示且 100% 不被遮擋 */
+/* 中間工作區：100% 滿版橫跨左右兩側 */
 .content {
   flex: 1;
   width: 100%;
@@ -290,7 +296,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding: 10px 20px 10px 178px;
+  padding: 10px 16px;
   position: relative;
   background: var(--bg);
 }
@@ -314,7 +320,7 @@ main#main-workbench {
   height: 100%;
 }
 
-/* 空狀態引導 */
+/* 空狀態引導 (滿版大氣橫跨) */
 .empty-state {
   flex: 1;
   display: flex;
@@ -421,7 +427,7 @@ main#main-workbench {
   background: var(--abnormal-dim);
 }
 
-/* 切格網格置中容器：確保照片自適應等比縮放，無需上下或左右滾動 */
+/* 切格網格置中容器：預留左側 168px 避開懸浮面板，確保照片在剩餘區域自適應等比置中縮放，第一、二欄絕不被遮擋 */
 .tile-grid-wrap {
   flex: 1;
   min-height: 0;
@@ -431,6 +437,9 @@ main#main-workbench {
   overflow: hidden;
   width: 100%;
   height: 100%;
+  padding-left: 168px;
+  padding-right: 20px;
+  box-sizing: border-box;
 }
 
 .tile-grid {

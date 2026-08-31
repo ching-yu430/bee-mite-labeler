@@ -26,22 +26,18 @@
 
 <div class="layout">
 
-  <!-- 左側照片清單與統計欄 -->
+  <!-- 左側常駐統計與工具欄 -->
   <aside id="sidebar" class="sidebar">
-    <div class="sidebar-header">
-      <span id="sidebar-count">照片清單</span>
-      <div class="sidebar-header-actions">
-        <button id="sidebar-clear-all" class="sidebar-icon-btn" title="清除全部照片" aria-label="清除全部照片">🗑</button>
-        <button id="sidebar-toggle" class="sidebar-icon-btn" title="收合／展開" aria-label="收合／展開側欄">◂</button>
-      </div>
+    <div class="sidebar-top">
+      <button id="photo-list-toggle-btn" class="photo-list-toggle-btn" title="展開照片清單">
+        <span>📋 照片清單</span>
+        <span id="photo-badge" class="photo-badge">0</span>
+      </button>
     </div>
 
-    <ul id="sidebar-list" class="sidebar-list">
-      <li id="sidebar-empty-msg" class="sidebar-empty">尚未上傳照片</li>
-    </ul>
-
-    <!-- 照片清單底下直接顯示總格數、正常、異常、未標、匯出 -->
+    <!-- 左側直接常駐顯示統計與匯出（無需展開） -->
     <div class="sidebar-summary" id="summary-panel">
+      <div class="summary-section-title">標註統計</div>
       <div class="summary-item-row">
         <span class="summary-label">總格數</span>
         <span class="summary-num" id="count-total">0</span>
@@ -62,7 +58,19 @@
     </div>
   </aside>
 
-  <button id="sidebar-open" class="sidebar-open-btn" title="展開照片清單" aria-label="展開照片清單" hidden>▸ 照片清單</button>
+  <!-- 照片清單抽屜（點擊上方「照片清單」時展開） -->
+  <div id="photo-list-drawer" class="photo-list-drawer collapsed">
+    <div class="drawer-header">
+      <span class="drawer-title">照片清單</span>
+      <div class="drawer-actions">
+        <button id="sidebar-clear-all" class="sidebar-icon-btn" title="清除全部照片" aria-label="清除全部照片">🗑</button>
+        <button id="drawer-close-btn" class="sidebar-icon-btn" title="關閉清單" aria-label="關閉清單">✕</button>
+      </div>
+    </div>
+    <ul id="sidebar-list" class="sidebar-list">
+      <li id="sidebar-empty-msg" class="sidebar-empty">尚未上傳照片</li>
+    </ul>
+  </div>
 
   <!-- 中間主要標註工作區（無需滾動） -->
   <div class="content">

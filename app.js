@@ -37,11 +37,11 @@ const toast = document.getElementById("toast");
 const zoomPreview = document.getElementById("zoom-preview");
 const zoomPreviewImg = document.getElementById("zoom-preview-img");
 const zoomPreviewCaption = document.getElementById("zoom-preview-caption");
-const sidebar = document.getElementById("sidebar");
-const sidebarToggle = document.getElementById("sidebar-toggle");
-const sidebarOpenBtn = document.getElementById("sidebar-open");
+const photoListToggleBtn = document.getElementById("photo-list-toggle-btn");
+const photoBadge = document.getElementById("photo-badge");
+const photoListDrawer = document.getElementById("photo-list-drawer");
+const drawerCloseBtn = document.getElementById("drawer-close-btn");
 const sidebarList = document.getElementById("sidebar-list");
-const sidebarCount = document.getElementById("sidebar-count");
 const sidebarClearAll = document.getElementById("sidebar-clear-all");
 const loadingOverlay = document.getElementById("loading-overlay");
 const loadingText = document.getElementById("loading-text");
@@ -63,6 +63,16 @@ settingsToggleBtn.addEventListener("click", () => {
 settingsCloseBtn.addEventListener("click", () => {
   settingsSidebar.classList.add("collapsed");
 });
+if (photoListToggleBtn) {
+  photoListToggleBtn.addEventListener("click", () => {
+    photoListDrawer.classList.toggle("collapsed");
+  });
+}
+if (drawerCloseBtn) {
+  drawerCloseBtn.addEventListener("click", () => {
+    photoListDrawer.classList.add("collapsed");
+  });
+}
 if (emptyUploadBtn) {
   emptyUploadBtn.addEventListener("click", () => {
     settingsSidebar.classList.remove("collapsed");
@@ -75,21 +85,8 @@ prevPhotoBtn.addEventListener("click", () => {
 nextPhotoBtn.addEventListener("click", () => {
   if (currentPhotoIndex < photos.length - 1) showPhoto(currentPhotoIndex + 1);
 });
-sidebarToggle.addEventListener("click", () => {
-  sidebar.classList.toggle("collapsed");
-  syncSidebarOpenBtn();
-});
-sidebarOpenBtn.addEventListener("click", () => {
-  sidebar.classList.remove("collapsed");
-  syncSidebarOpenBtn();
-});
 sidebarClearAll.addEventListener("click", clearAllPhotos);
 
-// 小螢幕預設收合側欄，避免蓋住主要內容
-if (window.matchMedia(MOBILE_QUERY).matches) {
-  sidebar.classList.add("collapsed");
-}
-syncSidebarOpenBtn();
 showPhoto(0);
 
 // 拖曳塗刷結束偵測（放開滑鼠 / 觸控、游標離開視窗都要結束）
@@ -137,10 +134,6 @@ window.addEventListener("beforeunload", (e) => {
   e.preventDefault();
   e.returnValue = "";
 });
-
-function syncSidebarOpenBtn() {
-  sidebarOpenBtn.hidden = !sidebar.classList.contains("collapsed");
-}
 
 function stopPainting() {
   isPainting = false;
@@ -366,10 +359,7 @@ async function addPhoto(file, rows, cols, overlap) {
     if (idx !== -1) {
       showPhoto(idx);
     }
-    if (window.matchMedia(MOBILE_QUERY).matches) {
-      sidebar.classList.add("collapsed");
-      syncSidebarOpenBtn();
-    }
+    photoListDrawer.classList.add("collapsed");
   });
   li.querySelector(".sidebar-remove").addEventListener("click", (ev) => {
     ev.stopPropagation();
@@ -494,7 +484,7 @@ function allTiles() {
 }
 
 function updateSidebarCount() {
-  sidebarCount.textContent = photos.length ? `照片（${photos.length}）` : "照片";
+  if (photoBadge) photoBadge.textContent = photos.length;
   if (photos.length === 0 && !document.getElementById("sidebar-empty-msg")) {
     const li = document.createElement("li");
     li.id = "sidebar-empty-msg";

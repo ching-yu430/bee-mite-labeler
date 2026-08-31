@@ -17,7 +17,6 @@
   --radius: 10px;
   --mono: ui-monospace, "SF Mono", Consolas, "Cascadia Code", monospace;
   --font-tc: 'Chiron GoRound TC WS', -apple-system, "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
-  --sidebar-w: 240px;
   --topbar-h: 52px;
 }
 
@@ -99,8 +98,63 @@ body {
 .topbar-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-shrink: 0;
+}
+
+/* 影像濾鏡工具列 */
+.filter-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  padding: 3px 8px;
+  border-radius: 8px;
+}
+
+.toolbar-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+}
+
+.mini-slider {
+  width: 50px;
+  cursor: pointer;
+  accent-color: var(--amber);
+}
+
+.toolbar-icon-btn {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  color: var(--text-dim);
+}
+
+.toolbar-icon-btn:hover {
+  border-color: var(--amber);
+  color: var(--amber-strong);
+}
+
+.ai-predict-btn {
+  background: #3949ab;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 9px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.ai-predict-btn:hover {
+  background: #283593;
 }
 
 .settings-trigger-btn {
@@ -128,7 +182,7 @@ body {
   transform: translateY(1px);
 }
 
-/* 主佈局容器 */
+/* 主佈局容器（100% 滿版無擠壓） */
 .layout {
   display: flex;
   height: calc(100vh - var(--topbar-h));
@@ -137,49 +191,261 @@ body {
   position: relative;
 }
 
-/* 左側常駐欄：照片清單按鈕 + 標註統計與匯出（永遠直接可見，無需展開） */
-.sidebar {
-  width: 154px;
-  flex-shrink: 0;
-  background: var(--bg-header);
-  border-right: 1px solid var(--line);
+/* 中間工作區：100% 滿版自適應、絕無捲軸 */
+.content {
+  flex: 1;
+  width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: 10px 8px;
-  z-index: 20;
-  box-sizing: border-box;
+  overflow: hidden;
+  padding: 10px 16px;
+  position: relative;
+  background: var(--bg);
 }
 
-.sidebar-top {
+main#main-workbench {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  overflow: hidden;
+  width: 100%;
 }
 
-.photo-list-toggle-btn {
+.photos-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   width: 100%;
+  height: 100%;
+}
+
+/* 空狀態引導 */
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: var(--card-bg);
+  border: 2px dashed var(--line);
+  border-radius: var(--radius);
+  padding: 40px 20px;
+  color: var(--text-dim);
+}
+
+.empty-state[hidden] {
+  display: none !important;
+}
+
+.empty-icon {
+  font-size: 3.5rem;
+  margin-bottom: 12px;
+}
+
+.empty-state h2 {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+  color: var(--text);
+}
+
+.empty-state p {
+  margin: 0 0 20px;
+  font-size: 0.88rem;
+  max-width: 380px;
+}
+
+/* 單張照片完整展示卡片（撐滿整個視窗工作區） */
+.photo-block {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   background: var(--card-bg);
   border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 8px 8px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text);
-  cursor: pointer;
+  border-radius: var(--radius);
+  padding: 8px 14px;
+  box-shadow: 0 1px 3px rgba(43, 33, 24, 0.05);
+  overflow: hidden;
+}
+
+.photo-block[hidden] {
+  display: none !important;
+}
+
+.photo-block-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 4px;
-  font-family: inherit;
-  box-shadow: 0 1px 2px rgba(43, 33, 24, 0.04);
-  transition: all 0.12s ease;
+  gap: 12px;
+  flex-shrink: 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 6px;
 }
 
-.photo-list-toggle-btn:hover {
+.photo-block h2 {
+  font-size: 0.84rem;
+  font-weight: 600;
+  font-family: var(--mono);
+  color: var(--text-dim);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.photo-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.mini-btn {
   background: #fff;
-  border-color: var(--amber);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 9px;
+  font-size: 0.74rem;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+}
+
+.mini-btn:hover {
+  border-color: var(--green);
+  color: var(--green);
+  background: var(--green-dim);
+}
+
+.mini-btn.mini-btn-danger:hover {
+  border-color: var(--abnormal);
+  color: var(--abnormal);
+  background: var(--abnormal-dim);
+}
+
+/* 切格網格置中容器：確保照片自適應等比縮放，無需上下或左右滾動 */
+.tile-grid-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+.tile-grid {
+  display: grid;
+  gap: 3px;
+  user-select: none;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  aspect-ratio: var(--grid-aspect, 1);
+  filter: brightness(var(--grid-brightness, 1)) contrast(var(--grid-contrast, 1));
+}
+
+.tile {
+  position: relative;
+  cursor: pointer;
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+  background: #fff;
+  width: 100%;
+  height: 100%;
+  transition: border-color 0.1s ease, transform 0.06s ease;
+}
+
+.tile img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.tile[data-state="normal"] { border-color: var(--green); background: var(--green-dim); }
+.tile[data-state="abnormal"] { border-color: var(--abnormal); background: var(--abnormal-dim); }
+
+.tile[data-state="normal"]::after,
+.tile[data-state="abnormal"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0.14;
+  pointer-events: none;
+}
+
+.tile[data-state="normal"]::after { color: var(--green); }
+.tile[data-state="abnormal"]::after { color: var(--abnormal); }
+
+.tile::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid var(--line);
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+.tile[data-state="normal"]::before { opacity: 1; background: var(--green); border-color: var(--green); }
+.tile[data-state="abnormal"]::before { opacity: 1; background: var(--abnormal); border-color: var(--abnormal); }
+
+.tile:hover { border-color: var(--amber); }
+.tile:active { transform: scale(0.97); }
+
+/* 左側懸浮面板（位置下移至 top: 104px，絕不遮擋上方檔名！） */
+.floating-left-panel {
+  position: fixed;
+  left: 20px;
+  top: calc(var(--topbar-h) + 48px);
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+/* 摺疊版照片清單按鈕 */
+.floating-drawer-btn {
+  background: rgba(251, 247, 238, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid var(--amber);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(43, 33, 24, 0.12);
+  color: var(--text);
+  font-family: inherit;
+  transition: background 0.12s, transform 0.06s;
+}
+
+.floating-drawer-btn:hover {
+  background: #fff;
+  border-color: var(--amber-strong);
   color: var(--amber-strong);
 }
 
@@ -192,19 +458,21 @@ body {
   border-radius: 10px;
 }
 
-/* 側欄常駐統計與匯出面板（直接在左側展示） */
-.sidebar-summary {
+/* 緊貼在照片清單底下的小懸浮統計視窗（直接可見） */
+.floating-summary-card {
+  background: rgba(251, 247, 238, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid var(--amber);
+  border-radius: 8px;
+  padding: 8px 10px;
+  box-shadow: 0 4px 14px rgba(43, 33, 24, 0.12);
+  width: 140px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  background: var(--card-bg);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 10px 8px;
-  box-shadow: 0 1px 2px rgba(43, 33, 24, 0.04);
+  gap: 4px;
 }
 
-.summary-section-title {
+.floating-summary-header {
   font-size: 0.74rem;
   font-weight: 700;
   color: var(--text-dim);
@@ -230,28 +498,48 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-.summary-item-row.is-normal .summary-num {
-  color: var(--green);
+.summary-item-row.is-normal .summary-num { color: var(--green); }
+.summary-item-row.is-abnormal .summary-num { color: var(--abnormal); }
+
+.primary-btn {
+  background: var(--amber);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s ease, transform 0.06s ease;
 }
 
-.summary-item-row.is-abnormal .summary-num {
-  color: var(--abnormal);
+.primary-btn:hover { background: var(--amber-strong); }
+.primary-btn:active { transform: translateY(1px); }
+.primary-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.export-btn-full {
+  width: 100%;
+  margin-top: 4px;
+  padding: 6px 8px;
+  font-size: 0.82rem;
+  text-align: center;
 }
 
-/* 照片清單滑出抽屜 */
+/* 左側覆蓋式照片清單抽屜（點擊【照片清單】展開，不擠壓畫面） */
 .photo-list-drawer {
-  position: absolute;
-  left: 154px;
-  top: 0;
-  height: 100%;
-  width: 260px;
+  position: fixed;
+  left: 0;
+  top: var(--topbar-h);
+  height: calc(100vh - var(--topbar-h));
+  width: 280px;
   background: var(--card-bg);
   border-right: 1px solid var(--line);
-  box-shadow: 4px 0 16px rgba(43, 33, 24, 0.12);
-  z-index: 25;
+  box-shadow: 4px 0 20px rgba(43, 33, 24, 0.18);
+  z-index: 50;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .photo-list-drawer.collapsed {
@@ -263,13 +551,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
+  padding: 12px 14px;
   background: var(--bg-header);
   border-bottom: 1px solid var(--line);
 }
 
 .drawer-title {
-  font-size: 0.84rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--text);
 }
@@ -323,7 +611,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--card-bg);
+  background: #fff;
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 8px;
@@ -399,251 +687,7 @@ body {
   color: var(--abnormal);
 }
 
-.primary-btn {
-  background: var(--amber);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 9px 18px;
-  font-size: 0.88rem;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.12s ease, transform 0.06s ease;
-}
-
-.primary-btn:hover { background: var(--amber-strong); }
-.primary-btn:active { transform: translateY(1px); }
-.primary-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.export-btn-full {
-  width: 100%;
-  margin-top: 6px;
-  padding: 8px 12px;
-  font-size: 0.86rem;
-  text-align: center;
-}
-
-/* 中間工作區：自適應視窗、無需滾動 */
-.content {
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding: 12px 16px;
-  position: relative;
-  background: var(--bg);
-}
-
-main#main-workbench {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  width: 100%;
-}
-
-.photos-container {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  width: 100%;
-  height: 100%;
-}
-
-/* 空狀態引導 */
-.empty-state {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  background: var(--card-bg);
-  border: 2px dashed var(--line);
-  border-radius: var(--radius);
-  padding: 40px 20px;
-  color: var(--text-dim);
-}
-
-.empty-state[hidden] {
-  display: none !important;
-}
-
-.empty-icon {
-  font-size: 3.5rem;
-  margin-bottom: 12px;
-}
-
-.empty-state h2 {
-  margin: 0 0 8px;
-  font-size: 1.2rem;
-  color: var(--text);
-}
-
-.empty-state p {
-  margin: 0 0 20px;
-  font-size: 0.88rem;
-  max-width: 380px;
-}
-
-/* 單張照片完整展示卡片（高度撐滿視窗工作區） */
-.photo-block {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  background: var(--card-bg);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 10px 14px;
-  box-shadow: 0 1px 3px rgba(43, 33, 24, 0.05);
-  overflow: hidden;
-}
-
-.photo-block[hidden] {
-  display: none !important;
-}
-
-.photo-block-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-shrink: 0;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 8px;
-}
-
-.photo-block h2 {
-  font-size: 0.84rem;
-  font-weight: 600;
-  font-family: var(--mono);
-  color: var(--text-dim);
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.photo-actions {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.mini-btn {
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 4px 9px;
-  font-size: 0.74rem;
-  color: var(--text-dim);
-  cursor: pointer;
-  font-family: inherit;
-  white-space: nowrap;
-  transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
-}
-
-.mini-btn:hover {
-  border-color: var(--green);
-  color: var(--green);
-  background: var(--green-dim);
-}
-
-.mini-btn.mini-btn-danger:hover {
-  border-color: var(--abnormal);
-  color: var(--abnormal);
-  background: var(--abnormal-dim);
-}
-
-/* 切格網格置中容器：確保照片自適應等比縮放，無需滾動 */
-.tile-grid-wrap {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  width: 100%;
-  height: 100%;
-}
-
-.tile-grid {
-  display: grid;
-  gap: 3px;
-  user-select: none;
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  aspect-ratio: var(--grid-aspect, 1);
-}
-
-.tile {
-  position: relative;
-  cursor: pointer;
-  border: 2px solid var(--line);
-  border-radius: 4px;
-  overflow: hidden;
-  background: #fff;
-  width: 100%;
-  height: 100%;
-  transition: border-color 0.1s ease, transform 0.06s ease;
-}
-
-.tile img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  pointer-events: none;
-  -webkit-user-drag: none;
-}
-
-.tile[data-state="normal"] { border-color: var(--green); background: var(--green-dim); }
-.tile[data-state="abnormal"] { border-color: var(--abnormal); background: var(--abnormal-dim); }
-
-.tile[data-state="normal"]::after,
-.tile[data-state="abnormal"]::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: currentColor;
-  opacity: 0.14;
-  pointer-events: none;
-}
-
-.tile[data-state="normal"]::after { color: var(--green); }
-.tile[data-state="abnormal"]::after { color: var(--abnormal); }
-
-.tile::before {
-  content: "";
-  position: absolute;
-  top: 3px;
-  right: 3px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #fff;
-  border: 1px solid var(--line);
-  opacity: 0;
-  transition: opacity 0.1s ease;
-}
-
-.tile[data-state="normal"]::before { opacity: 1; background: var(--green); border-color: var(--green); }
-.tile[data-state="abnormal"]::before { opacity: 1; background: var(--abnormal); border-color: var(--abnormal); }
-
-.tile:hover { border-color: var(--amber); }
-.tile:active { transform: scale(0.97); }
-
-/* 右側摺疊欄：上傳與切割設定抽屜 */
+/* 右側設定抽屜 */
 .settings-sidebar {
   position: fixed;
   right: 0;
@@ -653,7 +697,7 @@ main#main-workbench {
   background: var(--card-bg);
   border-left: 1px solid var(--line);
   box-shadow: -4px 0 20px rgba(43, 33, 24, 0.12);
-  z-index: 40;
+  z-index: 50;
   display: flex;
   flex-direction: column;
   transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
@@ -685,14 +729,30 @@ main#main-workbench {
   padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
+}
+
+.settings-section {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-section h4 {
+  margin: 0 0 4px;
+  font-size: 0.84rem;
+  color: var(--text);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 0.82rem;
+  gap: 4px;
+  font-size: 0.8rem;
   color: var(--text-dim);
 }
 
@@ -701,31 +761,39 @@ main#main-workbench {
   color: var(--text);
 }
 
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
 .field input[type="file"] {
   background: #fff;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 0.85rem;
-  font-family: inherit;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 0.82rem;
   cursor: pointer;
 }
 
 .settings-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
+  gap: 8px;
 }
 
-.field input[type="number"] {
+.field input[type="number"],
+.field input[type="text"] {
   background: #fff;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 8px;
-  font-size: 0.9rem;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 0.85rem;
   font-family: inherit;
   color: var(--text);
-  width: 100%;
 }
 
 .field input:focus-visible {
@@ -733,30 +801,17 @@ main#main-workbench {
   outline-offset: 1px;
 }
 
-.settings-hint {
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 12px 14px;
-  font-size: 0.78rem;
-  color: var(--text-dim);
-}
-
-.settings-hint h4 {
-  margin: 0 0 6px;
-  font-size: 0.82rem;
-  color: var(--text);
-}
-
-.settings-hint ul {
+.settings-shortcuts {
   margin: 0;
   padding-left: 18px;
+  font-size: 0.78rem;
+  color: var(--text-dim);
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
 }
 
-.settings-hint kbd {
+.settings-shortcuts kbd {
   display: inline-block;
   background: #fbf7ee;
   border: 1px solid var(--line);
@@ -768,7 +823,7 @@ main#main-workbench {
   color: var(--text);
 }
 
-/* 右下角浮動上下頁切換鈕 */
+/* 右下角浮動翻頁按鈕 */
 .floating-pager {
   position: fixed;
   right: 24px;
@@ -827,7 +882,7 @@ main#main-workbench {
 /* 懸停放大鏡 */
 .zoom-preview {
   position: fixed;
-  z-index: 50;
+  z-index: 60;
   pointer-events: none;
   width: 300px;
   border-radius: 10px;
@@ -910,20 +965,10 @@ main#main-workbench {
   box-shadow: 0 4px 14px rgba(43, 33, 24, 0.12);
   max-width: min(90vw, 420px);
   text-align: center;
-  z-index: 60;
+  z-index: 70;
 }
 
 @media (max-width: 760px) {
   .brand-text p { display: none; }
-  .settings-sidebar { width: 100%; }
-  .sidebar {
-    position: fixed;
-    left: 0;
-    top: var(--topbar-h);
-    height: calc(100vh - var(--topbar-h));
-    box-shadow: 4px 0 18px rgba(43, 33, 24, 0.22);
-  }
-  .sidebar.collapsed {
-    box-shadow: none;
-  }
+  .settings-sidebar, .photo-list-drawer { width: 100%; }
 }

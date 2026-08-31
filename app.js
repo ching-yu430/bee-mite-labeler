@@ -1,10 +1,9 @@
 // 蜂蟹蟎標註工具
 // 每張照片依網格切成小格，狀態在「未標 / 正常 / 異常」間循環，
-// 匯出時整理成 anomalib 慣用的 dataset/train/test 資料夾格式。
+// 匯出時整理成 anomalib / PatchCore 慣用的 dataset/train/test 資料夾格式。
 
 const STATE_CYCLE = ["unlabeled", "normal", "abnormal"];
 const STATE_LABEL = { unlabeled: "未標", normal: "正常", abnormal: "異常" };
-const MOBILE_QUERY = "(max-width: 760px)";
 
 /**
  * photos: {
@@ -26,10 +25,16 @@ let paintState = null;
 // 目前滑鼠停留的格子（供鍵盤快捷鍵使用）
 let hoveredTileRecord = null;
 
+// DOM 元素
 const photoInput = document.getElementById("photo-input");
 const rowsInput = document.getElementById("rows-input");
 const colsInput = document.getElementById("cols-input");
 const overlapInput = document.getElementById("overlap-input");
+const testSplitInput = document.getElementById("test-split-input");
+const augFlipInput = document.getElementById("aug-flip-input");
+const apiEndpointInput = document.getElementById("api-endpoint-input");
+const anomalyThresholdInput = document.getElementById("anomaly-threshold-input");
+
 const photosContainer = document.getElementById("photos-container");
 const summaryPanel = document.getElementById("summary-panel");
 const exportBtn = document.getElementById("export-btn");
@@ -37,17 +42,22 @@ const toast = document.getElementById("toast");
 const zoomPreview = document.getElementById("zoom-preview");
 const zoomPreviewImg = document.getElementById("zoom-preview-img");
 const zoomPreviewCaption = document.getElementById("zoom-preview-caption");
-const photoListToggleBtn = document.getElementById("photo-list-toggle-btn");
+
+const sidebarOpenBtn = document.getElementById("sidebar-open-btn");
 const photoBadge = document.getElementById("photo-badge");
 const photoListDrawer = document.getElementById("photo-list-drawer");
+const drawerCount = document.getElementById("drawer-count");
 const drawerCloseBtn = document.getElementById("drawer-close-btn");
 const sidebarList = document.getElementById("sidebar-list");
 const sidebarClearAll = document.getElementById("sidebar-clear-all");
+
 const loadingOverlay = document.getElementById("loading-overlay");
 const loadingText = document.getElementById("loading-text");
+
 const settingsSidebar = document.getElementById("settings-sidebar");
 const settingsToggleBtn = document.getElementById("settings-toggle-btn");
 const settingsCloseBtn = document.getElementById("settings-close-btn");
+
 const emptyState = document.getElementById("empty-state");
 const emptyUploadBtn = document.getElementById("empty-upload-btn");
 const floatingPager = document.getElementById("floating-pager");
@@ -55,16 +65,25 @@ const prevPhotoBtn = document.getElementById("prev-photo-btn");
 const nextPhotoBtn = document.getElementById("next-photo-btn");
 const pagerInfo = document.getElementById("pager-info");
 
+// 濾鏡與 AI 按鈕
+const filterBrightness = document.getElementById("filter-brightness");
+const filterContrast = document.getElementById("filter-contrast");
+const btnResetFilters = document.getElementById("btn-reset-filters");
+const btnAiPredict = document.getElementById("btn-ai-predict");
+
+// 事件綁定
 photoInput.addEventListener("change", handleFiles);
 exportBtn.addEventListener("click", exportDataset);
+
 settingsToggleBtn.addEventListener("click", () => {
   settingsSidebar.classList.toggle("collapsed");
 });
 settingsCloseBtn.addEventListener("click", () => {
   settingsSidebar.classList.add("collapsed");
 });
-if (photoListToggleBtn) {
-  photoListToggleBtn.addEventListener("click", () => {
+
+if (sidebarOpenBtn) {
+  sidebarOpenBtn.addEventListener("click", () => {
     photoListDrawer.classList.toggle("collapsed");
   });
 }
@@ -79,6 +98,7 @@ if (emptyUploadBtn) {
     photoInput.click();
   });
 }
+
 prevPhotoBtn.addEventListener("click", () => {
   if (currentPhotoIndex > 0) showPhoto(currentPhotoIndex - 1);
 });
@@ -86,6 +106,91 @@ nextPhotoBtn.addEventListener("click", () => {
   if (currentPhotoIndex < photos.length - 1) showPhoto(currentPhotoIndex + 1);
 });
 sidebarClearAll.addEventListener("click", clearAllPhotos);
+
+// 影像調整濾鏡
+if (filterBrightness && filterContrast) {
+  filterBrightness.addEventListener("input", applyFilters);
+  filterContrast.addEventListener("input", applyFilters);
+  if (btnResetFilters) {
+    btnResetFilters.addEventListener("click", () => {
+      filterBrightness.value = 100;
+      filterContrast.value = 100;
+      applyFilters();
+      showToast("已重設影像亮度與對比度");
+    });
+  }
+}
+
+function applyFilters() {
+  const b = (filterBrightness.value / 100).toFixed(2);
+  const c = (filterContrast.value / 100).toFixed(2);
+  photosContainer.style.setProperty("--grid-brightness", b);
+  photosContainer.style.setProperty("--grid-contrast", c);
+}
+
+// AI 即時推論 (Tailscale / API)
+if (btnAiPredict) {
+  btnAiPredict.addEventListener("click", runAiPrediction);
+}
+
+async function runAiPrediction() {
+  if (photos.length === 0) {
+    showToast("請先上傳照片");
+    return;
+  }
+  const currentPhoto = photos[currentPhotoIndex];
+  if (!currentPhoto || currentPhoto.tiles.length === 0) return;
+
+  const endpoint = (apiEndpointInput && apiEndpointInput.value.trim()) || "http://localhost:8000/predict";
+  const threshold = (anomalyThresholdInput && parseFloat(anomalyThresholdInput.value)) || 0.5;
+
+  showLoading(`正在透過 Tailscale API 連線推論 (${currentPhoto.fileName})…`);
+
+  try {
+    const formData = new FormData();
+    formData.append("filename", currentPhoto.fileName);
+    currentPhoto.tiles.forEach((t, i) => {
+      formData.append(`tile_${i}`, t.blob, `${t.photoName}_r${t.row}_c${t.col}.jpg`);
+    });
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      body: formData,
+      signal: controller.signal
+    }).catch(err => {
+      throw new Error(`無法連線至 ${endpoint}。請確認後端已啟動且 Tailscale IP 正確。`);
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`伺服器回應錯誤碼: ${response.status}`);
+    }
+
+    const data = await response.json();
+    let abnormalCount = 0;
+
+    currentPhoto.tiles.forEach((t, idx) => {
+      const pred = (data.predictions && data.predictions[idx]) || {};
+      const score = pred.score ?? (pred.is_anomaly ? 1 : 0);
+      const isAbnormal = score >= threshold;
+      setTileState(t, t.el, isAbnormal ? "abnormal" : "normal");
+      if (isAbnormal) abnormalCount++;
+    });
+
+    showToast(`AI 推論完成！標出 ${abnormalCount} 個異常格，其餘設為正常`);
+    updateSummary();
+
+  } catch (err) {
+    console.warn("AI Prediction notice:", err);
+    showToast(err.message || "推論連線失敗，請檢查 API 設定");
+  } finally {
+    hideLoading();
+  }
+}
 
 showPhoto(0);
 
@@ -95,7 +200,7 @@ document.addEventListener("pointercancel", stopPainting);
 window.addEventListener("blur", stopPainting);
 
 // 鍵盤快捷鍵：
-// 1. 滑鼠未停在輸入框時：← / A 上一張、→ / D 下一張
+// 1. 滑鼠未停在輸入框時：← / A 上一張、→ / D 下一張、N 一鍵設未標為正常
 // 2. 滑鼠停在格子上時：1=正常、2=異常、0/Backspace=清除
 document.addEventListener("keydown", (e) => {
   const tag = document.activeElement && document.activeElement.tagName;
@@ -111,6 +216,12 @@ document.addEventListener("keydown", (e) => {
     if (currentPhotoIndex < photos.length - 1) {
       e.preventDefault();
       showPhoto(currentPhotoIndex + 1);
+      return;
+    }
+  } else if (e.key === "n" || e.key === "N") {
+    if (photos[currentPhotoIndex]) {
+      e.preventDefault();
+      markPhotoAllNormal(photos[currentPhotoIndex]);
       return;
     }
   }
@@ -485,6 +596,7 @@ function allTiles() {
 
 function updateSidebarCount() {
   if (photoBadge) photoBadge.textContent = photos.length;
+  if (drawerCount) drawerCount.textContent = photos.length;
   if (photos.length === 0 && !document.getElementById("sidebar-empty-msg")) {
     const li = document.createElement("li");
     li.id = "sidebar-empty-msg";
@@ -511,9 +623,27 @@ function updateSummary() {
     const total = photo.tiles.length;
     const labeled = photo.tiles.filter(t => t.state !== "unlabeled").length;
     const progressEl = photo.sidebarEl.querySelector('[data-role="progress"]');
-    progressEl.textContent = `${labeled} / ${total} 已標`;
+    if (progressEl) progressEl.textContent = `${labeled} / ${total} 已標`;
     photo.sidebarEl.classList.toggle("is-complete", labeled === total && total > 0);
   }
+}
+
+// 產生翻轉資料增強影像
+async function createFlippedBlob(blob) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      ctx.translate(img.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob(resolve, "image/jpeg", 0.92);
+    };
+    img.src = URL.createObjectURL(blob);
+  });
 }
 
 async function exportDataset() {
@@ -531,10 +661,12 @@ async function exportDataset() {
   exportBtn.textContent = "打包中…";
 
   try {
-    // 正常格子自動切一小部分當作 test/good，其餘進 train/good，
-    // 符合 anomalib 預期的 train/test 資料夾結構。
+    const splitPercent = (testSplitInput && parseFloat(testSplitInput.value)) || 10;
+    const splitRatio = Math.max(0, Math.min(50, splitPercent)) / 100;
+    const shouldAug = augFlipInput && augFlipInput.checked;
+
     const shuffled = [...normalTiles].sort(() => Math.random() - 0.5);
-    const testCount = normalTiles.length >= 5 ? Math.max(1, Math.round(normalTiles.length * 0.1)) : 0;
+    const testCount = normalTiles.length >= 4 ? Math.max(1, Math.round(normalTiles.length * splitRatio)) : 0;
     const testNormal = shuffled.slice(0, testCount);
     const trainNormal = shuffled.slice(testCount);
 
@@ -543,6 +675,10 @@ async function exportDataset() {
 
     for (const t of trainNormal) {
       root.folder("train/good").file(tileFileName(t), t.blob);
+      if (shouldAug) {
+        const flippedBlob = await createFlippedBlob(t.blob);
+        root.folder("train/good").file(tileFileName(t, "_hflip"), flippedBlob);
+      }
     }
     for (const t of testNormal) {
       root.folder("test/good").file(tileFileName(t), t.blob);
@@ -559,7 +695,8 @@ async function exportDataset() {
     a.click();
     URL.revokeObjectURL(url);
 
-    showToast(`已匯出：train/good ${trainNormal.length}、test/good ${testNormal.length}、test/abnormal ${abnormalTiles.length}`);
+    const augMsg = shouldAug ? ` (含翻轉增強樣本)` : "";
+    showToast(`已匯出 PatchCore 資料集${augMsg}：train/good ${trainNormal.length * (shouldAug ? 2 : 1)}、test/good ${testNormal.length}、test/abnormal ${abnormalTiles.length}`);
   } catch (err) {
     console.error(err);
     showToast("匯出失敗，請再試一次");
@@ -569,8 +706,8 @@ async function exportDataset() {
   }
 }
 
-function tileFileName(t) {
-  return `${t.photoName}_r${String(t.row).padStart(2, "0")}_c${String(t.col).padStart(2, "0")}.jpg`;
+function tileFileName(t, suffix = "") {
+  return `${t.photoName}_r${String(t.row).padStart(2, "0")}_c${String(t.col).padStart(2, "0")}${suffix}.jpg`;
 }
 
 function dateStamp() {
@@ -587,8 +724,8 @@ function showZoomPreview(src, tileRecord) {
 
 function positionZoomPreview(e) {
   const margin = 18;
-  const previewW = zoomPreview.offsetWidth || 320;
-  const previewH = zoomPreview.offsetHeight || 320;
+  const previewW = zoomPreview.offsetWidth || 300;
+  const previewH = zoomPreview.offsetHeight || 300;
 
   let left = e.clientX + margin;
   let top = e.clientY + margin;

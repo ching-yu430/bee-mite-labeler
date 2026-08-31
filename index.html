@@ -18,26 +18,53 @@
     </div>
   </div>
   <div class="topbar-actions">
+    <!-- 影像調整濾鏡工具 -->
+    <div class="filter-toolbar" id="filter-toolbar">
+      <label class="toolbar-item" title="影像亮度">
+        <span>☀️</span>
+        <input type="range" id="filter-brightness" min="60" max="160" value="100" class="mini-slider">
+      </label>
+      <label class="toolbar-item" title="影像對比度">
+        <span>🌓</span>
+        <input type="range" id="filter-contrast" min="60" max="180" value="100" class="mini-slider">
+      </label>
+      <button id="btn-reset-filters" class="toolbar-icon-btn" title="重設亮度與對比">↺</button>
+      <button id="btn-ai-predict" class="ai-predict-btn" title="透過 Tailscale 後端進行 AI 即時推論">⚡ AI 辨識</button>
+    </div>
     <button id="settings-toggle-btn" class="settings-trigger-btn" title="上傳照片與設定" aria-label="上傳照片與設定">
-      <span>📁 上傳照片 / 設定</span>
+      <span>📁 上傳 / 設定</span>
     </button>
   </div>
 </header>
 
 <div class="layout">
 
-  <!-- 左側常駐統計與工具欄 -->
-  <aside id="sidebar" class="sidebar">
-    <div class="sidebar-top">
-      <button id="photo-list-toggle-btn" class="photo-list-toggle-btn" title="展開照片清單">
-        <span>📋 照片清單</span>
-        <span id="photo-badge" class="photo-badge">0</span>
-      </button>
-    </div>
+  <!-- 中間主要標註工作區（100% 滿版無擠壓，完全在視窗內，無上下左右捲軸） -->
+  <div class="content">
+    <main id="main-workbench">
+      <div id="empty-state" class="empty-state">
+        <div class="empty-icon">🐝</div>
+        <h2>尚未載入照片</h2>
+        <p>請點擊右上角「📁 上傳 / 設定」上傳蜂群照片進行切格與標註</p>
+        <button id="empty-upload-btn" class="primary-btn">選擇照片上傳</button>
+      </div>
+      <section id="photos-container" class="photos-container"></section>
+    </main>
+  </div>
 
-    <!-- 左側直接常駐顯示統計與匯出（無需展開） -->
-    <div class="sidebar-summary" id="summary-panel">
-      <div class="summary-section-title">標註統計</div>
+  <!-- 左側懸浮面板（位置下移至 top: 110px，徹底不遮擋上方檔名！） -->
+  <div class="floating-left-panel" id="floating-left-panel">
+    <!-- 摺疊的照片清單按鈕 -->
+    <button id="sidebar-open-btn" class="floating-drawer-btn" title="展開照片清單">
+      <span>📋 照片清單</span>
+      <span id="photo-badge" class="photo-badge">0</span>
+    </button>
+
+    <!-- 緊貼在照片清單底下的小懸浮統計視窗（直接可見，無需展開） -->
+    <div class="floating-summary-card" id="summary-panel">
+      <div class="floating-summary-header">
+        <span>📊 標註統計</span>
+      </div>
       <div class="summary-item-row">
         <span class="summary-label">總格數</span>
         <span class="summary-num" id="count-total">0</span>
@@ -56,81 +83,103 @@
       </div>
       <button id="export-btn" class="primary-btn export-btn-full" disabled>匯出資料集 (.zip)</button>
     </div>
-  </aside>
+  </div>
 
-  <!-- 照片清單抽屜（點擊上方「照片清單」時展開） -->
-  <div id="photo-list-drawer" class="photo-list-drawer collapsed">
+  <!-- 照片清單覆蓋抽屜（點擊【📋 照片清單】時從左側浮出，不擠壓畫面） -->
+  <aside id="photo-list-drawer" class="photo-list-drawer collapsed">
     <div class="drawer-header">
-      <span class="drawer-title">照片清單</span>
+      <span class="drawer-title">照片清單 (<span id="drawer-count">0</span>)</span>
       <div class="drawer-actions">
         <button id="sidebar-clear-all" class="sidebar-icon-btn" title="清除全部照片" aria-label="清除全部照片">🗑</button>
-        <button id="drawer-close-btn" class="sidebar-icon-btn" title="關閉清單" aria-label="關閉清單">✕</button>
+        <button id="drawer-close-btn" class="sidebar-icon-btn" title="收合照片清單" aria-label="收合照片清單">✕</button>
       </div>
     </div>
     <ul id="sidebar-list" class="sidebar-list">
       <li id="sidebar-empty-msg" class="sidebar-empty">尚未上傳照片</li>
     </ul>
-  </div>
+  </aside>
 
-  <!-- 中間主要標註工作區（無需滾動） -->
-  <div class="content">
-    <main id="main-workbench">
-      <div id="empty-state" class="empty-state">
-        <div class="empty-icon">🐝</div>
-        <h2>尚未載入照片</h2>
-        <p>請點擊右上角「📁 上傳照片 / 設定」上傳蜂群照片進行切格與標註</p>
-        <button id="empty-upload-btn" class="primary-btn">選擇照片上傳</button>
-      </div>
-      <section id="photos-container" class="photos-container"></section>
-    </main>
-  </div>
-
-  <!-- 右側摺疊欄：上傳照片與切割設定 -->
+  <!-- 右側設定抽屜（上傳設定 + PatchCore 訓練設定 + Tailscale 後端串聯） -->
   <aside id="settings-sidebar" class="settings-sidebar collapsed">
     <div class="settings-header">
-      <h3>⚙️ 上傳與切格設定</h3>
+      <h3>⚙️ 設定與擴充功能</h3>
       <button id="settings-close-btn" class="sidebar-icon-btn" title="收合設定" aria-label="收合設定">✕</button>
     </div>
     <div class="settings-body">
-      <label class="field">
-        <span class="field-title">選擇照片檔案</span>
-        <input type="file" id="photo-input" accept="image/*" multiple>
-      </label>
+      
+      <!-- 區塊 1：照片上傳與網格切分 -->
+      <section class="settings-section">
+        <h4>📁 上傳照片與網格切分</h4>
+        <label class="field">
+          <span class="field-title">選擇照片檔案</span>
+          <input type="file" id="photo-input" accept="image/*" multiple>
+        </label>
+        <div class="settings-grid">
+          <label class="field">
+            <span>列數 (Rows)</span>
+            <input type="number" id="rows-input" value="4" min="1" max="16">
+          </label>
+          <label class="field">
+            <span>欄數 (Cols)</span>
+            <input type="number" id="cols-input" value="8" min="1" max="16">
+          </label>
+          <label class="field">
+            <span>重疊 (px)</span>
+            <input type="number" id="overlap-input" value="15" min="0" max="100">
+          </label>
+        </div>
+      </section>
 
-      <div class="settings-grid">
+      <!-- 區塊 2：PatchCore 資料集與匯出設定 -->
+      <section class="settings-section">
+        <h4>📦 PatchCore 訓練集匯出設定</h4>
         <label class="field">
-          <span>列數</span>
-          <input type="number" id="rows-input" value="4" min="1" max="16">
+          <span>正常切格 Test 比例 (%)</span>
+          <input type="number" id="test-split-input" value="10" min="0" max="50">
         </label>
-        <label class="field">
-          <span>欄數</span>
-          <input type="number" id="cols-input" value="8" min="1" max="16">
+        <label class="checkbox-field">
+          <input type="checkbox" id="aug-flip-input">
+          <span>資料增強（匯出時包含翻轉樣本以增加資料量）</span>
         </label>
-        <label class="field">
-          <span>重疊 (px)</span>
-          <input type="number" id="overlap-input" value="15" min="0" max="100">
-        </label>
-      </div>
+      </section>
 
-      <div class="settings-hint">
-        <h4>💡 操作指南</h4>
-        <ul>
-          <li>點選格子：切換「未標 → 正常 → 異常」</li>
-          <li><b>按住滑鼠拖曳</b>：批次塗刷多個格子</li>
-          <li>快速鍵：滑鼠移到格子上按 <kbd>1</kbd>=正常、<kbd>2</kbd>=異常、<kbd>0</kbd>=清除</li>
-          <li>切換照片：按右下角按鈕或鍵盤 <kbd>←</kbd> / <kbd>→</kbd> (或 <kbd>A</kbd> / <kbd>D</kbd>)</li>
+      <!-- 區塊 3：Tailscale 與 AI 即時辨識串聯 -->
+      <section class="settings-section">
+        <h4>⚡ Tailscale 即時推論 API 設定</h4>
+        <label class="field">
+          <span>後端推論伺服器網址 (Tailscale IP / URL)</span>
+          <input type="text" id="api-endpoint-input" placeholder="http://100.x.x.x:8000/predict" value="http://localhost:8000/predict">
+        </label>
+        <label class="field">
+          <span>異常置信度門檻值 (0.0 ~ 1.0)</span>
+          <input type="number" id="anomaly-threshold-input" value="0.5" step="0.05" min="0" max="1">
+        </label>
+      </section>
+
+      <!-- 區塊 4：操作快捷鍵指南 -->
+      <section class="settings-section">
+        <h4>💡 快速鍵操作指南</h4>
+        <ul class="settings-shortcuts">
+          <li><kbd>1</kbd>：設為正常格（綠色）</li>
+          <li><kbd>2</kbd>：設為異常格（紅色）</li>
+          <li><kbd>0</kbd> / <kbd>Backspace</kbd>：清除標記</li>
+          <li><kbd>N</kbd>：一鍵將當前照片所有未標設為正常</li>
+          <li><kbd>←</kbd> 或 <kbd>A</kbd>：上一張照片</li>
+          <li><kbd>→</kbd> 或 <kbd>D</kbd>：下一張照片</li>
+          <li><b>按住滑鼠拖曳</b>：連續刷塗多個格子</li>
         </ul>
-      </div>
+      </section>
+
     </div>
   </aside>
 
 </div>
 
-<!-- 右下角浮動上下頁切換紐 -->
+<!-- 右下角浮動翻頁按鈕 -->
 <div class="floating-pager" id="floating-pager" hidden>
-  <button id="prev-photo-btn" class="pager-btn" title="上一張照片 (快捷鍵 ← 或 A)" aria-label="上一張照片">◂ 上一張</button>
+  <button id="prev-photo-btn" class="pager-btn" title="上一張照片 (← 或 A)" aria-label="上一張照片">◂ 上一張</button>
   <span class="pager-info" id="pager-info">0 / 0</span>
-  <button id="next-photo-btn" class="pager-btn" title="下一張照片 (快捷鍵 → 或 D)" aria-label="下一張照片">下一張 ▸</button>
+  <button id="next-photo-btn" class="pager-btn" title="下一張照片 (→ 或 D)" aria-label="下一張照片">下一張 ▸</button>
 </div>
 
 <div id="loading-overlay" class="loading-overlay" hidden>

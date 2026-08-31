@@ -450,7 +450,7 @@ main#main-workbench {
   width: auto;
   height: auto;
   aspect-ratio: var(--grid-aspect, 1);
-  filter: brightness(var(--grid-brightness, 1)) contrast(var(--grid-contrast, 1));
+  transition: filter 0.05s ease;
 }
 
 .tile {

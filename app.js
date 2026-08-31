@@ -247,28 +247,67 @@ nextPhotoBtn.addEventListener("click", () => {
 });
 sidebarClearAll.addEventListener("click", clearAllPhotos);
 
-// 影像調整濾鏡
-if (filterBrightness && filterContrast) {
-  filterBrightness.addEventListener("input", applyFilters);
-  filterContrast.addEventListener("input", applyFilters);
-  if (btnResetFilters) {
-    btnResetFilters.addEventListener("click", () => {
-      filterBrightness.value = 100;
-      filterContrast.value = 100;
-      if (btnSharpen) btnSharpen.classList.remove("is-active");
-      if (btnClahe) btnClahe.classList.remove("is-active");
-      photosContainer.classList.remove("is-sharpen", "is-clahe");
-      applyFilters();
-      setZoomLevel(3.0);
-      showToast("已重設影像亮度、對比度與濾鏡");
-    });
+// =================== 影像調整濾鏡 (亮度/對比/銳化/對比增強/重設) ===================
+function applyFilters() {
+  const bVal = filterBrightness ? parseFloat(filterBrightness.value) : 100;
+  const cVal = filterContrast ? parseFloat(filterContrast.value) : 100;
+  const isSharpen = btnSharpen ? btnSharpen.classList.contains("is-active") : false;
+  const isClahe = btnClahe ? btnClahe.classList.contains("is-active") : false;
+
+  let bRatio = bVal / 100;
+  let cRatio = cVal / 100;
+
+  if (isClahe) {
+    cRatio *= 1.35;
+    bRatio *= 1.05;
   }
+
+  let filterParts = [];
+  filterParts.push(`brightness(${bRatio.toFixed(2)})`);
+  filterParts.push(`contrast(${cRatio.toFixed(2)})`);
+  if (isSharpen) {
+    filterParts.push(`saturate(1.25) drop-shadow(0 0 1px rgba(0,0,0,0.95))`);
+  }
+
+  const finalFilter = filterParts.join(" ");
+
+  if (photosContainer) {
+    photosContainer.style.setProperty("--grid-brightness", (bVal / 100).toFixed(2));
+    photosContainer.style.setProperty("--grid-contrast", (cVal / 100).toFixed(2));
+  }
+
+  document.querySelectorAll(".tile-grid, .tile img, .tile").forEach(el => {
+    el.style.filter = finalFilter;
+  });
+}
+
+if (filterBrightness) {
+  filterBrightness.addEventListener("input", applyFilters);
+  filterBrightness.addEventListener("change", applyFilters);
+}
+
+if (filterContrast) {
+  filterContrast.addEventListener("input", applyFilters);
+  filterContrast.addEventListener("change", applyFilters);
+}
+
+if (btnResetFilters) {
+  btnResetFilters.addEventListener("click", () => {
+    if (filterBrightness) filterBrightness.value = 100;
+    if (filterContrast) filterContrast.value = 100;
+    if (btnSharpen) btnSharpen.classList.remove("is-active");
+    if (btnClahe) btnClahe.classList.remove("is-active");
+    if (photosContainer) photosContainer.classList.remove("is-sharpen", "is-clahe");
+    applyFilters();
+    setZoomLevel(3.0);
+    showToast("已重設影像亮度、對比度與濾鏡");
+  });
 }
 
 if (btnSharpen) {
   btnSharpen.addEventListener("click", () => {
     btnSharpen.classList.toggle("is-active");
-    photosContainer.classList.toggle("is-sharpen", btnSharpen.classList.contains("is-active"));
+    if (photosContainer) photosContainer.classList.toggle("is-sharpen", btnSharpen.classList.contains("is-active"));
     applyFilters();
     showToast(btnSharpen.classList.contains("is-active") ? "⚡ 已開啟蜂體邊緣銳化" : "已關閉銳化");
   });
@@ -277,35 +316,9 @@ if (btnSharpen) {
 if (btnClahe) {
   btnClahe.addEventListener("click", () => {
     btnClahe.classList.toggle("is-active");
-    photosContainer.classList.toggle("is-clahe", btnClahe.classList.contains("is-active"));
+    if (photosContainer) photosContainer.classList.toggle("is-clahe", btnClahe.classList.contains("is-active"));
     applyFilters();
     showToast(btnClahe.classList.contains("is-active") ? "🔆 已開啟對比增強" : "已關閉對比增強");
-  });
-}
-
-function applyFilters() {
-  const b = filterBrightness ? (filterBrightness.value / 100).toFixed(2) : "1.00";
-  const c = filterContrast ? (filterContrast.value / 100).toFixed(2) : "1.00";
-  const isSharpen = btnSharpen && btnSharpen.classList.contains("is-active");
-  const isClahe = btnClahe && btnClahe.classList.contains("is-active");
-
-  let computedContrast = parseFloat(c);
-  let computedBrightness = parseFloat(b);
-  if (isClahe) {
-    computedContrast *= 1.35;
-    computedBrightness *= 1.05;
-  }
-
-  let filterStr = `brightness(${computedBrightness.toFixed(2)}) contrast(${computedContrast.toFixed(2)})`;
-  if (isSharpen) {
-    filterStr += ` saturate(1.2) drop-shadow(0 0 1px rgba(0,0,0,0.95))`;
-  }
-
-  photosContainer.style.setProperty("--grid-brightness", b);
-  photosContainer.style.setProperty("--grid-contrast", c);
-
-  document.querySelectorAll(".tile-grid").forEach(grid => {
-    grid.style.filter = filterStr;
   });
 }
 

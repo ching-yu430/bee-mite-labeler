@@ -45,6 +45,9 @@ let isPainting = false;
 let paintState = null;
 // 目前滑鼠停留的格子（供鍵盤快捷鍵使用）
 let hoveredTileRecord = null;
+// 按住 Shift 時鎖定放大鏡：避免滑鼠從原本的格子移動到放大圖片的路上，
+// 掃過其他格子觸發它們的 mouseenter，導致放大鏡內容被切換或提早關閉。
+let zoomLocked = false;
 
 // DOM 元素
 const photoInput = document.getElementById("photo-input");
@@ -785,12 +788,17 @@ function createTileElement(tileRecord) {
   });
 
   tileEl.addEventListener("mouseenter", () => {
+    if (zoomLocked) return; // 放大鏡鎖定中，滑鼠掃過其他格子不搶走放大鏡內容
     cancelHideZoomPreview();
     hoveredTileRecord = tileRecord;
     showZoomPreview(imgEl.src, tileRecord);
   });
-  tileEl.addEventListener("mousemove", positionZoomPreview);
+  tileEl.addEventListener("mousemove", (ev) => {
+    if (zoomLocked) return; // 鎖定中不再跟著滑鼠移動位置，讓使用者能穩定移過去點擊
+    positionZoomPreview(ev);
+  });
   tileEl.addEventListener("mouseleave", () => {
+    if (zoomLocked) return; // 鎖定中忽略離開事件，避免放大鏡被提早關閉
     // 延遲隱藏：讓滑鼠有機會移到放大鏡上方，於放大影像精確打點
     scheduleHideZoomPreview();
   });
@@ -1084,7 +1092,7 @@ function removePhoto(photoId) {
 
   for (const t of photo.tiles) {
     URL.revokeObjectURL(t.el.querySelector("img").src);
-    if (hoveredTileRecord === t) hoveredTileRecord = null;
+    if (hoveredTileRecord === t) { hoveredTileRecord = null; zoomLocked = false; }
   }
   photo.blockEl.remove();
   photo.sidebarEl.remove();
@@ -1581,6 +1589,7 @@ function scheduleHideZoomPreview() {
   zoomHideTimer = setTimeout(() => {
     hideZoomPreview();
     hoveredTileRecord = null;
+    zoomLocked = false;
   }, 220);
 }
 function cancelHideZoomPreview() {
@@ -1594,6 +1603,16 @@ function setShiftUIState(active) {
   shiftKeyActive = active;
   if (zoomPreviewImgWrap) zoomPreviewImgWrap.classList.toggle("shift-clickable", active);
   if (zoomShiftHint) zoomShiftHint.hidden = !(active && hoveredTileRecord);
+
+  if (active && hoveredTileRecord) {
+    // 按下 Shift 時鎖定目前顯示的放大鏡（內容與位置都固定），
+    // 讓使用者可以放心把滑鼠移過去點擊，不會被其他格子的 hover 打斷。
+    cancelHideZoomPreview();
+    zoomLocked = true;
+  } else if (!active) {
+    // 放開 Shift 後解除鎖定，恢復跟隨滑鼠 hover 的一般行為
+    zoomLocked = false;
+  }
 }
 document.addEventListener("keydown", (e) => {
   if (e.key === "Shift") setShiftUIState(true);
@@ -1601,7 +1620,7 @@ document.addEventListener("keydown", (e) => {
 document.addEventListener("keyup", (e) => {
   if (e.key === "Shift") setShiftUIState(false);
 });
-window.addEventListener("blur", () => setShiftUIState(false));
+window.addEventListener("blur", () => { setShiftUIState(false); zoomLocked = false; });
 
 if (zoomPreviewImg) {
   zoomPreviewImg.addEventListener("mouseenter", cancelHideZoomPreview);

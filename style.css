@@ -669,7 +669,7 @@ main#main-workbench {
   text-align: center;
 }
 
-/* 獨立快速鍵指南下拉懸浮卡片 (可上下捲動) */
+/* 獨立快速鍵指南下拉懸浮卡片 (可摺疊、展開後可垂直捲動) */
 .floating-shortcuts-card {
   background: rgba(251, 247, 238, 0.95);
   backdrop-filter: blur(8px);
@@ -681,11 +681,10 @@ main#main-workbench {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: all 0.12s ease;
 }
 
 .shortcuts-card-btn {
-  background: none;
+  background: transparent;
   border: none;
   width: 100%;
   padding: 6px 8px;
@@ -706,13 +705,11 @@ main#main-workbench {
 }
 
 .shortcuts-dropdown-content {
-  max-height: 190px;
+  max-height: 185px;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 6px 8px;
   border-top: 1px solid var(--line);
-  transition: max-height 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease, padding 0.2s ease;
-  opacity: 1;
   scrollbar-width: thin;
   scrollbar-color: var(--amber) transparent;
   background: #fff;
@@ -728,12 +725,7 @@ main#main-workbench {
 }
 
 .shortcuts-dropdown-content.collapsed {
-  max-height: 0;
-  opacity: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  border-top-color: transparent;
-  pointer-events: none;
+  display: none !important;
 }
 
 .shortcuts-list {

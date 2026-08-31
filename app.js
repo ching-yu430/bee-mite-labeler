@@ -113,6 +113,7 @@ const filterContrast = document.getElementById("filter-contrast");
 const btnResetFilters = document.getElementById("btn-reset-filters");
 const btnSharpen = document.getElementById("btn-sharpen");
 const btnClahe = document.getElementById("btn-clahe");
+const btnAiPredict = document.getElementById("btn-ai-predict");
 const btnClearDb = document.getElementById("btn-clear-db");
 const zoomLevelBtns = document.querySelectorAll(".zoom-level-btn");
 
@@ -258,8 +259,8 @@ function applyFilters() {
   let cRatio = cVal / 100;
 
   if (isClahe) {
-    cRatio *= 1.35;
-    bRatio *= 1.05;
+    cRatio *= 1.4;
+    bRatio *= 1.06;
   }
 
   let filterParts = [];
@@ -271,6 +272,21 @@ function applyFilters() {
 
   const finalFilter = filterParts.join(" ");
 
+  // 1. 動態建立或更新 <style id="live-filter-style">，以最高優先級覆蓋所有照片切格與大圖
+  let styleEl = document.getElementById("live-filter-style");
+  if (!styleEl) {
+    styleEl = document.createElement("style");
+    styleEl.id = "live-filter-style";
+    document.head.appendChild(styleEl);
+  }
+  styleEl.textContent = `
+    .tile-grid, .tile-grid img, .tile img, .photos-container img, .tile-grid-wrap img {
+      filter: ${finalFilter} !important;
+      -webkit-filter: ${finalFilter} !important;
+    }
+  `;
+
+  // 2. 同步更新 photosContainer CSS 變數與 inline style
   if (photosContainer) {
     photosContainer.style.setProperty("--grid-brightness", (bVal / 100).toFixed(2));
     photosContainer.style.setProperty("--grid-contrast", (cVal / 100).toFixed(2));

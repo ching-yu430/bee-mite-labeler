@@ -274,7 +274,7 @@ function applyFilters() {
 
   const finalFilter = filterParts.join(" ");
 
-  // 1. 動態建立或更新 <style id="live-filter-style">，以最高優先級覆蓋所有照片切格與大圖
+  // 1. 動態建立或更新 <style id="live-filter-style">，以最高優先級覆蓋所有照片切格、大圖與懸浮放大鏡
   let styleEl = document.getElementById("live-filter-style");
   if (!styleEl) {
     styleEl = document.createElement("style");
@@ -282,7 +282,7 @@ function applyFilters() {
     document.head.appendChild(styleEl);
   }
   styleEl.textContent = `
-    .tile-grid, .tile-grid img, .tile img, .photos-container img, .tile-grid-wrap img {
+    .tile-grid, .tile-grid img, .tile img, .photos-container img, .tile-grid-wrap img, #zoom-preview img, .zoom-preview img, #zoom-preview-img {
       filter: ${finalFilter} !important;
       -webkit-filter: ${finalFilter} !important;
     }
@@ -294,7 +294,7 @@ function applyFilters() {
     photosContainer.style.setProperty("--grid-contrast", (cVal / 100).toFixed(2));
   }
 
-  document.querySelectorAll(".tile-grid, .tile img, .tile").forEach(el => {
+  document.querySelectorAll(".tile-grid, .tile img, .tile, #zoom-preview img, #zoom-preview-img").forEach(el => {
     el.style.filter = finalFilter;
   });
 }

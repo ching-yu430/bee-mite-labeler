@@ -1228,6 +1228,7 @@ main#main-workbench {
   height: auto;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
+  transition: filter 0.05s ease;
 }
 
 .zoom-preview .zoom-caption {

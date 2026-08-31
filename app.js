@@ -16,6 +16,15 @@ const ABNORMAL_TYPES = {
 let currentAbnormalType = "mite";
 let currentZoomLevel = 3.0; // 預設放大鏡倍率
 
+// A: 撤銷/重做堆疊
+const undoStack = [];
+const redoStack = [];
+const MAX_UNDO = 200;
+
+// J: 鍵盤導航
+let keyboardNavActive = false;
+let focusedTileIndex = -1;
+
 /**
  * photos: {
  *   id: string,
@@ -427,6 +436,63 @@ document.addEventListener("keydown", (e) => {
   const tag = document.activeElement && document.activeElement.tagName;
   if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
 
+  // A: Ctrl+Z 撤銷 / Ctrl+Y 重做
+  if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+    e.preventDefault();
+    performUndo();
+    return;
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === "y") {
+    e.preventDefault();
+    performRedo();
+    return;
+  }
+
+  // J: F 鍵切換鍵盤導航模式
+  if (e.key === "f" || e.key === "F") {
+    if (!e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+      keyboardNavActive = !keyboardNavActive;
+      if (keyboardNavActive) {
+        const cp = photos[currentPhotoIndex];
+        if (cp && cp.tiles.length > 0) {
+          focusedTileIndex = 0;
+          updateTileFocus(cp);
+          showToast("⌨️ 鍵盤導航已開啟 — 用方向鍵移動，1/2/0 標記");
+        }
+      } else {
+        clearTileFocus();
+        showToast("鍵盤導航已關閉");
+      }
+      return;
+    }
+  }
+
+  // J: 方向鍵導航切格
+  if (keyboardNavActive && photos[currentPhotoIndex]) {
+    const cp = photos[currentPhotoIndex];
+    const cols = parseInt(cp.blockEl.querySelector(".tile-grid").style.gridTemplateColumns.match(/\d+/)?.[0] || "8");
+    const totalTiles = cp.tiles.length;
+    if (totalTiles === 0) return;
+
+    let newIdx = focusedTileIndex;
+    if (e.key === "ArrowRight") { newIdx = Math.min(totalTiles - 1, focusedTileIndex + 1); }
+    else if (e.key === "ArrowLeft") { newIdx = Math.max(0, focusedTileIndex - 1); }
+    else if (e.key === "ArrowDown") { newIdx = Math.min(totalTiles - 1, focusedTileIndex + cols); }
+    else if (e.key === "ArrowUp") { newIdx = Math.max(0, focusedTileIndex - cols); }
+
+    if (newIdx !== focusedTileIndex && (e.key.startsWith("Arrow"))) {
+      e.preventDefault();
+      focusedTileIndex = newIdx;
+      updateTileFocus(cp);
+      // 讓焦點格等同 hoveredTileRecord，這樣 1/2/0 快捷鍵可以直接操作
+      hoveredTileRecord = cp.tiles[focusedTileIndex];
+      const focusedTile = cp.tiles[focusedTileIndex];
+      showZoomPreview(focusedTile.el.querySelector("img").src, focusedTile);
+      return;
+    }
+  }
+
   if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
     if (currentPhotoIndex > 0) {
       e.preventDefault();
@@ -490,6 +556,20 @@ window.addEventListener("beforeunload", (e) => {
 function stopPainting() {
   isPainting = false;
   paintState = null;
+}
+
+// J: 鍵盤導航輔助函數
+function updateTileFocus(photo) {
+  clearTileFocus();
+  if (focusedTileIndex >= 0 && focusedTileIndex < photo.tiles.length) {
+    photo.tiles[focusedTileIndex].el.classList.add("tile-focused");
+    photo.tiles[focusedTileIndex].el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+}
+
+function clearTileFocus() {
+  document.querySelectorAll(".tile-focused").forEach(el => el.classList.remove("tile-focused"));
+  focusedTileIndex = -1;
 }
 
 function showPhoto(index) {
@@ -569,7 +649,12 @@ async function addPhoto(file, rows, cols, overlap) {
   const baseName = file.name.replace(/\.[^.]+$/, "");
   const photoId = `p${++photoCounter}`;
 
-  const photo = { id: photoId, fileName: file.name, tiles: [] };
+  const photo = { id: photoId, fileName: file.name, tiles: [], originalBlob: null };
+
+  // I: 保存原始圖片 Blob 供備份匯出
+  try {
+    photo.originalBlob = file.slice();
+  } catch (ignored) {}
 
   // --- 主要區塊：切格網格 ---
   const block = document.createElement("div");
@@ -795,7 +880,18 @@ function cycleTile(tileRecord, tileEl) {
   return next;
 }
 
-function setTileState(tileRecord, tileEl, state) {
+function setTileState(tileRecord, tileEl, state, skipUndo = false) {
+  if (!skipUndo) {
+    undoStack.push({
+      tile: tileRecord,
+      oldState: tileRecord.state,
+      oldAbnormalType: tileRecord.abnormalType,
+      newState: state,
+      newAbnormalType: state === "abnormal" ? (tileRecord.abnormalType || currentAbnormalType) : null
+    });
+    if (undoStack.length > MAX_UNDO) undoStack.shift();
+    redoStack.length = 0; // 新動作清空 redo
+  }
   tileRecord.state = state;
   tileEl.dataset.state = state;
   if (state === "abnormal") {
@@ -804,6 +900,30 @@ function setTileState(tileRecord, tileEl, state) {
     tileRecord.abnormalType = null;
   }
   updateTileAriaLabel(tileRecord);
+}
+
+function performUndo() {
+  if (undoStack.length === 0) { showToast("沒有可撤銷的操作"); return; }
+  const action = undoStack.pop();
+  redoStack.push(action);
+  action.tile.state = action.oldState;
+  action.tile.abnormalType = action.oldAbnormalType;
+  action.tile.el.dataset.state = action.oldState;
+  updateTileAriaLabel(action.tile);
+  updateSummary();
+  showToast("↩ 已撤銷");
+}
+
+function performRedo() {
+  if (redoStack.length === 0) { showToast("沒有可重做的操作"); return; }
+  const action = redoStack.pop();
+  undoStack.push(action);
+  action.tile.state = action.newState;
+  action.tile.abnormalType = action.newAbnormalType;
+  action.tile.el.dataset.state = action.newState;
+  updateTileAriaLabel(action.tile);
+  updateSummary();
+  showToast("↪ 已重做");
 }
 
 function updateTileAriaLabel(tileRecord) {
@@ -937,6 +1057,13 @@ function updateSummary() {
     p.sidebarEl.classList.toggle("is-complete", pLabeled === pTotal && pTotal > 0);
   }
 
+  // C: 整體進度條更新
+  const progressPercent = total > 0 ? Math.round((normal + abnormal) / total * 100) : 0;
+  const progressPercentEl = document.getElementById("progress-percent");
+  const progressFillEl = document.getElementById("progress-fill");
+  if (progressPercentEl) progressPercentEl.textContent = `${progressPercent}%`;
+  if (progressFillEl) progressFillEl.style.width = `${progressPercent}%`;
+
   // 自動觸發本地暫存儲存 (防重整丟失)
   debounceSaveState();
 }
@@ -1048,6 +1175,59 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
       }
     }
 
+    // 3. Classification 二分類格式
+    if (format === "classification" || format === "both") {
+      const clsRoot = format === "both" ? zip.folder("classification_dataset") : zip.folder("dataset");
+      for (const t of normalTiles) {
+        clsRoot.folder("normal").file(tileFileName(t), t.blob);
+      }
+      for (const t of abnormalTiles) {
+        clsRoot.folder("abnormal").file(tileFileName(t), t.blob);
+      }
+    }
+
+    // I: 原檔備份
+    const shouldBackup = document.getElementById("modal-backup-originals");
+    if (shouldBackup && shouldBackup.checked) {
+      for (const p of photos) {
+        if (p.originalBlob) {
+          zip.folder("originals").file(p.fileName, p.originalBlob);
+        }
+      }
+    }
+
+    // G: 匯出統計報表 Excel (.xlsx)
+    if (typeof XLSX !== "undefined") {
+      const rows = [];
+      const abnormalKeys = Object.keys(ABNORMAL_TYPES);
+      for (const p of photos) {
+        const pTiles = p.tiles;
+        const row = {
+          "檔案名稱": p.fileName,
+          "總格數": pTiles.length,
+          "正常": pTiles.filter(t => t.state === "normal").length,
+          "異常": pTiles.filter(t => t.state === "abnormal").length,
+          "未標": pTiles.filter(t => t.state === "unlabeled").length
+        };
+        for (const key of abnormalKeys) {
+          row[ABNORMAL_TYPES[key].label] = pTiles.filter(t => t.state === "abnormal" && t.abnormalType === key).length;
+        }
+        rows.push(row);
+      }
+      // 合計列
+      const totalRow = { "檔案名稱": "合計" };
+      for (const col of Object.keys(rows[0]).filter(k => k !== "檔案名稱")) {
+        totalRow[col] = rows.reduce((sum, r) => sum + (r[col] || 0), 0);
+      }
+      rows.push(totalRow);
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "標註統計");
+      const xlsxData = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      zip.file("report.xlsx", xlsxData);
+    }
+
     // 3. 通用 JSON 標註檔 (含精確像素與正規化座標)
     const jsonMetadata = {
       dataset_version: "2.0",
@@ -1088,6 +1268,45 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
     exportBtn.disabled = (normalTiles.length + abnormalTiles.length) === 0;
     exportBtn.textContent = originalLabel;
   }
+}
+
+// F: 匯入既有標註 JSON
+const btnImportJson = document.getElementById("btn-import-json");
+const importJsonInput = document.getElementById("import-json-input");
+
+if (btnImportJson && importJsonInput) {
+  btnImportJson.addEventListener("click", () => importJsonInput.click());
+  importJsonInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (!data.photos || !Array.isArray(data.photos)) {
+        showToast("JSON 格式不正確，找不到 photos 陣列");
+        return;
+      }
+      let matched = 0, skipped = 0;
+      for (const jp of data.photos) {
+        const localPhoto = photos.find(p => p.fileName === jp.file_name);
+        if (!localPhoto) { skipped++; continue; }
+        for (const jt of jp.tiles) {
+          const localTile = localPhoto.tiles.find(t => t.row === jt.row && t.col === jt.col);
+          if (localTile) {
+            localTile.abnormalType = jt.abnormal_type || null;
+            setTileState(localTile, localTile.el, jt.state, true);
+            matched++;
+          }
+        }
+      }
+      updateSummary();
+      showToast(`📥 已匯入標註：成功還原 ${matched} 格${skipped > 0 ? `，${skipped} 張照片未匹配` : ""}`);
+    } catch (err) {
+      console.error(err);
+      showToast("匯入失敗：" + (err.message || "JSON 解析錯誤"));
+    }
+    importJsonInput.value = "";
+  });
 }
 
 // --- 💾 IndexedDB 本地專案自動暫存恢復機制 ---

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>蜂蟹蟎標註工具</title>
 <link rel="stylesheet" href="fonts/css/vf.css">
-<link rel="stylesheet" href="style.css?v=20260831_2">
+<link rel="stylesheet" href="style.css?v=20260831_3">
 </head>
 <body>
 
@@ -124,6 +124,13 @@
         <span class="summary-num" id="count-unlabeled">0</span>
       </div>
 
+      <div class="overall-progress">
+        <div class="progress-label-row">
+          <span>整體進度</span>
+          <span id="progress-percent">0%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
       <button id="export-btn" class="primary-btn export-btn-full" disabled>匯出資料集 (.zip)</button>
     </div>
 
@@ -186,6 +193,14 @@
         <button id="btn-clear-db" class="mini-btn mini-btn-danger" style="width: 100%; padding: 6px;">🗑️ 清空本地快取並重置專案</button>
       </section>
 
+      <!-- 區塊 2b：匯入既有標註 JSON -->
+      <section class="settings-section">
+        <h4>📥 匯入既有標註</h4>
+        <p class="section-desc">匯入先前匯出的 annotations_all.json，自動還原標註狀態（需先上傳相同照片）。</p>
+        <input type="file" id="import-json-input" accept=".json" hidden>
+        <button id="btn-import-json" class="mini-btn" style="width: 100%; padding: 6px;">📥 選擇 JSON 檔案匯入</button>
+      </section>
+
       <!-- 區塊 3：Tailscale 與 AI 即時辨識串聯 -->
       <section class="settings-section">
         <h4>⚡ Tailscale 即時推論 API 設定</h4>
@@ -238,6 +253,14 @@
             <div class="option-detail">同時打包 PatchCore、YOLO 結構與 annotations_all.json 完整像素座標，資料永久保存。</div>
           </div>
         </label>
+
+        <label class="export-option-card">
+          <input type="radio" name="export-format-choice" value="classification">
+          <div class="option-content">
+            <div class="option-title">🗂️ Classification 二分類格式</div>
+            <div class="option-detail">normal/ 與 abnormal/ 平鋪結構，可直接用 torchvision.datasets.ImageFolder 或 tf.keras 讀取，適用 CNN 二分類微調。</div>
+          </div>
+        </label>
       </div>
 
       <div class="modal-settings-grid">
@@ -251,6 +274,10 @@
         <label class="modal-checkbox">
           <input type="checkbox" id="modal-aug-flip">
           <span>包含水平翻轉增強樣本</span>
+        </label>
+        <label class="modal-checkbox">
+          <input type="checkbox" id="modal-backup-originals">
+          <span>同時備份原始大圖至 originals/</span>
         </label>
       </div>
     </div>
@@ -285,6 +312,9 @@
         <div class="shortcut-item"><kbd>→</kbd> / <kbd>D</kbd><span>切換至下一張照片</span></div>
         <div class="shortcut-item"><kbd>滑鼠滾輪</kbd><span>懸停於格子上時調整放大鏡倍率</span></div>
         <div class="shortcut-item"><kbd>滑鼠拖曳</kbd><span>按住左鍵滑過多個格子連續塗刷</span></div>
+        <div class="shortcut-item"><kbd>Ctrl+Z</kbd><span>撤銷上一步標註</span></div>
+        <div class="shortcut-item"><kbd>Ctrl+Y</kbd><span>重做已撤銷的標註</span></div>
+        <div class="shortcut-item"><kbd>F</kbd><span>進入/離開鍵盤導航模式 (方向鍵移動焦點)</span></div>
       </div>
     </div>
     <div class="modal-footer" style="padding: 10px 16px;">
@@ -319,6 +349,7 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="app.js?v=20260831_2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="app.js?v=20260831_3"></script>
 </body>
 </html>

@@ -1573,3 +1573,39 @@ main#main-workbench {
   .settings-sidebar, .photo-list-drawer { width: 100%; }
   .modal-box { max-width: 95vw; }
 }
+
+/* ============ C: 整體進度條 ============ */
+.overall-progress {
+  margin: 8px 0;
+  padding: 0 2px;
+}
+.progress-label-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-bottom: 3px;
+}
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.progress-fill {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--amber), var(--amber-strong));
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* ============ J: 鍵盤導航焦點高亮 ============ */
+.tile.tile-focused {
+  outline: 3px dashed var(--amber);
+  outline-offset: -1px;
+  z-index: 5;
+  box-shadow: 0 0 8px rgba(201, 134, 47, 0.5);
+}

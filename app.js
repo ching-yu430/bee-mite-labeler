@@ -17,11 +17,25 @@ let currentAbnormalType = "mite";
 let currentZoomLevel = 3.0; // 預設放大鏡倍率
 let globalFilter = ""; // 用來記錄目前的濾鏡參數，讓放大鏡強制套用
 
-// Shift+點擊精確打點時，自動以該點為中心產生的 YOLO 邊界框邊長 (px)。
+// Shift+單純點擊時使用的固定邊界框邊長 (px)，適合快速盲打；若用 Shift+拖曳畫框，
+// 則直接採用拖曳出的實際寬高，不受此設定限制。
 // 可透過工具列調整，每次打點會把當下的值存進該筆標註（t.point.boxPx），
 // 之後調整全域設定不會影響已標記過的舊標註。
 const DEFAULT_POINT_BOX_PX = 20;
 let currentPointBoxPx = DEFAULT_POINT_BOX_PX;
+
+// Shift+拖曳畫框時，拖曳距離小於此像素值視為「單純點擊」，退回舊版固定尺寸方框（方便快速盲打）
+const DRAG_THRESHOLD_PX = 6;
+
+// 統一取得一筆 point 標註實際的邊界框寬高（px）：
+// 優先用拖曳畫出的 widthPx/heightPx；沒有的話（例如快速點擊或匯入舊版 JSON）退回 boxPx 方形；
+// 兩者都沒有就用全域預設值。供 YOLO 匯出、mask 繪製、格子上的框線顯示共用，確保三處算法一致。
+function pointBoxDims(point) {
+  if (!point) return { w: DEFAULT_POINT_BOX_PX, h: DEFAULT_POINT_BOX_PX };
+  const w = point.widthPx || point.boxPx || DEFAULT_POINT_BOX_PX;
+  const h = point.heightPx || point.boxPx || DEFAULT_POINT_BOX_PX;
+  return { w, h };
+}
 
 // A: 撤銷/重做堆疊
 const undoStack = [];
@@ -855,7 +869,7 @@ async function addPhoto(file, rows, cols, overlap) {
 }
 
 /**
- * 依 tileRecord 建立單一格子 DOM 元素（點擊塗刷、Shift+點擊精確打點、
+ * 依 tileRecord 建立單一格子 DOM 元素（點擊塗刷、Shift+點擊/拖曳精確標註、
  * 懸浮放大鏡、滾輪調整倍率等互動事件皆在此綁定）。
  * 供新上傳照片與 IndexedDB 還原共用，確保行為一致。
  */
@@ -876,22 +890,17 @@ function createTileElement(tileRecord) {
   updateTileAriaLabel(tileRecord);
   renderPointMarker(tileRecord, tileEl);
 
-  // 支援 Shift+點擊精確打點 (Point Annotation) 與 一般單擊切換
+  // 支援 Shift+拖曳自由畫框（貼合物件實際大小），Shift+單純點擊則退回固定尺寸快速方框；
+  // 不按 Shift 則是一般單擊切換 / 連續塗刷
   tileEl.addEventListener("pointerdown", (ev) => {
     if (ev.pointerType === "mouse" && ev.button !== 0) return;
-    if (ev.pointerType !== "touch") ev.preventDefault();
 
-    // 如果按住 Shift 點擊：在點擊處標記精確座標（提示改用放大鏡點擊可更精準）
     if (ev.shiftKey) {
-      const rect = tileEl.getBoundingClientRect();
-      const clickX = Math.min(rect.width, Math.max(0, ev.clientX - rect.left));
-      const clickY = Math.min(rect.height, Math.max(0, ev.clientY - rect.top));
-      const normX = rect.width > 0 ? clickX / rect.width : 0.5;
-      const normY = rect.height > 0 ? clickY / rect.height : 0.5;
-      applyPointAnnotation(tileRecord, normX, normY);
+      startDragAnnotation(tileRecord, tileEl, ev, tileEl);
       return;
     }
 
+    if (ev.pointerType !== "touch") ev.preventDefault();
     // 一般單點或連續塗刷
     const next = cycleTile(tileRecord, tileEl);
     isPainting = true;
@@ -958,24 +967,25 @@ function renderPointMarker(tileRecord, tileEl) {
   marker.className = "tile-point-marker";
   marker.style.left = `${(tileRecord.point.normX * 100).toFixed(2)}%`;
   marker.style.top = `${(tileRecord.point.normY * 100).toFixed(2)}%`;
-  const boxPx = tileRecord.point.boxPx || DEFAULT_POINT_BOX_PX;
-  marker.title = `精確標註點（原圖座標 ${tileRecord.point.origX}, ${tileRecord.point.origY}，邊界框 ${boxPx}×${boxPx}px）`;
+  const { w: boxW, h: boxH } = pointBoxDims(tileRecord.point);
+  marker.title = `精確標註區域（原圖座標 ${tileRecord.point.origX}, ${tileRecord.point.origY}，範圍 ${Math.round(boxW)}×${Math.round(boxH)}px；Shift+拖曳可重新框選範圍）`;
   marker.innerHTML = `<span class="point-ring"></span><span class="point-pin">📍</span>`;
   tileEl.appendChild(marker);
   tileEl.appendChild(buildPointBoxOutline(tileRecord));
 }
 
 /**
- * 依 tileRecord.point.boxPx 畫出實際會匯出到 YOLO 的邊界框範圍，讓使用者能直接看到框大小是否合理。
+ * 依 tileRecord.point 的實際寬高（Shift+拖曳畫出的矩形，或快速點擊的固定方框）
+ * 畫出會匯出到 YOLO / mask 的邊界框範圍，讓使用者能直接看到框大小與形狀是否合理。
  */
 function buildPointBoxOutline(tileRecord) {
   const box = document.createElement("div");
   box.className = "tile-point-box";
-  const boxPx = tileRecord.point.boxPx || DEFAULT_POINT_BOX_PX;
+  const { w: boxW, h: boxH } = pointBoxDims(tileRecord.point);
   box.style.left = `${(tileRecord.point.normX * 100).toFixed(2)}%`;
   box.style.top = `${(tileRecord.point.normY * 100).toFixed(2)}%`;
-  box.style.width = `${clamp01(boxPx / tileRecord.w) * 100}%`;
-  box.style.height = `${clamp01(boxPx / tileRecord.h) * 100}%`;
+  box.style.width = `${clamp01(boxW / tileRecord.w) * 100}%`;
+  box.style.height = `${clamp01(boxH / tileRecord.h) * 100}%`;
   return box;
 }
 
@@ -1420,7 +1430,7 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
       for (const t of testNormal) {
         pcRoot.folder("test/good").file(tileFileName(t), t.blob);
       }
-      // 是否有任何異常格是用 Shift+點擊精確打點的，影響下方 mask 精確度的說明文字
+      // 是否有任何異常格是用 Shift+點擊/拖曳精確標註過的，影響下方 mask 精確度的說明文字
       let hasPointMasks = false;
       for (const t of abnormalTiles) {
         const subFolder = t.abnormalType ? `abnormal_${t.abnormalType}` : "abnormal";
@@ -1460,12 +1470,12 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
           const classId = CLASS_INDEX[t.abnormalType] ?? 0;
           let txtLine;
           if (t.point) {
-            // 精確打點：以點擊處為中心，用該筆標註當初設定的框大小產生邊界框（換算成切格自身的正規化座標）
-            const boxPx = t.point.boxPx || DEFAULT_POINT_BOX_PX;
+            // 精確標註：以中心點為準，用 Shift+拖曳實際框出的寬高（或快速點擊的固定方框）產生邊界框（換算成切格自身的正規化座標）
+            const { w: boxW, h: boxH } = pointBoxDims(t.point);
             const xCenter = clamp01(t.point.normX);
             const yCenter = clamp01(t.point.normY);
-            const wNorm = clamp01(boxPx / t.w);
-            const hNorm = clamp01(boxPx / t.h);
+            const wNorm = clamp01(boxW / t.w);
+            const hNorm = clamp01(boxH / t.h);
             txtLine = `${classId} ${xCenter.toFixed(6)} ${yCenter.toFixed(6)} ${wNorm.toFixed(6)} ${hNorm.toFixed(6)}\n`;
           } else {
             // 未打點：沿用切格本身的正規化邊界框 (置中全覆蓋)
@@ -1486,14 +1496,14 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
           const classId = CLASS_INDEX[t.abnormalType] ?? 0;
           let xCenter, yCenter, widthNorm, heightNorm;
           if (t.point) {
-            // 精確打點：以原圖絕對像素座標為中心，用該筆標註當初設定的框大小產生邊界框
-            const boxPx = t.point.boxPx || DEFAULT_POINT_BOX_PX;
+            // 精確標註：以原圖絕對像素座標為中心，用 Shift+拖曳實際框出的寬高（或快速點擊的固定方框）產生邊界框
+            const { w: boxW, h: boxH } = pointBoxDims(t.point);
             const origX = t.point.origX ?? (t.left + t.point.normX * t.w);
             const origY = t.point.origY ?? (t.top + t.point.normY * t.h);
             xCenter = origX / t.origW;
             yCenter = origY / t.origH;
-            widthNorm = clamp01(boxPx / t.origW);
-            heightNorm = clamp01(boxPx / t.origH);
+            widthNorm = clamp01(boxW / t.origW);
+            heightNorm = clamp01(boxH / t.origH);
           } else {
             // 未打點：沿用整個切格範圍作為邊界框
             xCenter = (t.left + t.w / 2) / t.origW;
@@ -1584,12 +1594,14 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
             orig_y: t.point.origY,
             tile_norm_x: t.point.normX,
             tile_norm_y: t.point.normY,
+            width_px: pointBoxDims(t.point).w,
+            height_px: pointBoxDims(t.point).h,
             yolo_box: {
-              box_px: t.point.boxPx || DEFAULT_POINT_BOX_PX,
+              box_px: t.point.boxPx || DEFAULT_POINT_BOX_PX, // 舊版相容欄位，等於 max(width_px, height_px)
               x_center_norm: +(t.point.origX / t.origW).toFixed(6),
               y_center_norm: +(t.point.origY / t.origH).toFixed(6),
-              width_norm: +clamp01((t.point.boxPx || DEFAULT_POINT_BOX_PX) / t.origW).toFixed(6),
-              height_norm: +clamp01((t.point.boxPx || DEFAULT_POINT_BOX_PX) / t.origH).toFixed(6)
+              width_norm: +clamp01(pointBoxDims(t.point).w / t.origW).toFixed(6),
+              height_norm: +clamp01(pointBoxDims(t.point).h / t.origH).toFixed(6)
             }
           } : null
         }))
@@ -1644,7 +1656,16 @@ if (btnImportJson && importJsonInput) {
           if (localTile) {
             localTile.abnormalType = jt.abnormal_type || null;
             const importedPoint = jt.point
-              ? { normX: jt.point.tile_norm_x, normY: jt.point.tile_norm_y, origX: jt.point.orig_x, origY: jt.point.orig_y }
+              ? {
+                  normX: jt.point.tile_norm_x,
+                  normY: jt.point.tile_norm_y,
+                  origX: jt.point.orig_x,
+                  origY: jt.point.orig_y,
+                  boxPx: jt.point.yolo_box ? jt.point.yolo_box.box_px : undefined,
+                  // 較舊版本的 JSON 沒有 width_px/height_px，退回用 box_px 當正方形處理
+                  widthPx: jt.point.width_px ?? (jt.point.yolo_box ? jt.point.yolo_box.box_px : undefined),
+                  heightPx: jt.point.height_px ?? (jt.point.yolo_box ? jt.point.yolo_box.box_px : undefined)
+                }
               : null;
             setTileState(localTile, localTile.el, jt.state, true, importedPoint);
             matched++;
@@ -1817,19 +1838,86 @@ if (zoomPreviewImg) {
   zoomPreviewImg.addEventListener("mouseenter", cancelHideZoomPreview);
   zoomPreviewImg.addEventListener("mouseleave", scheduleHideZoomPreview);
 
-  // 在放大鏡的放大影像上 Shift+點擊，等同在原格子上點擊同一相對位置，
-  // 但因為畫面被放大，使用者可以點得更準確。
+  // 在放大鏡的放大影像上 Shift+拖曳，等同在原格子上拖曳畫框同一相對位置，
+  // 但因為畫面被放大，使用者可以框得更準確；單純 Shift+點擊仍退回固定尺寸快速方框。
   zoomPreviewImg.addEventListener("pointerdown", (ev) => {
     if (!ev.shiftKey || !hoveredTileRecord) return;
     if (ev.pointerType === "mouse" && ev.button !== 0) return;
-    ev.preventDefault();
-    ev.stopPropagation();
-    const rect = zoomPreviewImg.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
-    const clickX = Math.min(rect.width, Math.max(0, ev.clientX - rect.left));
-    const clickY = Math.min(rect.height, Math.max(0, ev.clientY - rect.top));
-    applyPointAnnotation(hoveredTileRecord, clickX / rect.width, clickY / rect.height);
+    startDragAnnotation(hoveredTileRecord, zoomPreviewImg, ev, zoomPreviewImgWrap);
   });
+}
+
+/**
+ * 共用的 Shift+點擊／Shift+拖曳互動邏輯，供格子本身與放大鏡影像共用：
+ * - 按下後滑鼠移動距離小於 DRAG_THRESHOLD_PX（單純點擊）：退回舊版固定尺寸方框，中心即點擊處。
+ * - 按下後有明顯拖曳：即時畫出跟隨滑鼠的虛線預覽框，放開時依實際拖曳範圍產生矩形標註。
+ * @param {*} tileRecord 要標註的格子
+ * @param {HTMLElement} coordEl 用來計算滑鼠相對座標的元素（格子本身，或放大鏡的 img）
+ * @param {PointerEvent} downEvent pointerdown 事件
+ * @param {HTMLElement} previewContainer 虛線預覽框要附加到哪個容器（需 position:relative，且尺寸與 coordEl 一致）
+ */
+function startDragAnnotation(tileRecord, coordEl, downEvent, previewContainer) {
+  downEvent.preventDefault();
+  downEvent.stopPropagation();
+  const rect = coordEl.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return;
+  const container = previewContainer || coordEl;
+
+  const startX = Math.min(rect.width, Math.max(0, downEvent.clientX - rect.left));
+  const startY = Math.min(rect.height, Math.max(0, downEvent.clientY - rect.top));
+  let curX = startX;
+  let curY = startY;
+  let moved = false;
+
+  const previewEl = document.createElement("div");
+  previewEl.className = "drag-box-preview";
+  previewEl.hidden = true;
+  container.appendChild(previewEl);
+
+  function updatePreview() {
+    const left = Math.min(startX, curX);
+    const top = Math.min(startY, curY);
+    const w = Math.abs(curX - startX);
+    const h = Math.abs(curY - startY);
+    previewEl.style.left = `${(left / rect.width) * 100}%`;
+    previewEl.style.top = `${(top / rect.height) * 100}%`;
+    previewEl.style.width = `${(w / rect.width) * 100}%`;
+    previewEl.style.height = `${(h / rect.height) * 100}%`;
+  }
+
+  function onMove(mv) {
+    curX = Math.min(rect.width, Math.max(0, mv.clientX - rect.left));
+    curY = Math.min(rect.height, Math.max(0, mv.clientY - rect.top));
+    const dx = Math.abs(curX - startX);
+    const dy = Math.abs(curY - startY);
+    if (!moved && (dx > DRAG_THRESHOLD_PX || dy > DRAG_THRESHOLD_PX)) {
+      moved = true;
+      previewEl.hidden = false;
+    }
+    if (moved) updatePreview();
+  }
+
+  function onUp() {
+    window.removeEventListener("pointermove", onMove);
+    window.removeEventListener("pointerup", onUp);
+    previewEl.remove();
+
+    if (!moved) {
+      // 單純點擊：退回舊版固定尺寸方框，中心即點擊處（快速盲打用）
+      const normX = rect.width > 0 ? startX / rect.width : 0.5;
+      const normY = rect.height > 0 ? startY / rect.height : 0.5;
+      applyPointAnnotation(tileRecord, normX, normY);
+    } else {
+      const x1 = Math.min(startX, curX) / rect.width;
+      const x2 = Math.max(startX, curX) / rect.width;
+      const y1 = Math.min(startY, curY) / rect.height;
+      const y2 = Math.max(startY, curY) / rect.height;
+      applyBoxAnnotation(tileRecord, x1, y1, x2, y2);
+    }
+  }
+
+  window.addEventListener("pointermove", onMove);
+  window.addEventListener("pointerup", onUp, { once: true });
 }
 
 /**
@@ -1844,12 +1932,45 @@ function applyPointAnnotation(tileRecord, normX, normY) {
   const origX = Math.round(tileRecord.left + tileX);
   const origY = Math.round(tileRecord.top + tileY);
 
-  setTileState(tileRecord, tileRecord.el, "abnormal", false, { normX, normY, origX, origY, boxPx: currentPointBoxPx });
+  setTileState(tileRecord, tileRecord.el, "abnormal", false, {
+    normX, normY, origX, origY,
+    boxPx: currentPointBoxPx,
+    widthPx: currentPointBoxPx,
+    heightPx: currentPointBoxPx
+  });
   updateSummary();
   if (hoveredTileRecord === tileRecord) {
     renderZoomPointMarker(tileRecord);
   }
-  showToast(`📍 已標記精確點 (原圖座標 ${origX}, ${origY})，匯出 YOLO 時將以此為中心產生 ${currentPointBoxPx}×${currentPointBoxPx}px 邊界框`);
+  showToast(`📍 已標記精確點 (原圖座標 ${origX}, ${origY})，匯出 YOLO 時將以此為中心產生 ${currentPointBoxPx}×${currentPointBoxPx}px 邊界框；也可以直接按住 Shift 拖曳畫出貼合物件大小的矩形框`);
+}
+
+/**
+ * 依 Shift+拖曳畫出的矩形範圍（x1n/y1n/x2n/y2n，皆為相對於該格子的 0~1 正規化座標）
+ * 產生精確標註，寬高直接對應拖曳出的實際大小，不再強制正方形。
+ * 供格子直接拖曳與放大鏡拖曳共用。
+ */
+function applyBoxAnnotation(tileRecord, x1n, y1n, x2n, y2n) {
+  x1n = clamp01(x1n); x2n = clamp01(x2n);
+  y1n = clamp01(y1n); y2n = clamp01(y2n);
+
+  const widthPx = Math.max(4, Math.round((x2n - x1n) * tileRecord.w));
+  const heightPx = Math.max(4, Math.round((y2n - y1n) * tileRecord.h));
+  const normX = (x1n + x2n) / 2;
+  const normY = (y1n + y2n) / 2;
+  const tileX = normX * tileRecord.w;
+  const tileY = normY * tileRecord.h;
+  const origX = Math.round(tileRecord.left + tileX);
+  const origY = Math.round(tileRecord.top + tileY);
+  // boxPx 保留給舊版程式碼／匯入相容用，等於長邊；實際匯出一律用 widthPx/heightPx
+  const boxPx = Math.max(widthPx, heightPx);
+
+  setTileState(tileRecord, tileRecord.el, "abnormal", false, { normX, normY, origX, origY, boxPx, widthPx, heightPx });
+  updateSummary();
+  if (hoveredTileRecord === tileRecord) {
+    renderZoomPointMarker(tileRecord);
+  }
+  showToast(`▭ 已框出精確範圍 (原圖座標 ${origX}, ${origY}，${widthPx}×${heightPx}px)，YOLO 與 mask 都會直接採用這個實際大小`);
 }
 
 /**
@@ -1951,9 +2072,10 @@ function maskFileName(t) {
 /**
  * 產生像素級二值 ground truth mask（異常區域塗白、其餘塗黑），供 anomalib 的
  * pixel-level AUROC / 定位評估使用，尺寸與該格匯出的圖片（t.w × t.h）一致。
- * - 有 Shift+點擊精確打點：以點座標為中心，用當初該筆標註設定的邊界框邊長當直徑畫一個白色圓形。
- * - 沒有打點、只整格標為異常：目前無法得知確切異常位置，保守地把整格塗白，
- *   讓 pixel-level 指標至少可以跑，但定位精確度會低於有打點的樣本，建議盡量搭配 Shift+點擊補點。
+ * - 有精確標註（Shift+拖曳畫出矩形，或 Shift+點擊的固定方框）：以中心點為準，
+ *   依實際寬高畫一個內接橢圓，比固定圓形更貼近拖曳框出的真實物件輪廓與長寬比。
+ * - 沒有精確標註、只整格標為異常：無法得知確切位置，保守地把整格塗白，
+ *   pixel-level 指標仍可運作但精確度較低，建議盡量搭配 Shift+拖曳畫框。
  */
 async function createMaskBlob(t) {
   const canvas = document.createElement("canvas");
@@ -1964,12 +2086,13 @@ async function createMaskBlob(t) {
   ctx.fillRect(0, 0, t.w, t.h);
   ctx.fillStyle = "#ffffff";
   if (t.point) {
-    const boxPx = t.point.boxPx || DEFAULT_POINT_BOX_PX;
+    const { w: boxW, h: boxH } = pointBoxDims(t.point);
     const cx = clamp01(t.point.normX) * t.w;
     const cy = clamp01(t.point.normY) * t.h;
-    const r = Math.max(2, boxPx / 2);
+    const rx = Math.max(2, boxW / 2);
+    const ry = Math.max(2, boxH / 2);
     ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
     ctx.fill();
   } else {
     ctx.fillRect(0, 0, t.w, t.h);
@@ -1987,7 +2110,7 @@ function dateStamp() {
  * 產生可直接搭配 anomalib 目前 CLI 使用的 PatchCore 訓練設定檔（class_path/init_args 格式）。
  * 資料夾結構對應匯出的 dataset/（或 both 模式下的 patchcore_dataset/）：train/good、test/good、test/abnormal_*、test/mask/abnormal_*。
  * 現在每個 test/abnormal_* 都附有對應的 test/mask/abnormal_* 像素級遮罩，因此 task 設為 segmentation，
- * 可以直接算 pixel-level AUROC；mask 的精確度視標註時是否用 Shift+點擊打點而定（見下方註解）。
+ * 可以直接算 pixel-level AUROC；mask 的精確度視標註時是否用 Shift+拖曳畫框而定（見下方註解）。
  * anomalib 的設定 schema 會隨版本調整，訓練前請先用小資料集跑一次確認欄位是否仍相容。
  */
 function buildAnomalibConfigYaml(abnormalFolders, hasPointMasks = false) {
@@ -2000,8 +2123,8 @@ function buildAnomalibConfigYaml(abnormalFolders, hasPointMasks = false) {
   const maskNote = abnormalFolders.length === 0
     ? "# 目前沒有異常樣本，之後補上異常格再重新匯出即會一併產生 mask"
     : (hasPointMasks
-      ? "# mask 中，有用 Shift+點擊精確打點的異常格會畫出小圓形標註區域；未打點、只整格標異常的格子則整格塗白，精確度較低（建議盡量補打點）"
-      : "# 目前所有異常格都沒有用 Shift+點擊精確打點，mask 皆為整格塗白（近似 image-level 標註），建議之後補上精確打點以提升 pixel-level 評估的參考價值");
+      ? "# mask 中，有用 Shift+拖曳/點擊精確標註的異常格會畫出貼合實際大小的橢圓區域；未標註、只整格標異常的格子則整格塗白，精確度較低（建議盡量補標）"
+      : "# 目前所有異常格都沒有用 Shift+拖曳/點擊精確標註，mask 皆為整格塗白（近似 image-level 標註），建議之後補上精確標註以提升 pixel-level 評估的參考價值");
   return `# 由蜂蟹蟎標註工具自動產生。用法：
 #   1. 把這個檔案所在的資料夾（含 train/、test/）當作工作目錄
 #   2. anomalib train --config anomalib_patchcore_config.yaml

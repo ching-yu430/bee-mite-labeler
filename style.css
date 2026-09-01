@@ -1789,6 +1789,17 @@ main#main-workbench {
   50% { transform: translate(-50%, calc(-100% - 3px)) translateY(-2px); }
 }
 
+/* Shift+拖曳畫框時，跟隨滑鼠即時顯示的虛線預覽框（放開滑鼠後才轉為實際標註） */
+.drag-box-preview {
+  position: absolute;
+  border: 1.5px dashed #2f8fdb;
+  background: rgba(47, 143, 219, 0.16);
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 9;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
 /* 顯示 Shift+點擊打點實際會匯出的 YOLO 邊界框範圍（隨「點框大小」設定縮放） */
 .tile-point-box {
   position: absolute;

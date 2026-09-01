@@ -52,9 +52,9 @@
 
       <div class="toolbar-separator"></div>
 
-      <!-- Shift+點擊打點的邊界框大小，決定匯出 YOLO 時產生的框邊長 (px) -->
-      <div class="zoom-controls" title="Shift+點擊精確打點時，匯出 YOLO 產生的邊界框邊長 (px)；依蟎蟲在照片中的實際大小調整">
-        <span class="toolbar-label">📍 框</span>
+      <!-- Shift+點擊打點的邊界框大小（快速盲打用），決定匯出 YOLO 產生的框邊長 (px)；也可以直接 Shift+拖曳自由畫框 -->
+      <div class="zoom-controls" title="Shift+單純點擊時使用的固定框邊長 (px)，適合快速盲打；若要框出真實大小，直接按住 Shift 拖曳畫框即可，不受此數值限制">
+        <span class="toolbar-label">📍 快速框</span>
         <div class="zoom-btn-group">
           <button class="point-box-btn" data-box="12">12</button>
           <button class="point-box-btn is-active" data-box="20">20</button>
@@ -339,7 +339,8 @@
         <div class="shortcut-item"><kbd>T</kbd><span>❓ 其他可疑異狀</span></div>
         <div class="shortcut-item"><kbd>0</kbd> / <kbd>⌫</kbd><span>清除該格標記 (重置為未標)</span></div>
         <div class="shortcut-item"><kbd>N</kbd><span>將這張照片所有未標全設為正常</span></div>
-        <div class="shortcut-item"><kbd>Shift + 點擊</kbd><span>精確打點標註 (Point)，建議在懸浮放大鏡上點擊以獲得更高精準度</span></div>
+        <div class="shortcut-item"><kbd>Shift + 點擊</kbd><span>快速標記固定尺寸方框（尺寸見上方「📍 快速框」設定），建議在懸浮放大鏡上點擊以獲得更高精準度</span></div>
+        <div class="shortcut-item"><kbd>Shift + 拖曳</kbd><span>自由畫出矩形框，貼合物件實際大小與長寬比，YOLO 座標與 mask 都會直接採用；同樣建議在放大鏡上操作更精準</span></div>
         <div class="shortcut-item"><kbd>←</kbd> / <kbd>A</kbd><span>切換至上一張照片</span></div>
         <div class="shortcut-item"><kbd>→</kbd> / <kbd>D</kbd><span>切換至下一張照片</span></div>
         <div class="shortcut-item"><kbd>滑鼠滾輪</kbd><span>懸停於格子上時調整放大鏡倍率</span></div>
@@ -371,11 +372,11 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<!-- 懸浮放大鏡（支援倍率顯示與微調，按住 Shift 並點擊放大鏡可精確打點） -->
+<!-- 懸浮放大鏡（支援倍率顯示與微調，按住 Shift 並點擊/拖曳放大鏡可精確標註） -->
 <div id="zoom-preview" class="zoom-preview" hidden>
   <div class="zoom-preview-header">
     <span class="zoom-badge" id="zoom-badge">3.0x</span>
-    <span class="zoom-shift-hint" id="zoom-shift-hint" hidden>📍 Shift+點擊打點</span>
+    <span class="zoom-shift-hint" id="zoom-shift-hint" hidden>📍 Shift+點擊/拖曳畫框</span>
   </div>
   <div class="zoom-preview-img-wrap" id="zoom-preview-img-wrap">
     <img id="zoom-preview-img" src="" alt="">

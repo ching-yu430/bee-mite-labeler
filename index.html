@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>蜂蟹蟎標註工具</title>
 <link rel="stylesheet" href="fonts/css/vf.css">
-<link rel="stylesheet" href="style.css?v=20260901_01">
+<link rel="stylesheet" href="style.css?v=20260901_1">
 </head>
 <body>
 
@@ -42,12 +42,12 @@
       <!-- 放大鏡倍率切換 -->
       <div class="zoom-controls" title="懸停放大鏡倍率 (亦可直接在格子上滾動滑鼠滾輪調整)">
         <span class="toolbar-label">🔍 放大</span>
-        <div class="zoom-btn-group">
-          <button class="zoom-level-btn" data-zoom="2">2x</button>
-          <button class="zoom-level-btn is-active" data-zoom="3">3x</button>
-          <button class="zoom-level-btn" data-zoom="4">4x</button>
-          <button class="zoom-level-btn" data-zoom="6">6x</button>
-        </div>
+        <select id="zoom-level-select" class="toolbar-select">
+          <option value="2">2x</option>
+          <option value="3" selected>3x</option>
+          <option value="4">4x</option>
+          <option value="6">6x</option>
+        </select>
       </div>
 
       <div class="toolbar-separator"></div>
@@ -55,12 +55,12 @@
       <!-- Shift+點擊打點的邊界框大小（快速盲打用），決定匯出 YOLO 產生的框邊長 (px)；也可以直接 Shift+拖曳自由畫框 -->
       <div class="zoom-controls" title="Shift+單純點擊時使用的固定框邊長 (px)，適合快速盲打；若要框出真實大小，直接按住 Shift 拖曳畫框即可，不受此數值限制">
         <span class="toolbar-label">📍 快速框</span>
-        <div class="zoom-btn-group">
-          <button class="point-box-btn" data-box="12">12</button>
-          <button class="point-box-btn is-active" data-box="20">20</button>
-          <button class="point-box-btn" data-box="28">28</button>
-          <button class="point-box-btn" data-box="40">40</button>
-        </div>
+        <select id="point-box-select" class="toolbar-select">
+          <option value="12">12</option>
+          <option value="20" selected>20</option>
+          <option value="28">28</option>
+          <option value="40">40</option>
+        </select>
       </div>
 
       <div class="toolbar-separator"></div>
@@ -386,6 +386,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="app.js?v=20260901_01"></script>
+<script src="app.js?v=20260901_1"></script>
 </body>
 </html>

@@ -1552,10 +1552,8 @@ main#main-workbench {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
-  padding: 14px 18px;
-  background: #fff;
-  border-top: 1px solid var(--line);
+  gap: 12px;
+  margin-top: 10px;
 }
 
 .btn-secondary {

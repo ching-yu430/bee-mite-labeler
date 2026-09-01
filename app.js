@@ -17,6 +17,7 @@ const ABNORMAL_TYPES = {
 let currentAbnormalType = "mite";
 let currentZoomLevel = 3.0; // 預設放大倍率
 let globalFilter = ""; // 全域影像濾鏡設定
+let zoomLocked = false; // 放大鏡鎖定狀態
 
 // 相關狀態與業務邏輯
 // 相關狀態與業務邏輯

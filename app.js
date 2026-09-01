@@ -160,6 +160,8 @@ const btnSharpen = document.getElementById("btn-sharpen");
 const btnClahe = document.getElementById("btn-clahe");
 const btnAiPredict = document.getElementById("btn-ai-predict");
 const btnClearDb = document.getElementById("btn-clear-db");
+const zoomLevelSelect = document.getElementById("zoom-level-select");
+const pointBoxSelect = document.getElementById("point-box-select");
 const zoomLevelBtns = document.querySelectorAll(".zoom-level-btn");
 const pointBoxBtns = document.querySelectorAll(".point-box-btn");
 
@@ -358,6 +360,13 @@ if (healthConfirmBtn) {
 }
 
 // 相關狀態與業務邏輯
+if (zoomLevelSelect) {
+  zoomLevelSelect.addEventListener("change", () => {
+    const level = parseFloat(zoomLevelSelect.value) || 3.0;
+    setZoomLevel(level);
+  });
+}
+
 zoomLevelBtns.forEach(btn => {
   btn.addEventListener("click", () => {
     const level = parseFloat(btn.dataset.zoom) || 3.0;
@@ -367,6 +376,24 @@ zoomLevelBtns.forEach(btn => {
 
 function setZoomLevel(level) {
   currentZoomLevel = Math.max(1.5, Math.min(8.0, level));
+  
+  if (zoomLevelSelect) {
+    // Find matching option or closest option
+    let closestVal = null;
+    let minDiff = Infinity;
+    for (const opt of zoomLevelSelect.options) {
+      const optVal = parseFloat(opt.value);
+      const diff = Math.abs(optVal - currentZoomLevel);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestVal = opt.value;
+      }
+    }
+    if (closestVal !== null) {
+      zoomLevelSelect.value = closestVal;
+    }
+  }
+
   zoomLevelBtns.forEach(b => {
     b.classList.toggle("is-active", Math.abs(parseFloat(b.dataset.zoom) - currentZoomLevel) < 0.1);
   });
@@ -374,9 +401,19 @@ function setZoomLevel(level) {
   if (zoomPreview) {
     zoomPreview.style.width = `${Math.round(100 * currentZoomLevel + 20)}px`;
   }
+  if (hoveredTileRecord && !zoomPreview.hidden) {
+    const img = hoveredTileRecord.el ? hoveredTileRecord.el.querySelector("img") : null;
+    if (img) showZoomPreview(img.src, hoveredTileRecord);
+  }
 }
 
-// 相關狀態與業務邏輯
+if (pointBoxSelect) {
+  pointBoxSelect.addEventListener("change", () => {
+    const px = parseFloat(pointBoxSelect.value) || DEFAULT_POINT_BOX_PX;
+    setPointBoxPx(px);
+  });
+}
+
 pointBoxBtns.forEach(btn => {
   btn.addEventListener("click", () => {
     const px = parseFloat(btn.dataset.box) || DEFAULT_POINT_BOX_PX;
@@ -386,9 +423,30 @@ pointBoxBtns.forEach(btn => {
 
 function setPointBoxPx(px) {
   currentPointBoxPx = Math.max(4, Math.min(200, px));
+  
+  if (pointBoxSelect) {
+    let closestVal = null;
+    let minDiff = Infinity;
+    for (const opt of pointBoxSelect.options) {
+      const optVal = parseFloat(opt.value);
+      const diff = Math.abs(optVal - currentPointBoxPx);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestVal = opt.value;
+      }
+    }
+    if (closestVal !== null) {
+      pointBoxSelect.value = closestVal;
+    }
+  }
+
   pointBoxBtns.forEach(b => {
     b.classList.toggle("is-active", Math.abs(parseFloat(b.dataset.box) - currentPointBoxPx) < 0.1);
   });
+  
+  if (hoveredTileRecord && !zoomPreview.hidden) {
+    renderZoomPointMarker(hoveredTileRecord);
+  }
 }
 
 prevPhotoBtn.addEventListener("click", () => {
@@ -623,6 +681,7 @@ document.addEventListener("keydown", (e) => {
         }
       } else {
         clearTileFocus();
+        focusedTileIndex = -1;
         hoveredTileRecord = null;
         hideZoomPreview();
         showToast("快捷鍵導覽已關閉");
@@ -736,15 +795,39 @@ function stopPainting() {
 // 相關狀態與業務邏輯
 function updateTileFocus(photo) {
   clearTileFocus();
-  if (focusedTileIndex >= 0 && focusedTileIndex < photo.tiles.length) {
-    photo.tiles[focusedTileIndex].el.classList.add("tile-focused");
-    photo.tiles[focusedTileIndex].el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  if (focusedTileIndex >= 0 && photo && photo.tiles && focusedTileIndex < photo.tiles.length) {
+    const tile = photo.tiles[focusedTileIndex];
+    if (tile && tile.el) {
+      tile.el.classList.add("tile-focused");
+      tile.el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      positionZoomPreviewForTile(tile);
+    }
   }
 }
 
 function clearTileFocus() {
   document.querySelectorAll(".tile-focused").forEach(el => el.classList.remove("tile-focused"));
-  focusedTileIndex = -1;
+}
+
+function positionZoomPreviewForTile(tileRecord) {
+  if (!tileRecord || !tileRecord.el || !zoomPreview) return;
+  const rect = tileRecord.el.getBoundingClientRect();
+  const margin = 18;
+  const previewW = zoomPreview.offsetWidth || 300;
+  const previewH = zoomPreview.offsetHeight || 300;
+
+  let left = rect.right + margin;
+  let top = rect.top;
+
+  if (left + previewW > window.innerWidth) {
+    left = rect.left - previewW - margin;
+  }
+  if (top + previewH > window.innerHeight) {
+    top = window.innerHeight - previewH - margin;
+  }
+
+  zoomPreview.style.left = `${Math.max(8, left)}px`;
+  zoomPreview.style.top = `${Math.max(8, top)}px`;
 }
 
 function showPhoto(index) {

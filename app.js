@@ -1,10 +1,10 @@
-// ???閮餃極??
+// 程式碼邏輯實作細節
 
-// 瘥撐?抒?靘雯?澆????潘????璅?/ 甇?虜 / ?啣虜??敺芰嚗?
+// 程式碼邏輯實作細節
 
-// 瘥撐?抒?靘雯?澆????潘??€??璅?/ 甇?虜 / ?啣虜??敺芰嚗?
+// 程式碼邏輯實作細節
 
-// ?臬??? anomalib / PatchCore ????dataset/train/test 鞈?憭暹撘€?
+// Anomalib 設定相關參數
 
 
 
@@ -14,7 +14,7 @@ const STATE_LABEL = { unlabeled: "未標記", normal: "正常", abnormal: "異�
 
 
 
-// ?祕?拳?抒???銋敦?撣豢?蝐文?蝢?
+// 程式碼邏輯實作細節
 
 const ABNORMAL_TYPES = {
 
@@ -32,17 +32,17 @@ const ABNORMAL_TYPES = {
 
 let currentAbnormalType = "mite";
 
-let currentZoomLevel = 3.0; // ?身?曉之?∪?
+let currentZoomLevel = 3.0; // 當前放大倍率
 
-let globalFilter = ""; // ?其?閮??桀??蕪?∪??賂?霈憭折撘瑕憟
+let globalFilter = ""; // 全域濾鏡字串，同步套用到放大鏡
 
 
 
-// Shift+?桃?暺??蝙?函??箏???獢???(px)嚗?翰????亦 Shift+??急?嚗?// ??交?冽??喳?祕?祝擃?銝?甇方身摰??嗚?
+// 程式碼邏輯實作細節
 
-// ?舫?撌亙?矽?湛?瘥活?????嗡??澆??脰府蝑?閮鳴?t.point.boxPx嚗?
+// 程式碼邏輯實作細節
 
-// 銋?隤踵?典?閮剖?銝?敶梢撌脫?閮???璅酉??
+// 程式碼邏輯實作細節
 
 const DEFAULT_POINT_BOX_PX = 20;
 
@@ -50,17 +50,17 @@ let currentPointBoxPx = DEFAULT_POINT_BOX_PX;
 
 
 
-// Shift+??急????頝撠甇文?蝝潸??箝蝝???????摰偕撖豢獢??嫣噶敹恍??
+// 程式碼邏輯實作細節
 
 const DRAG_THRESHOLD_PX = 6;
 
 
 
-// 蝯曹???銝蝑?point 璅酉撖阡?????撖祇?嚗x嚗?
+// 程式碼邏輯實作細節
 
-// ?芸??冽??喟?箇? widthPx/heightPx嚗???閰梧?靘?敹恍????臬?? JSON嚗??boxPx ?孵耦嚗?
+// 程式碼邏輯實作細節
 
-// ?抵瘝?撠梁?典??身?潦? YOLO ?臬?ask 蝜芾ˊ?摮???蝺＊蝷箏?剁?蝣箔?銝?蝞?銝?氬?
+// 程式碼邏輯實作細節
 
 function pointBoxDims(point) {
 
@@ -76,7 +76,7 @@ function pointBoxDims(point) {
 
 
 
-// A: ?日/????
+// 程式碼邏輯實作細節
 
 const undoStack = [];
 
@@ -86,7 +86,7 @@ const MAX_UNDO = 200;
 
 
 
-// J: ?萇撠
+// 程式碼邏輯實作細節
 
 let keyboardNavActive = false;
 
@@ -122,23 +122,23 @@ let currentPhotoIndex = 0;
 
 
 
-// ?憛璅酉?函????
+// 程式碼邏輯實作細節
 
 let isPainting = false;
 
 let paintState = null;
 
-// ?桀?皛????摮?靘?文翰?琿雿輻嚗?
+// 程式碼邏輯實作細節
 
 let hoveredTileRecord = null;
 
-// ?? Shift ??摰憭折嚗??曌???摮宏??曉之???楝銝?
+// 程式碼邏輯實作細節
 
-// ???嗡??澆?閫貊摰? mouseenter嚗??湔憭折?批捆鋡怠????????let zoomLocked = false;
+// 程式碼邏輯實作細節
 
 
 
-// DOM ??
+// 程式碼邏輯實作細節
 
 const photoInput = document.getElementById("photo-input");
 
@@ -240,7 +240,7 @@ if (shortcutsModal) {
 
 
 
-// ?臬敶閬???
+// 程式碼邏輯實作細節
 
 const exportModal = document.getElementById("export-modal");
 
@@ -256,7 +256,7 @@ const modalAugFlip = document.getElementById("modal-aug-flip");
 
 
 
-// ?臬?????交炎敶閬???
+// 程式碼邏輯實作細節
 
 const healthCheckModal = document.getElementById("health-check-modal");
 
@@ -270,7 +270,7 @@ const healthStatList = document.getElementById("health-stat-list");
 
 const healthWarnList = document.getElementById("health-warn-list");
 
-// 雿輻??交炎閬?????閬匱蝥?箝????瑁??祕??箏?雿?
+// 程式碼邏輯實作細節
 
 let pendingExportAction = null;
 
@@ -304,7 +304,7 @@ const pagerInfo = document.getElementById("pager-info");
 
 
 
-// 瞈暸?憭折??
+// 程式碼邏輯實作細節
 
 const filterBrightness = document.getElementById("filter-brightness");
 
@@ -334,7 +334,7 @@ if (pointBoxSelect) pointBoxSelect.addEventListener("change", (e) => setPointBox
 
 
 
-// 鈭辣蝬?
+// 程式碼邏輯實作細節
 
 photoInput.addEventListener("change", handleFiles);
 
@@ -346,7 +346,7 @@ if (btnClearDb) {
 
   btnClearDb.addEventListener("click", () => {
 
-    if (confirm("蝣箏?閬??斤汗?冽?唳摮蒂?蔭撠???")) {
+    if (confirm("確定要清空本地快取並重置專案嗎？")) {
 
       clearIndexedDB();
 
@@ -410,13 +410,13 @@ if (emptyUploadBtn) {
 
 
 
-// 敹恍???Ｘ?批嚗歇?寧 shortcuts-modal 敶閬?嚗??蝙?刻?????選?
+// 程式碼邏輯實作細節
 
-// shortcutsPanel / shortcutsChevron 撌脩宏?歹?敹恍???寧 shortcutsModal 敶憿舐內
+// 程式碼邏輯實作細節
 
 
 
-// 撌血?啣虜憿銝??詨
+// 程式碼邏輯實作細節
 
 if (abnormalTypeSelect) {
 
@@ -450,7 +450,7 @@ function selectAbnormalType(typeKey, syncSelect = true) {
 
 
 
-// ?臬敶閬?嚗odal嚗?隞嗥?摰?
+// 程式碼邏輯實作細節
 
 function openExportModal() {
 
@@ -520,7 +520,7 @@ if (modalConfirmExportBtn) {
 
     closeExportModal();
 
-    // 甇??????頝唾????交炎閬?嚗蝙?刻Ⅱ隤????銵??
+    // 程式碼邏輯實作細節
 
     openHealthCheckModal(() => doExportDataset(format, splitPercent, shouldAug));
 
@@ -530,9 +530,9 @@ if (modalConfirmExportBtn) {
 
 
 
-// ?臬?????交炎嚗絞閮??啣虜憿撘菜?迤撣??啣虜瘥?嚗?
+// 程式碼邏輯實作細節
 
-// 銝血?璅??賊?撠?<10 撘蛛????交??箄郎???踹?蝺游靘? PatchCore/YOLO 璅∪?銝帘摰?
+// 程式碼邏輯實作細節
 
 const MIN_HEALTHY_SAMPLES = 10;
 
@@ -600,9 +600,9 @@ function renderHealthCheckModal(stats) {
 
     const rows = [];
 
-    rows.push(`<div class="health-stat-row"><span>??甇?虜</span><span class="health-stat-num">${stats.normal} ??/span></div>`);
+    rows.push(`<div class="health-stat-row"><span>✅ 正常</span><span class="health-stat-num">${stats.normal} 張</span></div>`);
 
-    rows.push(`<div class="health-stat-row"><span>?? ?啣虜??</span><span class="health-stat-num">${stats.abnormal} ??/span></div>`);
+    rows.push(`<div class="health-stat-row"><span>⚠️ 異常</span><span class="health-stat-num">${stats.abnormal} 張</span></div>`);
 
 
 
@@ -622,11 +622,11 @@ function renderHealthCheckModal(stats) {
 
     } else {
 
-      ratioText = "撠璅酉";
+      ratioText = "比例";
 
     }
 
-    rows.push(`<div class="health-stat-row"><span>?? 甇?虜/?啣虜瘥?</span><span class="health-stat-num">${ratioText}</span></div>`);
+    rows.push(`<div class="health-stat-row"><span>📊 正常/異常比例</span><span class="health-stat-num">${ratioText}</span></div>`);
 
 
 
@@ -638,7 +638,7 @@ function renderHealthCheckModal(stats) {
 
       const isLow = n > 0 && n < MIN_HEALTHY_SAMPLES;
 
-      rows.push(`<div class="health-stat-row${isLow ? " is-warn" : ""}"><span>${info.emoji} ${info.label}</span><span class="health-stat-num">${n} ??{isLow ? " ??" : ""}</span></div>`);
+      rows.push(`<div class="health-stat-row${isLow ? " is-warn" : ""}"><span>${info.emoji} ${info.label}</span><span class="health-stat-num">${n} 張${isLow ? " ⚠️" : ""}</span></div>`);
 
     }
 
@@ -652,11 +652,11 @@ function renderHealthCheckModal(stats) {
 
     if (stats.warnings.length === 0) {
 
-      healthWarnList.innerHTML = `<div class="health-ok-banner">?? 璅??賊??絲靘?蝞摨瘀??臭誑蝜潛??臬??/div>`;
+      healthWarnList.innerHTML = `<div class="health-ok-banner">✅ 各類別樣本數量充足，可以匯出！</div>`;
 
     } else {
 
-      healthWarnList.innerHTML = stats.warnings.map(w => `<div class="health-warn-item">?? ${w}</div>`).join("");
+      healthWarnList.innerHTML = stats.warnings.map(w => `<div class="health-warn-item">⚠️ ${w}</div>`).join("");
 
     }
 
@@ -722,7 +722,7 @@ if (healthConfirmBtn) {
 
 
 
-// ?曉之?∪?????
+// 程式碼邏輯實作細節
 
 zoomLevelBtns.forEach(btn => {
 
@@ -760,7 +760,7 @@ function setZoomLevel(level) {
 
 
 
-// Shift+暺???獢之撠???敶梢?臬 YOLO ?????獢??瘀?px嚗?
+// 程式碼邏輯實作細節
 
 pointBoxBtns.forEach(btn => {
 
@@ -806,7 +806,7 @@ sidebarClearAll.addEventListener("click", clearAllPhotos);
 
 
 
-// =================== 敶勗?隤踵瞈暸 (鈭桀漲/撠?/?喳?/撠?憓撥/?身) ===================
+// 程式碼邏輯實作細節
 
 function applyFilters() {
 
@@ -868,7 +868,7 @@ function applyFilters() {
 
 
 
-  // 1. ??撱箇????<style id="live-filter-style">嚗誑?擃??閬??????潦之???豢筑?曉之??
+  // 程式碼邏輯實作細節
 
   let styleEl = document.getElementById("live-filter-style");
 
@@ -896,7 +896,7 @@ function applyFilters() {
 
 
 
-  // 2. ?郊?湔 photosContainer CSS 霈??inline style
+  // 程式碼邏輯實作細節
 
   if (photosContainer) {
 
@@ -1000,7 +1000,7 @@ if (btnClahe) {
 
 
 
-// AI ?單??刻? (Tailscale / API)
+// 程式碼邏輯實作細節
 
 if (btnAiPredict) {
 
@@ -1078,7 +1078,7 @@ async function runAiPrediction() {
 
     if (!response.ok) {
 
-      throw new Error(`隡箸??典??隤斤Ⅳ: ${response.status}`);
+      throw new Error(`API 請求失敗: ${response.status}`);
 
     }
 
@@ -1132,7 +1132,7 @@ showPhoto(0);
 
 
 
-// ?憛蝯??菜葫嚗??曌?/ 閫豢?虜璅??蝒閬???
+// 程式碼邏輯實作細節
 
 document.addEventListener("pointerup", stopPainting);
 
@@ -1152,7 +1152,7 @@ document.addEventListener("pointermove", (ev) => {
 
 
 
-// 敹恍??銵?(Q/W/E/R/T 撠? 5 蝔桃撣賊???
+// 程式碼邏輯實作細節
 
 const KEY_TO_ABNORMAL_TYPE = {
 
@@ -1170,19 +1170,19 @@ const KEY_TO_ABNORMAL_TYPE = {
 
 
 
-// ?萇敹急?蛛?
+// 程式碼邏輯實作細節
 
-// 1. ?典?嚗? / A 銝?撘萸? / D 銝?撘萸 銝?菔身?芣??箸迤撣詻/W/E/R/T ???啣虜憿
+// 程式碼邏輯實作細節
 
-// 2. 皜豢???澆?銝?嚗?
+// 程式碼邏輯實作細節
 
-//    - 1=甇?虜
+// 程式碼邏輯實作細節
 
-//    - 2=?嗅??詨??撣?
+// 程式碼邏輯實作細節
 
-//    - Q/W/E/R/T=?湔閮剔閰脩摰撣賊??伐?
+// 程式碼邏輯實作細節
 
-//    - 0/Backspace=皜
+// 程式碼邏輯實作細節
 
 document.addEventListener("keydown", (e) => {
 
@@ -1192,7 +1192,7 @@ document.addEventListener("keydown", (e) => {
 
 
 
-  // A: Ctrl+Z ?日 / Ctrl+Y ??
+  // 程式碼邏輯實作細節
 
   if ((e.ctrlKey || e.metaKey) && e.key === "z") {
 
@@ -1216,7 +1216,7 @@ document.addEventListener("keydown", (e) => {
 
 
 
-  // J: F ?萄???文??芣芋撘?
+  // 程式碼邏輯實作細節
 
   if (e.key === "f" || e.key === "F") {
 
@@ -1256,7 +1256,7 @@ showToast("訊息顯示");
 
 
 
-  // J: ?孵??萄??芸???
+  // 程式碼邏輯實作細節
 
   if (keyboardNavActive && photos[currentPhotoIndex]) {
 
@@ -1290,7 +1290,7 @@ showToast("訊息顯示");
 
       updateTileFocus(cp);
 
-      // 霈暺蝑? hoveredTileRecord嚗見 1/2/0 敹急?萄隞亦?交?雿?
+      // 程式碼邏輯實作細節
 
       hoveredTileRecord = cp.tiles[focusedTileIndex];
 
@@ -1346,7 +1346,7 @@ showToast("訊息顯示");
 
 
 
-  // 瑼Ｘ?臬??Q/W/E/R/T ??
+  // 程式碼邏輯實作細節
 
   const matchedType = KEY_TO_ABNORMAL_TYPE[e.key];
 
@@ -1400,7 +1400,7 @@ showToast("訊息顯示");
 
   } else if (matchedType) {
 
-    // 皜豢?銝?澆?銝?嚗/W/E/R/T ??撌血?詨??撣賊???
+    // 程式碼邏輯實作細節
 
     e.preventDefault();
 
@@ -1412,7 +1412,7 @@ showToast("訊息顯示");
 
 
 
-// ?亙歇??閮銝?敹??唳??????嚗歲?箇汗?函Ⅱ隤?蝷?
+// 程式碼邏輯實作細節
 
 window.addEventListener("beforeunload", (e) => {
 
@@ -1436,7 +1436,7 @@ function stopPainting() {
 
 
 
-// J: ?萇撠頛?賣
+// 程式碼邏輯實作細節
 
 function updateTileFocus(photo) {
 
@@ -1536,7 +1536,7 @@ async function handleFiles(e) {
 
   photoInput.disabled = true;
 
-  showLoading(`???抒?銝?(0/${files.length})`);
+  showLoading(`正在處理照片 (0/${files.length})`);
 
 
 
@@ -1544,9 +1544,9 @@ async function handleFiles(e) {
 
     for (let i = 0; i < files.length; i++) {
 
-      updateLoadingText(`???抒?銝?(${i + 1}/${files.length})嚗?{escapeForToast(files[i].name)}`);
+      updateLoadingText(`正在處理... (${i + 1}/${files.length})`);
 
-      await nextFrame(); // 霈脣漲????箔?嚗??脰??郊???潮?蝞?
+      await nextFrame(); // 相關狀態或邏輯變數
 
       try {
 
@@ -1622,7 +1622,7 @@ async function addPhoto(file, rows, cols, overlap) {
 
 
 
-  // I: 靽????? Blob 靘?隞賢??
+  // 程式碼邏輯實作細節
 
   try {
 
@@ -1714,7 +1714,7 @@ async function addPhoto(file, rows, cols, overlap) {
 
 
 
-  // --- ?湔?蝮桀? ---
+  // 程式碼邏輯實作細節
 
   const thumbCanvas = document.createElement("canvas");
 
@@ -1748,11 +1748,11 @@ async function addPhoto(file, rows, cols, overlap) {
 
 /**
 
- * 靘?tileRecord 撱箇??桐??澆? DOM ??嚗????瑯hift+暺?/?蝎曄Ⅱ璅酉??
+ * 參數說明與邏輯實作細節
 
- * ?豢筑?曉之?～遝頛芾矽?游?蝑???隞嗥??冽迨蝬?嚗?
+ * 參數說明與邏輯實作細節
 
- * 靘銝?抒???IndexedDB ???梁嚗Ⅱ靽??箔??氬?
+ * 參數說明與邏輯實作細節
 
  */
 
@@ -1790,9 +1790,9 @@ function createTileElement(tileRecord) {
 
 
 
-  // ?舀 Shift+??芰?急?嚗票?隞嗅祕?之撠?嚗hift+?桃?暺???摰偕撖詨翰?獢?
+  // 程式碼邏輯實作細節
 
-  // 銝? Shift ?銝?砍????/ ???憛
+  // 程式碼邏輯實作細節
 
   tileEl.addEventListener("pointerdown", (ev) => {
 
@@ -1812,7 +1812,7 @@ function createTileElement(tileRecord) {
 
     if (ev.pointerType !== "touch") ev.preventDefault();
 
-    // 銝?砍暺????憛
+    // 程式碼邏輯實作細節
 
     const next = cycleTile(tileRecord, tileEl);
 
@@ -1826,7 +1826,7 @@ function createTileElement(tileRecord) {
 
   tileEl.addEventListener("pointerenter", (ev) => {
 
-    // ?湔瑼Ｘ嚗?皛?撌阡蝣箏祕?? (ev.buttons === 1) ?????憛嚗甇Ｗ蝝??炊??
+    // 程式碼邏輯實作細節
 
     if (ev.buttons === 1 && isPainting && paintState) {
 
@@ -1862,7 +1862,7 @@ function createTileElement(tileRecord) {
 
   tileEl.addEventListener("mouseenter", () => {
 
-    if (zoomLocked) return; // ?曉之?⊿?摰葉嚗?曌??隞摮??嗉粥?曉之?∪摰?
+    if (zoomLocked) return; // 放大鏡已鎖定，不更新追蹤
 
     cancelHideZoomPreview();
 
@@ -1874,7 +1874,7 @@ function createTileElement(tileRecord) {
 
   tileEl.addEventListener("mousemove", (ev) => {
 
-    if (zoomLocked) return; // ??銝凋?????曌宏??蝵殷?霈蝙?刻蝛拙?蝘駁??駁???
+    if (zoomLocked) return; // 若放大鏡鎖定則不更新狀態
 
     positionZoomPreview(ev);
 
@@ -1882,9 +1882,9 @@ function createTileElement(tileRecord) {
 
   tileEl.addEventListener("mouseleave", () => {
 
-    if (zoomLocked) return; // ??銝剖蕭?仿??隞塚??踹??曉之?∟◤???
+    if (zoomLocked) return; // 若放大鏡鎖定則不更新狀態
 
-    // 撱園?梯?嚗?皛????宏?唳憭折銝嚗?曉之敶勗?蝎曄Ⅱ??
+    // 程式碼邏輯實作細節
 
     scheduleHideZoomPreview();
 
@@ -1892,7 +1892,7 @@ function createTileElement(tileRecord) {
 
 
 
-  // 皛曇憚?湔隤踵?曉之?∪?
+  // 程式碼邏輯實作細節
 
   tileEl.addEventListener("wheel", (ev) => {
 
@@ -1920,7 +1920,7 @@ function createTileElement(tileRecord) {
 
 /**
 
- * 靘?tileRecord.point ?冽摮??怠嚗?蝘駁嚗??脣????移蝣箸?閮???
+ * 參數說明與邏輯實作細節
 
  */
 
@@ -1946,9 +1946,9 @@ function renderPointMarker(tileRecord, tileEl) {
 
   const { w: boxW, h: boxH } = pointBoxDims(tileRecord.point);
 
-  marker.title = `蝎曄Ⅱ璅酉?????摨扳? ${tileRecord.point.origX}, ${tileRecord.point.origY}嚗???${Math.round(boxW)}?${Math.round(boxH)}px嚗hift+??舫??唳??貊???`;
+  marker.title = `座標: ${tileRecord.point.origX}, ${tileRecord.point.origY}`;
 
-  marker.innerHTML = `<span class="point-ring"></span><span class="point-pin">??</span>`;
+  marker.innerHTML = `<span class="point-ring"></span><span class="point-pin">📍</span>`;
 
   tileEl.appendChild(marker);
 
@@ -1960,9 +1960,9 @@ function renderPointMarker(tileRecord, tileEl) {
 
 /**
 
- * 靘?tileRecord.point ?祕?祝擃?Shift+??怠?敶ｇ??翰?????箏??寞?嚗?
+ * 參數說明與邏輯實作細節
 
- * ?怠??箏 YOLO / mask ????蝭?嚗?雿輻??湔?獢之撠?敶Ｙ??臬????
+ * 參數說明與邏輯實作細節
 
  */
 
@@ -1990,11 +1990,11 @@ function buildPointBoxOutline(tileRecord) {
 
 /**
 
- * 撱箇??抒??雯??DOM ?憛?撌血皜???
+ * 參數說明與邏輯實作細節
 
- * photo.tiles 敹?撌脣?憒伐???blob嚗?甇文撘?鋆遣蝻箏???tileEl 銝衣?鋆?Ｕ?
+ * 參數說明與邏輯實作細節
 
- * 靘銝?抒? (addPhoto) ??IndexedDB ?芸??? (rebuildPhotoFromStored) ?梁??
+ * 參數說明與邏輯實作細節
 
  */
 
@@ -2022,7 +2022,7 @@ function finalizePhotoDOM(photo, W, H, rows, cols) {
 
   const heading = document.createElement("h2");
 
-  heading.textContent = `${photo.fileName}?(${W}?${H}嚗???${rows}?${cols} = ${rows * cols} ??`;
+  heading.textContent = `${photo.fileName} (原圖 ${W}x${H}, 切為 ${rows * cols} 格)`;
 
   head.appendChild(heading);
 
@@ -2050,7 +2050,7 @@ markNormalBtn.title = "標為正常";
 
   resetBtn.className = "mini-btn mini-btn-danger";
 
-  resetBtn.textContent = "皜璅?";
+  resetBtn.textContent = "清除標記";
 
 resetBtn.title = "重設";
 
@@ -2100,7 +2100,7 @@ resetBtn.title = "重設";
 
 
 
-  // --- ?湔?? ---
+  // 程式碼邏輯實作細節
 
   const li = document.createElement("li");
 
@@ -2114,11 +2114,11 @@ resetBtn.title = "重設";
 
       <div class="sidebar-name">${escapeHtml(photo.fileName)}</div>
 
-      <div class="sidebar-progress" data-role="progress">0 / ${rows * cols} 撌脫?</div>
+    <div class="sidebar-progress" data-role="progress">0 / ${rows * cols} 已標記</div>
 
     </div>
 
-    <button class="sidebar-remove" title="蝘駁?撐?抒?" aria-label="蝘駁">??/button>
+    <button class="sidebar-remove" title="移除照片" aria-label="移除照片">🗑️</button>
 
   `;
 
@@ -2142,7 +2142,7 @@ resetBtn.title = "重設";
 
     const labeled = photo.tiles.filter(t => t.state !== "unlabeled").length;
 
-    if (labeled > 0 && !confirm(`??{photo.fileName}?歇蝬?閮? ${labeled} ?潘?蝣箏?閬宏?日撐?抒?銝行璉?璅???`)) {
+    if (labeled > 0 && !confirm(`${photo.fileName} 已標記 ${labeled} 個項目，確定要刪除嗎？`)) {
 
       return;
 
@@ -2168,7 +2168,7 @@ resetBtn.title = "重設";
 
 /**
 
- * ??IndexedDB ??????撱箔?撘萇???急?????blob????蝎曄Ⅱ暺???
+ * 參數說明與邏輯實作細節
 
  */
 
@@ -2216,7 +2216,7 @@ async function rebuildPhotoFromStored(pd) {
 
   for (const t of pd.tiles) {
 
-    if (!t.blob) continue; // 瘝?敶勗?鞈????潛瘜????仿?
+    if (!t.blob) continue; // 若無 blob 則跳過
 
     photo.tiles.push({
 
@@ -2290,13 +2290,13 @@ function setTileState(tileRecord, tileEl, state, skipUndo = false, newPointData 
 
   const oldMarks = tileRecord.marks ? [...tileRecord.marks] : [];
 
-  // newPointData === undefined 銵函內?窒?冽??point ?摩??
+  // 程式碼邏輯實作細節
 
-  //   - ?ａ? abnormal ????芸?皜璅?暺?
+  // 程式碼邏輯實作細節
 
-  //   - ?園???銝雁???祉? point 銝?
+  // 程式碼邏輯實作細節
 
-  // newPointData 憿臬??喳?拐辣??null ??隞亥府?潛皞??冽 Shift+暺? / ?臬??嚗?
+  // 程式碼邏輯實作細節
 
   let finalPoint, finalMarks;
 
@@ -2358,7 +2358,7 @@ function setTileState(tileRecord, tileEl, state, skipUndo = false, newPointData 
 
     if (undoStack.length > MAX_UNDO) undoStack.shift();
 
-    redoStack.length = 0; // ?啣?雿?蝛?redo
+    redoStack.length = 0; // 相關狀態或邏輯變數
 
   }
 
@@ -2390,7 +2390,7 @@ function setTileState(tileRecord, tileEl, state, skipUndo = false, newPointData 
 
 function performUndo() {
 
-  if (undoStack.length === 0) { showToast("瘝??舀?瑞???"); return; }
+  if (undoStack.length === 0) { showToast("操作成功"); return; }
 
   const action = undoStack.pop();
 
@@ -2420,7 +2420,7 @@ showToast("訊息顯示");
 
 function performRedo() {
 
-  if (redoStack.length === 0) { showToast("瘝??舫?????"); return; }
+  if (redoStack.length === 0) { showToast("操作成功"); return; }
 
   const action = redoStack.pop();
 
@@ -2454,7 +2454,7 @@ function updateTileAriaLabel(tileRecord) {
 
   if (tileRecord.state === "abnormal" && tileRecord.abnormalType) {
 
-    const typeInfo = ABNORMAL_TYPES[tileRecord.abnormalType] || { label: "?啣虜", emoji: "??" };
+    const typeInfo = ABNORMAL_TYPES[tileRecord.abnormalType] || { label: "異常", emoji: "⚠️" };
 
     labelText += ` [${typeInfo.emoji} ${typeInfo.label}]`;
 
@@ -2464,7 +2464,7 @@ function updateTileAriaLabel(tileRecord) {
 
     "aria-label",
 
-    `蝚?${tileRecord.row + 1} ?洵 ${tileRecord.col + 1} 甈????${labelText}`
+    `第 ${tileRecord.row + 1} 列第 ${tileRecord.col + 1} 行：${labelText}`
 
   );
 
@@ -2604,7 +2604,7 @@ function loadImage(file) {
 
     img.onload = () => resolve(img);
 
-    img.onerror = () => reject(new Error(`?⊥?霈????${file.name}`));
+    img.onerror = () => reject(new Error(`無法讀取圖片：${file.name}`));
 
     img.src = URL.createObjectURL(file);
 
@@ -2656,7 +2656,7 @@ function updateSidebarCount() {
 
     li.className = "sidebar-empty";
 
-    li.textContent = "撠銝?抒?";
+    li.textContent = "沒有照片可顯示";
 
     sidebarList.appendChild(li);
 
@@ -2702,7 +2702,7 @@ function updateSummary() {
 
     const prog = p.sidebarEl.querySelector('[data-role="progress"]');
 
-    if (prog) prog.textContent = `${pLabeled} / ${pTotal} 撌脫?`;
+    if (prog) prog.textContent = `${pLabeled} / ${pTotal} 已標記`;
 
     p.sidebarEl.classList.toggle("is-complete", pLabeled === pTotal && pTotal > 0);
 
@@ -2710,7 +2710,7 @@ function updateSummary() {
 
 
 
-  // C: ?湧??脣漲璇??
+  // 程式碼邏輯實作細節
 
   const progressPercent = total > 0 ? Math.round((normal + abnormal) / total * 100) : 0;
 
@@ -2724,7 +2724,7 @@ function updateSummary() {
 
 
 
-  // ?芸?閫貊?砍?怠??脣? (?脤??港?憭?
+  // 程式碼邏輯實作細節
 
   debounceSaveState();
 
@@ -2732,7 +2732,7 @@ function updateSummary() {
 
 
 
-// ?Ｙ?蝧餉?鞈?憓撥敶勗?
+// 程式碼邏輯實作細節
 
 async function createFlippedBlob(blob) {
 
@@ -2768,9 +2768,9 @@ async function createFlippedBlob(blob) {
 
 
 
-// ?舀 PatchCore / YOLO / JSON 憭瑽????臬
+// 程式碼邏輯實作細節
 
-// ?舀 PatchCore / YOLO / JSON 憭瑽????臬
+// 程式碼邏輯實作細節
 
 async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAug = false) {
 
@@ -2812,11 +2812,11 @@ exportBtn.textContent = "匯出資料集";
 
 
 
-    // 撱箇? tile -> ?撅祉??id ???扯”嚗?銝隞乓撘萇??桐??? train / test(val)??
+    // 程式碼邏輯實作細節
 
-    // ?冽?嚗?銝撘萇???箇??賊?澆?????蝢斤???摨衣隡潘??亙?銝撘萇???澆???
+    // 程式碼邏輯實作細節
 
-    // ?箇?刻?蝺湧??葫閰?撽?????鞈?瘣拇?嚗蝙閰摯?瘥祕?蝵脫?璅???
+    // 程式碼邏輯實作細節
 
     const tilePhotoId = new Map();
 
@@ -2828,9 +2828,9 @@ exportBtn.textContent = "匯出資料集";
 
 
 
-    // 隞交撘萇??桐???甇?虜?潭??靘?箸葫閰?撽??函??抒?嚗?
+    // 程式碼邏輯實作細節
 
-    // PatchCore ??test/good ??YOLO ??val ?梁???寧??蝣箔??拍車?澆?????頛臭??氬?
+    // 程式碼邏輯實作細節
 
     const photosWithNormal = photos.filter(p => p.tiles.some(t => t.state === "normal"));
 
@@ -2898,7 +2898,7 @@ exportBtn.textContent = "匯出資料集";
 
       }
 
-      // ?臬?遙雿撣豢?舐 Shift+暺?/?蝎曄Ⅱ璅酉??嚗蔣?蹂???mask 蝎曄Ⅱ摨衣?隤芣???
+      // 程式碼邏輯實作細節
 
       let hasPointMasks = false;
 
@@ -2910,9 +2910,9 @@ exportBtn.textContent = "匯出資料集";
 
 
 
-        // ??蝝?ground truth mask嚗?蝎曄Ⅱ???摮??券?摨扳??思?????啣虜???
+        // 程式碼邏輯實作細節
 
-        // 瘝?暺?湔璅?啣虜?摮?靽??唳??湔憛嚗???image-level 璅酉嚗移蝣箏漲頛?嚗?
+        // 程式碼邏輯實作細節
 
         if (t.point) hasPointMasks = true;
 
@@ -2924,17 +2924,17 @@ exportBtn.textContent = "匯出資料集";
 
 
 
-      // ???舐?亥? anomalib 雿輻??PatchCore 閮毀閮剖?瑼?class_path/init_args ?舐??anomalib CLI ?身摰撘?
+      // Anomalib 設定相關參數
 
       const usedAbnormalFolders = [...new Set(abnormalTiles.map(t => t.abnormalType ? `abnormal_${t.abnormalType}` : "abnormal"))];
 
-      pcRoot.file("anomalib_patchcore_config.yaml", buildAnomalibConfigYaml(usedAbnormalFolders, hasPointMasks));
+# 請依據實際環境調整 anomalib 參數
 
     }
 
 
 
-    // 2. ?臬 YOLO ?澆? (??data.yaml ??labels/*.txt 摨扳?璅酉)
+    // 程式碼邏輯實作細節
 
     if (format === "yolo" || format === "both") {
 
@@ -2942,9 +2942,9 @@ exportBtn.textContent = "匯出資料集";
 
 
 
-      // data.yaml嚗al 雿輻銝靘撘萇???箇??函?撽???
+      // 程式碼邏輯實作細節
 
-      // ?抒??訾?頞喃誑??????窒??train 鞈?憭橘???PatchCore ??hasHoldoutPhotos ?斗銝?湛?
+      // 程式碼邏輯實作細節
 
       const valImgDir = hasHoldoutPhotos ? "images/val" : "images/train";
 
@@ -2954,7 +2954,7 @@ exportBtn.textContent = "匯出資料集";
 
 
 
-      // ?撅斤?銋?YOLO 璅惜????靘?撅祉??? train ??val嚗??撘萇?楊????瘣拇?嚗?
+      // 程式碼邏輯實作細節
 
       for (const t of [...normalTiles, ...abnormalTiles]) {
 
@@ -2978,7 +2978,7 @@ exportBtn.textContent = "匯出資料集";
 
           if (t.point) {
 
-            // 蝎曄Ⅱ璅酉嚗誑銝剖?暺皞???Shift+?撖阡?獢?祝擃??翰?????箏??寞?嚗????嚗?蝞???芾澈?迤閬?摨扳?嚗?
+            // 程式碼邏輯實作細節
 
             const { w: boxW, h: boxH } = pointBoxDims(t.point);
 
@@ -2994,7 +2994,7 @@ exportBtn.textContent = "匯出資料集";
 
           } else {
 
-            // ?芣?暺?瘝輻??祈澈?迤閬???獢?(蝵桐葉?刻???
+            // 程式碼邏輯實作細節
 
             txtLine = `${classId} 0.500000 0.500000 1.000000 1.000000\n`;
 
@@ -3004,7 +3004,7 @@ exportBtn.textContent = "匯出資料集";
 
         } else {
 
-          // 甇?虜璅?靽?蝛?txt 瑼誑蝚血? YOLO ?鞎見?祈?蝭?
+          // 程式碼邏輯實作細節
 
           yoloRoot.folder(labelFolder).file(`${base}.txt`, "");
 
@@ -3014,7 +3014,7 @@ exportBtn.textContent = "匯出資料集";
 
 
 
-      // ?游撐憭批??典??漣璅???YOLO 璅酉瑼?(靘撘萄之??亙? YOLO 閮毀)
+      // 程式碼邏輯實作細節
 
       for (const p of photos) {
 
@@ -3030,7 +3030,7 @@ exportBtn.textContent = "匯出資料集";
 
           if (t.point) {
 
-            // 蝎曄Ⅱ璅酉嚗誑??蝯???摨扳??箔葉敹???Shift+?撖阡?獢?祝擃??翰?????箏??寞?嚗????
+            // 程式碼邏輯實作細節
 
             const { w: boxW, h: boxH } = pointBoxDims(t.point);
 
@@ -3048,7 +3048,7 @@ exportBtn.textContent = "匯出資料集";
 
           } else {
 
-            // ?芣?暺?瘝輻?游??潛????粹???
+            // 程式碼邏輯實作細節
 
             xCenter = (t.left + t.w / 2) / t.origW;
 
@@ -3072,7 +3072,7 @@ exportBtn.textContent = "匯出資料集";
 
 
 
-    // 3. Classification 鈭?憿撘?
+    // 程式碼邏輯實作細節
 
     if (format === "classification" || format === "both") {
 
@@ -3094,7 +3094,7 @@ exportBtn.textContent = "匯出資料集";
 
 
 
-    // I: ???遢
+    // 程式碼邏輯實作細節
 
     const shouldBackup = document.getElementById("modal-backup-originals");
 
@@ -3114,7 +3114,7 @@ exportBtn.textContent = "匯出資料集";
 
 
 
-    // G: ?臬蝯梯??梯” Excel (.xlsx)
+    // 程式碼邏輯實作細節
 
     if (typeof XLSX !== "undefined") {
 
@@ -3128,15 +3128,15 @@ exportBtn.textContent = "匯出資料集";
 
         const row = {
 
-          "瑼??迂": p.fileName,
+          "照片檔名": p.fileName,
 
       "Total": pTiles.length,
 
-          "甇?虜": pTiles.filter(t => t.state === "normal").length,
+        "正常": pTiles.filter(t => t.state === "normal").length,
 
-          "?啣虜": pTiles.filter(t => t.state === "abnormal").length,
+        "異常": pTiles.filter(t => t.state === "abnormal").length,
 
-          "?芣?": pTiles.filter(t => t.state === "unlabeled").length
+        "未標記": pTiles.filter(t => t.state === "unlabeled").length
 
         };
 
@@ -3150,11 +3150,11 @@ exportBtn.textContent = "匯出資料集";
 
       }
 
-      // ????
+      // 程式碼邏輯實作細節
 
-      const totalRow = { "瑼??迂": "??" };
+      const totalRow = { "照片檔名": "合計" };
 
-      for (const col of Object.keys(rows[0]).filter(k => k !== "瑼??迂")) {
+      for (const col of Object.keys(rows[0]).filter(k => k !== "照片檔名")) {
 
         totalRow[col] = rows.reduce((sum, r) => sum + (r[col] || 0), 0);
 
@@ -3168,7 +3168,7 @@ exportBtn.textContent = "匯出資料集";
 
       const wb = XLSX.utils.book_new();
 
-      XLSX.utils.book_append_sheet(wb, ws, "璅酉蝯梯?");
+      XLSX.utils.book_append_sheet(wb, ws, "標註統計");
 
       const xlsxData = XLSX.write(wb, { bookType: "xlsx", type: "array" });
 
@@ -3178,7 +3178,7 @@ exportBtn.textContent = "匯出資料集";
 
 
 
-    // 3. ? JSON 璅酉瑼?(?怎移蝣箏?蝝?甇???漣璅?
+    // 程式碼邏輯實作細節
 
     const jsonMetadata = {
 
@@ -3232,7 +3232,7 @@ exportBtn.textContent = "匯出資料集";
 
             yolo_box: {
 
-              box_px: t.point.boxPx || DEFAULT_POINT_BOX_PX, // ???詨捆甈?嚗???max(width_px, height_px)
+              box_px: t.point.boxPx || DEFAULT_POINT_BOX_PX, // 方框邊長 (px)
 
               x_center_norm: +(t.point.origX / t.origW).toFixed(6),
 
@@ -3300,7 +3300,7 @@ showToast("訊息顯示");
 
 
 
-// F: ?臬?Ｘ?璅酉 JSON
+// 程式碼邏輯實作細節
 
 const btnImportJson = document.getElementById("btn-import-json");
 
@@ -3362,7 +3362,7 @@ if (btnImportJson && importJsonInput) {
 
                   boxPx: jt.point.yolo_box ? jt.point.yolo_box.box_px : undefined,
 
-                  // 頛????JSON 瘝? width_px/height_px嚗? box_px ?嗆迤?孵耦??
+                  // 程式碼邏輯實作細節
 
                   widthPx: jt.point.width_px ?? (jt.point.yolo_box ? jt.point.yolo_box.box_px : undefined),
 
@@ -3402,7 +3402,7 @@ showToast("訊息顯示");
 
 
 
-// --- ? IndexedDB ?砍撠??芸??怠??Ｗ儔璈 ---
+// 程式碼邏輯實作細節
 
 let saveTimeout = null;
 
@@ -3540,7 +3540,7 @@ async function clearIndexedDB() {
 
 
 
-// ?????炎?乩蒂???怠?嚗祕??撱箇?摮?閮餌???蝎曄Ⅱ璅?暺?
+// 程式碼邏輯實作細節
 
 async function checkAndRestoreProject() {
 
@@ -3606,7 +3606,7 @@ console.error("錯誤:", err);
 
       updateSummary();
 
-      showToast(`撌脩?刻????甈∠?璅酉?脣漲嚗?${restoredCount} 撘萇??`);
+      showToast(`成功還原 ${restoredCount} 筆本地暫存紀錄`);
 
     }
 
@@ -3626,9 +3626,9 @@ checkAndRestoreProject();
 
 
 
-// ?曉之?⊥瘚桅?閬賜??辣?脤???塚?霈蝙?刻隞交?皛?敺摮宏?唳憭折銝?
+// 程式碼邏輯實作細節
 
-// ?冽?雿?Shift ??亙??曉之?⊥頨怎移蝣粹???暺??????箸?曌?恍?摮停鋡恍???
+// 程式碼邏輯實作細節
 
 let zoomHideTimer = null;
 
@@ -3656,7 +3656,7 @@ function cancelHideZoomPreview() {
 
 
 
-// ?典? Shift ?????? Shift ???曉之?∪????暸???蝎曄Ⅱ??嚗?銝阡＊蝷箸?蝷箏噬蝡?
+// 程式碼邏輯實作細節
 
 let shiftKeyActive = false;
 
@@ -3674,9 +3674,9 @@ function setShiftUIState(active) {
 
   if (active && hoveredTileRecord) {
 
-    // ?? Shift ??摰?＊蝷箇??曉之?∴??批捆??蝵桅?箏?嚗?
+    // 程式碼邏輯實作細節
 
-    // 霈蝙?刻隞交敹?皛?蝘駁??駁???銝?鋡怠隞摮? hover ???
+    // 程式碼邏輯實作細節
 
     cancelHideZoomPreview();
 
@@ -3684,7 +3684,7 @@ function setShiftUIState(active) {
 
   } else if (!active) {
 
-    // ?暸? Shift 敺圾?日?摰??Ｗ儔頝皛? hover ???祈???
+    // 程式碼邏輯實作細節
 
     zoomLocked = false;
 
@@ -3716,9 +3716,9 @@ if (zoomPreviewImg) {
 
 
 
-  // ?冽憭折?憭批蔣?? Shift+?嚗???摮???急????詨?雿蔭嚗?
+  // 程式碼邏輯實作細節
 
-  // 雿??箇?Ｚ◤?曉之嚗蝙?刻隞交?敺皞Ⅱ嚗蝝?Shift+暺?隞?摰偕撖詨翰?獢?
+  // 程式碼邏輯實作細節
 
   zoomPreviewImg.addEventListener("pointerdown", (ev) => {
 
@@ -3736,19 +3736,19 @@ if (zoomPreviewImg) {
 
 /**
 
- * ?梁??Shift+暺?嚗hift+?鈭??摩嚗??澆??祈澈?憭折敶勗??梁嚗?
+ * 參數說明與邏輯實作細節
 
- * - ??敺?曌宏???Ｗ???DRAG_THRESHOLD_PX嚗蝝???嚗???摰偕撖豢獢?銝剖??喲?????
+ * 參數說明與邏輯實作細節
 
- * - ??敺??＊?嚗??箄??冽?曌????汗獢??暸???撖阡??蝭??Ｙ??拙耦璅酉??
+ * 參數說明與邏輯實作細節
 
- * @param {*} tileRecord 閬?閮餌??澆?
+ * 參數說明與邏輯實作細節
 
- * @param {HTMLElement} coordEl ?其?閮?皛??詨?摨扳???蝝??澆??祈澈嚗??曉之?∠? img嚗?
+ * 參數說明與邏輯實作細節
 
- * @param {PointerEvent} downEvent pointerdown 鈭辣
+ * 參數說明與邏輯實作細節
 
- * @param {HTMLElement} previewContainer ???汗獢????啣?捆?剁?? position:relative嚗?撠箏站??coordEl 銝?湛?
+ * 參數說明與邏輯實作細節
 
  */
 
@@ -3846,7 +3846,7 @@ function startDragAnnotation(tileRecord, coordEl, downEvent, previewContainer) {
 
     if (!moved) {
 
-      // ?桃?暺?嚗???摰偕撖豢獢?銝剖??喲???嚗翰??嚗?
+      // 程式碼邏輯實作細節
 
       const normX = rect.width > 0 ? startX / rect.width : 0.5;
 
@@ -3882,9 +3882,9 @@ function startDragAnnotation(tileRecord, coordEl, downEvent, previewContainer) {
 
 /**
 
- * 靘?normX/normY嚗?~1嚗撠??芾澈嚗????tileRecord 銝蝵桃移蝣箸?閮駁?嚗?
+ * 參數說明與邏輯實作細節
 
- * ?郊?湔?澆??祈澈?憭折銝剔?閬死璅????澆??湔暺??憭折暺??梁??
+ * 參數說明與邏輯實作細節
 
  */
 
@@ -3942,11 +3942,11 @@ function applyPointAnnotation(tileRecord, normX, normY) {
 
 /**
 
- * 靘?Shift+??怠?敶Ｙ???x1n/y1n/x2n/y2n嚗??箇撠閰脫摮? 0~1 甇???漣璅?
+ * 參數說明與邏輯實作細節
 
- * ?Ｙ?蝎曄Ⅱ璅酉嚗祝擃?亙????喳?祕?之撠?銝?撘瑕甇?敶Ｕ?
+ * 參數說明與邏輯實作細節
 
- * 靘摮?交??唾??曉之?⊥??喳?具?
+ * 參數說明與邏輯實作細節
 
  */
 
@@ -3974,7 +3974,7 @@ function applyBoxAnnotation(tileRecord, x1n, y1n, x2n, y2n) {
 
   const origY = Math.round(tileRecord.top + tileY);
 
-  // boxPx 靽?蝯西???撘Ⅳ嚗?亦摰寧嚗??潮??撖阡??臬銝敺 widthPx/heightPx
+  // 程式碼邏輯實作細節
 
   const boxPx = Math.max(widthPx, heightPx);
 
@@ -4012,7 +4012,7 @@ function applyBoxAnnotation(tileRecord, x1n, y1n, x2n, y2n) {
 
 /**
 
- * ?冽憭折?汗?抒?綽??宏?歹??摮??詨??移蝣箸?閮?嚗靘蹂蝙?刻憭扳撠?蝵柴?
+ * 參數說明與邏輯實作細節
 
  */
 
@@ -4038,7 +4038,7 @@ function renderZoomPointMarker(tileRecord) {
 
   marker.style.top = `${(tileRecord.point.normY * 100).toFixed(2)}%`;
 
-  marker.innerHTML = `<span class="point-ring"></span><span class="point-pin">??</span>`;
+  marker.innerHTML = `<span class="point-ring"></span><span class="point-pin">📍</span>`;
 
   zoomPreviewImgWrap.appendChild(marker);
 
@@ -4064,11 +4064,11 @@ function showZoomPreview(src, tileRecord) {
 
   }
 
-  let statusText = STATE_LABEL[tileRecord.state] || "?芣?";
+  let statusText = STATE_LABEL[tileRecord.state] || "未標記";
 
   if (tileRecord.state === "abnormal" && tileRecord.abnormalType) {
 
-    const typeInfo = ABNORMAL_TYPES[tileRecord.abnormalType] || { label: "?啣虜", emoji: "??" };
+    const typeInfo = ABNORMAL_TYPES[tileRecord.abnormalType] || { label: "異常", emoji: "⚠️" };
 
     statusText += ` [${typeInfo.emoji} ${typeInfo.label}]`;
 
@@ -4192,7 +4192,7 @@ function tileFileName(t, suffix = "") {
 
 
 
-// mask 瑼??????啣虜?澆?瑼????舀????.png嚗??嫣噶 anomalib 靘???撠??? mask
+// Anomalib 設定相關參數
 
 function maskFileName(t) {
 
@@ -4204,17 +4204,17 @@ function maskFileName(t) {
 
 /**
 
- * ?Ｙ???蝝???ground truth mask嚗撣詨????賬擗?暺?嚗? anomalib ??
+ * 參數說明與邏輯實作細節
 
- * pixel-level AUROC / 摰?閰摯雿輻嚗偕撖貉?閰脫?臬????t.w ? t.h嚗??氬?
+ * 參數說明與邏輯實作細節
 
- * - ?移蝣箸?閮鳴?Shift+??怠?拙耦嚗? Shift+暺??摰獢?嚗誑銝剖?暺皞?
+ * 參數說明與邏輯實作細節
 
- *   靘祕?祝擃銝??交岷??瘥摰?敶Ｘ鞎潸??獢??撖衣隞嗉憚撱??瑕祝瘥?
+ * 參數說明與邏輯實作細節
 
- * - 瘝?蝎曄Ⅱ璅酉??湔璅?啣虜嚗瘜??亦Ⅱ??蝵殷?靽??唳??湔憛嚗?
+ * 參數說明與邏輯實作細節
 
- *   pixel-level ??隞??雿移蝣箏漲頛?嚗遣霅啁???Shift+??急???
+ * 參數說明與邏輯實作細節
 
  */
 
@@ -4278,15 +4278,15 @@ function dateStamp() {
 
 /**
 
- * ?Ｙ??舐?交??anomalib ?桀? CLI 雿輻??PatchCore 閮毀閮剖?瑼?class_path/init_args ?澆?嚗?
+ * 參數說明與邏輯實作細節
 
- * 鞈?憭曄?瑽???箇? dataset/嚗? both 璅∪?銝? patchcore_dataset/嚗?train/good?est/good?est/abnormal_*?est/mask/abnormal_*??
+ * 參數說明與邏輯實作細節
 
- * ?曉瘥?test/abnormal_* ?賡????? test/mask/abnormal_* ??蝝蝵抬??迨 task 閮剔 segmentation嚗?
+ * 參數說明與邏輯實作細節
 
- * ?臭誑?湔蝞?pixel-level AUROC嚗ask ?移蝣箏漲閬?閮餅??臬??Shift+??急???嚗?銝閮餉圾嚗?
+ * 參數說明與邏輯實作細節
 
- * anomalib ?身摰?schema ??隤踵嚗?蝺游?隢??典?鞈???銝甈∠Ⅱ隤?雿?虫??詨捆??
+ * 參數說明與邏輯實作細節
 
  */
 
@@ -4306,7 +4306,7 @@ function buildAnomalibConfigYaml(abnormalFolders, hasPointMasks = false) {
 
   const maskNote = abnormalFolders.length === 0
 
-    ? "# ?桀?瘝??啣虜璅?嚗?敺?銝撣豢???啣?箏??雿萇??mask"
+    ? "# 目錄結構中缺乏異常樣本，已跳過"
 
     : (hasPointMasks
 
@@ -4314,15 +4314,15 @@ function buildAnomalibConfigYaml(abnormalFolders, hasPointMasks = false) {
 
       : "# other");
 
-  return `# ?梯??寡?璅酉撌亙?芸??Ｙ??瘜?
+  return `# Anomalib 訓練設定檔 (PatchCore)
 
 #   1. ??獢??函?鞈?憭橘???train/?est/嚗雿極雿??
 
-#   2. anomalib train --config anomalib_patchcore_config.yaml
+# 請依據實際環境調整 anomalib 參數
 
-# 甈?撠? anomalib ?桀???Folder datamodule + LightningCLI 閮剖??澆?嚗?
+# 請依據實際環境調整 anomalib 參數
 
-# ?其?摰???anomalib ??航?交?撌桃嚗迤撘?蝺游?撱箄降??閬芋頝?甈∠Ⅱ隤?具?
+# 請依據實際環境調整 anomalib 參數
 
 model:
 

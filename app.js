@@ -611,41 +611,58 @@ document.addEventListener("keydown", (e) => {
       keyboardNavActive = !keyboardNavActive;
       if (keyboardNavActive) {
         const cp = photos[currentPhotoIndex];
-        if (cp && cp.tiles.length > 0) {
+        if (cp && cp.tiles && cp.tiles.length > 0) {
           focusedTileIndex = 0;
           updateTileFocus(cp);
-          showToast("快捷鍵導覽已啟動");
+          hoveredTileRecord = cp.tiles[0];
+          if (hoveredTileRecord && hoveredTileRecord.el) {
+            const img = hoveredTileRecord.el.querySelector("img");
+            if (img) showZoomPreview(img.src, hoveredTileRecord);
+          }
+          showToast("快捷鍵導覽已啟動 (可使用方向鍵移動，1/2/0 標記)");
         }
       } else {
         clearTileFocus();
-        showToast("快捷鍵導覽已啟動");
+        hoveredTileRecord = null;
+        hideZoomPreview();
+        showToast("快捷鍵導覽已關閉");
       }
       return;
     }
   }
 
-  // 相關狀態與業務邏輯
+  // 鍵盤導覽方向鍵移動
   if (keyboardNavActive && photos[currentPhotoIndex]) {
     const cp = photos[currentPhotoIndex];
-    const cols = parseInt(cp.blockEl.querySelector(".tile-grid").style.gridTemplateColumns.match(/\d+/)?.[0] || "8");
-    const totalTiles = cp.tiles.length;
-    if (totalTiles === 0) return;
+    const totalTiles = (cp && cp.tiles) ? cp.tiles.length : 0;
+    if (totalTiles > 0) {
+      let cols = 8;
+      const maxCol = Math.max(...cp.tiles.map(t => t.col || 0));
+      if (isFinite(maxCol) && maxCol >= 0) {
+        cols = maxCol + 1;
+      }
 
-    let newIdx = focusedTileIndex;
-    if (e.key === "ArrowRight") { newIdx = Math.min(totalTiles - 1, focusedTileIndex + 1); }
-    else if (e.key === "ArrowLeft") { newIdx = Math.max(0, focusedTileIndex - 1); }
-    else if (e.key === "ArrowDown") { newIdx = Math.min(totalTiles - 1, focusedTileIndex + cols); }
-    else if (e.key === "ArrowUp") { newIdx = Math.max(0, focusedTileIndex - cols); }
+      let curIdx = (focusedTileIndex >= 0 && focusedTileIndex < totalTiles) ? focusedTileIndex : 0;
+      let newIdx = curIdx;
+      if (e.key === "ArrowRight") { newIdx = Math.min(totalTiles - 1, curIdx + 1); }
+      else if (e.key === "ArrowLeft") { newIdx = Math.max(0, curIdx - 1); }
+      else if (e.key === "ArrowDown") { newIdx = Math.min(totalTiles - 1, curIdx + cols); }
+      else if (e.key === "ArrowUp") { newIdx = Math.max(0, curIdx - cols); }
 
-    if (newIdx !== focusedTileIndex && (e.key.startsWith("Arrow"))) {
-      e.preventDefault();
-      focusedTileIndex = newIdx;
-      updateTileFocus(cp);
-      // 相關狀態與業務邏輯
-      hoveredTileRecord = cp.tiles[focusedTileIndex];
-      const focusedTile = cp.tiles[focusedTileIndex];
-      showZoomPreview(focusedTile.el.querySelector("img").src, focusedTile);
-      return;
+      if (e.key.startsWith("Arrow")) {
+        e.preventDefault();
+        focusedTileIndex = newIdx;
+        updateTileFocus(cp);
+        const focusedTile = cp.tiles[focusedTileIndex];
+        if (focusedTile && focusedTile.el) {
+          hoveredTileRecord = focusedTile;
+          const img = focusedTile.el.querySelector("img");
+          if (img) {
+            showZoomPreview(img.src, focusedTile);
+          }
+        }
+        return;
+      }
     }
   }
 
@@ -672,14 +689,15 @@ document.addEventListener("keydown", (e) => {
   // 相關狀態與業務邏輯
   const matchedType = KEY_TO_ABNORMAL_TYPE[e.key];
 
-  if (hoveredTileRecord) {
+  if (hoveredTileRecord && hoveredTileRecord.el) {
     if (matchedType) {
       e.preventDefault();
       selectAbnormalType(matchedType);
       hoveredTileRecord.abnormalType = matchedType;
       setTileState(hoveredTileRecord, hoveredTileRecord.el, "abnormal");
       updateSummary();
-      showZoomPreview(hoveredTileRecord.el.querySelector("img").src, hoveredTileRecord);
+      const img = hoveredTileRecord.el.querySelector("img");
+      if (img) showZoomPreview(img.src, hoveredTileRecord);
       return;
     }
 
@@ -692,7 +710,8 @@ document.addEventListener("keydown", (e) => {
       e.preventDefault();
       setTileState(hoveredTileRecord, hoveredTileRecord.el, newState);
       updateSummary();
-      showZoomPreview(hoveredTileRecord.el.querySelector("img").src, hoveredTileRecord);
+      const img = hoveredTileRecord.el.querySelector("img");
+      if (img) showZoomPreview(img.src, hoveredTileRecord);
       return;
     }
   } else if (matchedType) {

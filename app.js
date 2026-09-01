@@ -114,6 +114,16 @@ const modalConfirmExportBtn = document.getElementById("modal-confirm-export-btn"
 const modalTestSplit = document.getElementById("modal-test-split");
 const modalAugFlip = document.getElementById("modal-aug-flip");
 
+// 匯出前資料集健檢彈出視窗元素
+const healthCheckModal = document.getElementById("health-check-modal");
+const healthCloseBtn = document.getElementById("health-close-btn");
+const healthCancelBtn = document.getElementById("health-cancel-btn");
+const healthConfirmBtn = document.getElementById("health-confirm-btn");
+const healthStatList = document.getElementById("health-stat-list");
+const healthWarnList = document.getElementById("health-warn-list");
+// 使用者在健檢視窗按下「仍要繼續匯出」後才會執行的實際匯出動作
+let pendingExportAction = null;
+
 const loadingOverlay = document.getElementById("loading-overlay");
 const loadingText = document.getElementById("loading-text");
 
@@ -232,7 +242,104 @@ if (modalConfirmExportBtn) {
     const shouldAug = modalAugFlip ? modalAugFlip.checked : false;
 
     closeExportModal();
-    doExportDataset(format, splitPercent, shouldAug);
+    // 正式打包前先跳資料集健檢視窗，使用者確認後才真的執行匯出
+    openHealthCheckModal(() => doExportDataset(format, splitPercent, shouldAug));
+  });
+}
+
+// 匯出前資料集健檢：統計各異常類別張數、正常/異常比例，
+// 並對樣本數過少（<10 張）的類別提出警告，避免練出來的 PatchCore/YOLO 模型不穩定。
+const MIN_HEALTHY_SAMPLES = 10;
+
+function computeDatasetHealth() {
+  const tiles = allTiles();
+  const normal = tiles.filter(t => t.state === "normal").length;
+  const abnormal = tiles.filter(t => t.state === "abnormal").length;
+  const abnormalKeys = Object.keys(ABNORMAL_TYPES);
+  const byClass = {};
+  for (const key of abnormalKeys) {
+    byClass[key] = tiles.filter(t => t.state === "abnormal" && t.abnormalType === key).length;
+  }
+
+  const warnings = [];
+  for (const key of abnormalKeys) {
+    const n = byClass[key];
+    if (n > 0 && n < MIN_HEALTHY_SAMPLES) {
+      const info = ABNORMAL_TYPES[key];
+      warnings.push(`「${info.emoji} ${info.label}」目前只有 ${n} 張，樣本數過少，PatchCore／YOLO 都很難從這麼少的資料學到穩定特徵，建議補標到至少 ${MIN_HEALTHY_SAMPLES} 張再匯出。`);
+    }
+  }
+  if (normal > 0 && normal < MIN_HEALTHY_SAMPLES) {
+    warnings.push(`正常樣本只有 ${normal} 格，PatchCore 需要足夠的正常樣本才能建立可靠的特徵記憶庫，建議至少補到 ${MIN_HEALTHY_SAMPLES} 張以上。`);
+  }
+  if (normal === 0 && abnormal > 0) {
+    warnings.push(`目前完全沒有正常樣本，PatchCore 這類無監督方法無法訓練，至少需要標記一些「正常」格子。`);
+  }
+
+  return { normal, abnormal, byClass, warnings };
+}
+
+function renderHealthCheckModal(stats) {
+  if (healthStatList) {
+    const rows = [];
+    rows.push(`<div class="health-stat-row"><span>✅ 正常</span><span class="health-stat-num">${stats.normal} 格</span></div>`);
+    rows.push(`<div class="health-stat-row"><span>⚠️ 異常合計</span><span class="health-stat-num">${stats.abnormal} 格</span></div>`);
+
+    let ratioText;
+    if (stats.abnormal > 0 && stats.normal > 0) {
+      ratioText = `約 ${(stats.normal / stats.abnormal).toFixed(1)} : 1（正常:異常）`;
+    } else if (stats.normal > 0) {
+      ratioText = "全為正常，尚無異常樣本";
+    } else if (stats.abnormal > 0) {
+      ratioText = "全為異常，尚無正常樣本";
+    } else {
+      ratioText = "尚無標註";
+    }
+    rows.push(`<div class="health-stat-row"><span>⚖️ 正常/異常比例</span><span class="health-stat-num">${ratioText}</span></div>`);
+
+    for (const key of Object.keys(ABNORMAL_TYPES)) {
+      const info = ABNORMAL_TYPES[key];
+      const n = stats.byClass[key];
+      const isLow = n > 0 && n < MIN_HEALTHY_SAMPLES;
+      rows.push(`<div class="health-stat-row${isLow ? " is-warn" : ""}"><span>${info.emoji} ${info.label}</span><span class="health-stat-num">${n} 格${isLow ? " ⚠️" : ""}</span></div>`);
+    }
+    healthStatList.innerHTML = rows.join("");
+  }
+
+  if (healthWarnList) {
+    if (stats.warnings.length === 0) {
+      healthWarnList.innerHTML = `<div class="health-ok-banner">👍 樣本數量看起來還算健康，可以繼續匯出。</div>`;
+    } else {
+      healthWarnList.innerHTML = stats.warnings.map(w => `<div class="health-warn-item">⚠️ ${w}</div>`).join("");
+    }
+  }
+}
+
+function openHealthCheckModal(onConfirm) {
+  const stats = computeDatasetHealth();
+  renderHealthCheckModal(stats);
+  pendingExportAction = onConfirm;
+  if (healthCheckModal) healthCheckModal.hidden = false;
+}
+
+function closeHealthCheckModal() {
+  if (healthCheckModal) healthCheckModal.hidden = true;
+  pendingExportAction = null;
+}
+
+if (healthCloseBtn) healthCloseBtn.addEventListener("click", closeHealthCheckModal);
+if (healthCancelBtn) healthCancelBtn.addEventListener("click", closeHealthCheckModal);
+if (healthCheckModal) {
+  healthCheckModal.addEventListener("click", (e) => {
+    if (e.target === healthCheckModal) closeHealthCheckModal();
+  });
+}
+if (healthConfirmBtn) {
+  healthConfirmBtn.addEventListener("click", () => {
+    const action = pendingExportAction;
+    if (healthCheckModal) healthCheckModal.hidden = true;
+    pendingExportAction = null;
+    if (action) action();
   });
 }
 
@@ -1313,14 +1420,22 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
       for (const t of testNormal) {
         pcRoot.folder("test/good").file(tileFileName(t), t.blob);
       }
+      // 是否有任何異常格是用 Shift+點擊精確打點的，影響下方 mask 精確度的說明文字
+      let hasPointMasks = false;
       for (const t of abnormalTiles) {
         const subFolder = t.abnormalType ? `abnormal_${t.abnormalType}` : "abnormal";
         pcRoot.folder(`test/${subFolder}`).file(tileFileName(t), t.blob);
+
+        // 像素級 ground truth mask：有精確打點的格子，用點座標畫一個小圓當異常區域；
+        // 沒打點、只整格標為異常的格子，保守地把整格塗白（等同 image-level 標註，精確度較低）。
+        if (t.point) hasPointMasks = true;
+        const maskBlob = await createMaskBlob(t);
+        pcRoot.folder(`test/mask/${subFolder}`).file(maskFileName(t), maskBlob);
       }
 
       // 附上可直接讓 anomalib 使用的 PatchCore 訓練設定檔（class_path/init_args 是目前 anomalib CLI 的設定格式）
       const usedAbnormalFolders = [...new Set(abnormalTiles.map(t => t.abnormalType ? `abnormal_${t.abnormalType}` : "abnormal"))];
-      pcRoot.file("anomalib_patchcore_config.yaml", buildAnomalibConfigYaml(usedAbnormalFolders));
+      pcRoot.file("anomalib_patchcore_config.yaml", buildAnomalibConfigYaml(usedAbnormalFolders, hasPointMasks));
     }
 
     // 2. 匯出 YOLO 格式 (含 data.yaml 與 labels/*.txt 座標標註)
@@ -1493,7 +1608,8 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
     const holdoutNote = hasHoldoutPhotos
       ? `，測試/驗證集抽出 ${testPhotoIds.size} 張照片`
       : (photosWithNormal.length > 0 ? "，照片數太少未切出獨立測試/驗證集" : "");
-    showToast(`已成功匯出 ${format.toUpperCase()} 資料集！(正常 ${normalTiles.length}、異常 ${abnormalTiles.length} 格${holdoutNote})`);
+    const maskNote = (format === "patchcore" || format === "both") ? "，已附上 test/mask 像素級遮罩" : "";
+    showToast(`已成功匯出 ${format.toUpperCase()} 資料集！(正常 ${normalTiles.length}、異常 ${abnormalTiles.length} 格${holdoutNote}${maskNote})`);
   } catch (err) {
     console.error(err);
     showToast("匯出失敗，請再試一次");
@@ -1827,6 +1943,40 @@ function tileFileName(t, suffix = "") {
   return `${t.photoName}_r${String(t.row).padStart(2, "0")}_c${String(t.col).padStart(2, "0")}${suffix}.jpg`;
 }
 
+// mask 檔名與對應的異常格圖檔同名（副檔名改為 .png），方便 anomalib 依檔名比對圖片與 mask
+function maskFileName(t) {
+  return tileFileName(t).replace(/\.jpg$/i, ".png");
+}
+
+/**
+ * 產生像素級二值 ground truth mask（異常區域塗白、其餘塗黑），供 anomalib 的
+ * pixel-level AUROC / 定位評估使用，尺寸與該格匯出的圖片（t.w × t.h）一致。
+ * - 有 Shift+點擊精確打點：以點座標為中心，用當初該筆標註設定的邊界框邊長當直徑畫一個白色圓形。
+ * - 沒有打點、只整格標為異常：目前無法得知確切異常位置，保守地把整格塗白，
+ *   讓 pixel-level 指標至少可以跑，但定位精確度會低於有打點的樣本，建議盡量搭配 Shift+點擊補點。
+ */
+async function createMaskBlob(t) {
+  const canvas = document.createElement("canvas");
+  canvas.width = t.w;
+  canvas.height = t.h;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#000000";
+  ctx.fillRect(0, 0, t.w, t.h);
+  ctx.fillStyle = "#ffffff";
+  if (t.point) {
+    const boxPx = t.point.boxPx || DEFAULT_POINT_BOX_PX;
+    const cx = clamp01(t.point.normX) * t.w;
+    const cy = clamp01(t.point.normY) * t.h;
+    const r = Math.max(2, boxPx / 2);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    ctx.fillRect(0, 0, t.w, t.h);
+  }
+  return new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+}
+
 function dateStamp() {
   const d = new Date();
   const pad = n => String(n).padStart(2, "0");
@@ -1835,14 +1985,23 @@ function dateStamp() {
 
 /**
  * 產生可直接搭配 anomalib 目前 CLI 使用的 PatchCore 訓練設定檔（class_path/init_args 格式）。
- * 資料夾結構對應匯出的 dataset/（或 both 模式下的 patchcore_dataset/）：train/good、test/good、test/abnormal_*。
- * 目前沒有像素級 mask，所以 task 設為 classification；未來若匯出 mask（見 mask_dir）可以改成 segmentation。
+ * 資料夾結構對應匯出的 dataset/（或 both 模式下的 patchcore_dataset/）：train/good、test/good、test/abnormal_*、test/mask/abnormal_*。
+ * 現在每個 test/abnormal_* 都附有對應的 test/mask/abnormal_* 像素級遮罩，因此 task 設為 segmentation，
+ * 可以直接算 pixel-level AUROC；mask 的精確度視標註時是否用 Shift+點擊打點而定（見下方註解）。
  * anomalib 的設定 schema 會隨版本調整，訓練前請先用小資料集跑一次確認欄位是否仍相容。
  */
-function buildAnomalibConfigYaml(abnormalFolders) {
+function buildAnomalibConfigYaml(abnormalFolders, hasPointMasks = false) {
   const abnormalDirYaml = abnormalFolders.length > 0
     ? `[${abnormalFolders.map(f => `"${f}"`).join(", ")}]`
     : "null  # 目前沒有異常樣本，之後補上異常格再重新匯出";
+  const maskDirYaml = abnormalFolders.length > 0
+    ? `[${abnormalFolders.map(f => `"test/mask/${f}"`).join(", ")}]`
+    : "null";
+  const maskNote = abnormalFolders.length === 0
+    ? "# 目前沒有異常樣本，之後補上異常格再重新匯出即會一併產生 mask"
+    : (hasPointMasks
+      ? "# mask 中，有用 Shift+點擊精確打點的異常格會畫出小圓形標註區域；未打點、只整格標異常的格子則整格塗白，精確度較低（建議盡量補打點）"
+      : "# 目前所有異常格都沒有用 Shift+點擊精確打點，mask 皆為整格塗白（近似 image-level 標註），建議之後補上精確打點以提升 pixel-level 評估的參考價值");
   return `# 由蜂蟹蟎標註工具自動產生。用法：
 #   1. 把這個檔案所在的資料夾（含 train/、test/）當作工作目錄
 #   2. anomalib train --config anomalib_patchcore_config.yaml
@@ -1863,12 +2022,14 @@ data:
     normal_dir: "train/good"
     abnormal_dir: ${abnormalDirYaml}
     normal_test_dir: "test/good"
+    ${maskNote}
+    mask_dir: ${maskDirYaml}
     extensions: [".jpg"]
     image_size: [256, 256]
     train_batch_size: 32
     eval_batch_size: 8
     num_workers: 4
-    task: classification
+    task: segmentation
     test_split_mode: from_dir
     val_split_mode: same_as_test
     val_split_ratio: 0.5

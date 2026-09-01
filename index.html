@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>蜂蟹蟎標註工具</title>
 <link rel="stylesheet" href="fonts/css/vf.css">
-<link rel="stylesheet" href="style.css?v=20260831_10">
+<link rel="stylesheet" href="style.css?v=20260901_01">
 </head>
 <body>
 
@@ -247,7 +247,7 @@
           <input type="radio" name="export-format-choice" value="patchcore" checked>
           <div class="option-content">
             <div class="option-title">📦 PatchCore / Anomalib 格式 <span class="option-badge">推薦</span></div>
-            <div class="option-detail">標準 MVTec 異常檢測目錄結構 (train/good, test/good, test/abnormal)，適用於 PatchCore、FastFlow、PaDiM 等無監督異常檢測。</div>
+            <div class="option-detail">標準 MVTec 異常檢測目錄結構 (train/good, test/good, test/abnormal)，並附上對應的 test/mask/ 像素級遮罩供 pixel-level AUROC 評估，適用於 PatchCore、FastFlow、PaDiM 等無監督異常檢測。</div>
           </div>
         </label>
 
@@ -298,6 +298,25 @@
     <div class="modal-footer">
       <button id="modal-cancel-btn" class="btn-secondary">取消</button>
       <button id="modal-confirm-export-btn" class="primary-btn">🚀 確定下載 (.zip)</button>
+    </div>
+  </div>
+</div>
+
+<!-- 匯出前資料集健檢彈出視窗 (Modal) -->
+<div id="health-check-modal" class="modal-overlay" hidden>
+  <div class="modal-box" style="max-width: 480px;">
+    <div class="modal-header">
+      <h3>🩺 匯出前資料集健檢</h3>
+      <button id="health-close-btn" class="modal-close-btn" title="關閉視窗">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-desc">正式打包前先看一眼各類別樣本數與正常/異常比例，樣本太少的類別 PatchCore、YOLO 都很難學好。</p>
+      <div class="health-stat-list" id="health-stat-list"></div>
+      <div class="health-warn-list" id="health-warn-list"></div>
+    </div>
+    <div class="modal-footer">
+      <button id="health-cancel-btn" class="btn-secondary">取消，回去補標</button>
+      <button id="health-confirm-btn" class="primary-btn">仍要繼續匯出</button>
     </div>
   </div>
 </div>
@@ -366,6 +385,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="app.js?v=20260831_10"></script>
+<script src="app.js?v=20260901_01"></script>
 </body>
 </html>

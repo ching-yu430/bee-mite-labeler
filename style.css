@@ -1576,6 +1576,71 @@ main#main-workbench {
   color: var(--text);
 }
 
+/* 匯出前資料集健檢視窗 */
+.health-stat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.health-stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 0.82rem;
+  color: var(--text);
+}
+
+.health-stat-row .health-stat-num {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.health-stat-row.is-warn {
+  border-color: #e8a33d;
+  background: #fff8ec;
+}
+
+.health-stat-row.is-warn .health-stat-num {
+  color: #b3691a;
+}
+
+.health-warn-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.health-warn-item {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  background: #fff3e0;
+  border: 1px solid #ffcc80;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 0.78rem;
+  color: #7a4a12;
+  line-height: 1.45;
+}
+
+.health-ok-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #e8f5e9;
+  border: 1px solid #c8e6c9;
+  border-radius: 6px;
+  padding: 9px 12px;
+  font-size: 0.82rem;
+  color: var(--green);
+  font-weight: 600;
+}
+
 /* 快捷鍵指南彈出視窗清單 */
 .shortcuts-modal-list {
   display: flex;

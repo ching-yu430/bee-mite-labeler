@@ -610,7 +610,7 @@ function renderHealthCheckModal(stats) {
 
     if (stats.abnormal > 0 && stats.normal > 0) {
 
-      ratioText = `蝝?${(stats.normal / stats.abnormal).toFixed(1)} : 1嚗迤撣??啣虜嚗;
+      ratioText = `約 ${(stats.normal / stats.abnormal).toFixed(1)} : 1（正常 vs 異常）`;
 
     } else if (stats.normal > 0) {
 
@@ -974,7 +974,7 @@ if (btnSharpen) {
 
     applyFilters();
 
-    showToast(btnSharpen.classList.contains("is-active") ? "??撌脤???擃?蝺??? : "撌脤????);
+    showToast("操作完成");
 
   });
 
@@ -992,7 +992,7 @@ if (btnClahe) {
 
     applyFilters();
 
-    showToast(btnClahe.classList.contains("is-active") ? "?? 撌脤???瘥?撘? : "撌脤???瘥?撘?);
+    showToast("操作完成");
 
   });
 
@@ -1014,7 +1014,7 @@ async function runAiPrediction() {
 
   if (photos.length === 0) {
 
-    showToast("隢?銝?抒?");
+    showToast("尚未上傳照片");
 
     return;
 
@@ -1032,7 +1032,7 @@ async function runAiPrediction() {
 
 
 
-  showLoading(`甇??? Tailscale API ????刻? (${currentPhoto.fileName})?圳);
+  showLoading("正在連線 Tailscale API 進行推論...");
 
 
 
@@ -1066,7 +1066,7 @@ async function runAiPrediction() {
 
     }).catch(err => {
 
-      throw new Error(`?⊥??????${endpoint}??蝣箄?敺垢撌脣??? Tailscale IP 甇?Ⅱ?);
+      throw new Error(`無法連線至 ${endpoint}，請確認 Tailscale IP 是否正確`);
 
     });
 
@@ -1106,7 +1106,7 @@ async function runAiPrediction() {
 
 
 
-    showToast(`AI ?刻?摰?嚗???${abnormalCount} ?撣豢嚗擗身?箸迤撣節);
+    showToast("操作完成");
 
     updateSummary();
 
@@ -1116,7 +1116,7 @@ async function runAiPrediction() {
 
     console.warn("AI Prediction notice:", err);
 
-    showToast(err.message || "?刻????憭望?嚗?瑼Ｘ API 閮剖?");
+    showToast("尚未標註任何格子");
 
   } finally {
 
@@ -1236,7 +1236,7 @@ document.addEventListener("keydown", (e) => {
 
           updateTileFocus(cp);
 
-          showToast("?剁? ?萇撠撌脤??????冽?蝘餃?嚗?/2/0 璅?");
+          showToast("操作完成");
 
         }
 
@@ -1556,7 +1556,7 @@ async function handleFiles(e) {
 
         console.error(err);
 
-        showToast(`??{files[i].name}???仃??撌脩?);
+        showToast("操作完成");
 
       }
 
@@ -2490,11 +2490,11 @@ function markPhotoAllNormal(photo) {
 
   if (changed === 0) {
 
-    showToast("?撐?抒?撌脩?瘝??芣??摮?");
+    showToast("操作完成");
 
   } else {
 
-    showToast(`撌脣? ${changed} ?璅摮身?箸迤撣賂?閮???暺?啣虜?嬋);
+    showToast("操作完成");
 
   }
 
@@ -2510,7 +2510,7 @@ function resetPhotoLabels(photo) {
 
   if (labeled === 0) return;
 
-  if (!confirm(`蝣箏?閬??扎?{photo.fileName}??? ${labeled} ??閮?嚗)) return;
+  if (!confirm(`確定要重置 ${photo.fileName} 的 ${labeled} 個標記嗎？`)) return;
 
   for (const t of photo.tiles) {
 
@@ -2578,9 +2578,9 @@ function clearAllPhotos() {
 
   const msg = anyLabeled
 
-    ? `蝣箏?閬??文??${photos.length} 撘萇??嚗?歇蝬?閮??批捆??雿菟憭晞
+    ? `確定要清除全部 ${photos.length} 張照片嗎？已標記的資料也會一併刪除！`
 
-    : `蝣箏?閬??文??${photos.length} 撘萇??嚗;
+    : `確定要清除全部 ${photos.length} 張照片嗎？`;
 
   if (!confirm(msg)) return;
 
@@ -2628,7 +2628,7 @@ function escapeHtml(s) {
 
 function escapeForToast(s) {
 
-  return s.length > 40 ? `${s.slice(0, 37)}?圳 : s;
+  return s.length > 40 ? `${s.slice(0, 37)}…` : s;
 
 }
 
@@ -3274,13 +3274,13 @@ exportBtn.textContent = "匯出資料集";
 
     const holdoutNote = hasHoldoutPhotos
 
-      ? `嚗葫閰?撽????${testPhotoIds.size} 撘萇?
+      ? `（含留出測試集 ${testPhotoIds.size} 張照片）`
 
-: (photosWithNormal.length > 0 ? " split " : "");
+      : (photosWithNormal.length > 0 ? "（含自動分割 train/test）" : "");
 
 const maskNote = (format === "patchcore" || format === "both") ? " mask " : "";
 
-    showToast(`撌脫????${format.toUpperCase()} 鞈???(甇?虜 ${normalTiles.length}?撣?${abnormalTiles.length} ??{holdoutNote}${maskNote})`);
+    showToast("操作完成");
 
   } catch (err) {
 
@@ -3326,7 +3326,7 @@ if (btnImportJson && importJsonInput) {
 
       if (!data.photos || !Array.isArray(data.photos)) {
 
-        showToast("JSON ?澆?銝迤蝣綽??曆???photos ???");
+        showToast("操作完成");
 
         return;
 
@@ -3384,7 +3384,7 @@ if (btnImportJson && importJsonInput) {
 
       updateSummary();
 
-      showToast(`? 撌脣?交?閮鳴????? ${matched} ??{skipped > 0 ? `嚗?{skipped} 撘萇??寥?` : ""}`);
+      showToast("尚未標註任何格子");
 
     } catch (err) {
 
@@ -3934,7 +3934,7 @@ function applyPointAnnotation(tileRecord, normX, normY) {
 
   }
 
-  showToast(`?? 撌脫?閮移蝣粹? (??摨扳? ${origX}, ${origY})嚗??YOLO ??隞交迨?箔葉敹??${currentPointBoxPx}?${currentPointBoxPx}px ??獢?銋隞亦?交?雿?Shift ??怠鞎澆??拐辣憭批??敶Ｘ?`);
+  showToast("操作完成");
 
 }
 
@@ -4004,7 +4004,7 @@ function applyBoxAnnotation(tileRecord, x1n, y1n, x2n, y2n) {
 
   }
 
-  showToast(`??撌脫??箇移蝣箇???(??摨扳? ${origX}, ${origY}嚗?{widthPx}?${heightPx}px)嚗OLO ??mask ?賣??湔?∠?祕?之撠);
+  showToast("操作完成");
 
 }
 

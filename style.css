@@ -1812,23 +1812,29 @@ main#main-workbench {
 }
 
 .toolbar-select {
-  padding: 6px 12px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238a8272'/%3E%3C/svg%3E") no-repeat right 8px center;
+  background-size: 8px 5px;
+  border: 1px solid var(--line);
   border-radius: 6px;
-  border: 1px solid #4a5568;
-  background-color: #2d3748;
-  color: #e2e8f0;
-  font-size: 0.9rem;
+  padding: 0 24px 0 10px;
+  height: 28px;
+  font-size: 0.78rem;
+  font-weight: 600;
   font-family: inherit;
+  color: var(--text-dim);
   cursor: pointer;
   outline: none;
-  transition: all 0.2s ease;
-  height: 36px;
+  transition: border-color 0.15s, color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 .toolbar-select:hover {
-  border-color: #63b3ed;
-  background-color: #3f4a5c;
+  border-color: var(--amber);
+  color: var(--amber-strong, #a06820);
+  background-color: #fffdf9;
 }
 .toolbar-select:focus {
-  border-color: #63b3ed;
-  box-shadow: 0 0 0 2px rgba(99, 179, 237, 0.2);
+  border-color: var(--amber);
+  box-shadow: 0 0 0 2px rgba(201, 134, 47, 0.18);
+  color: var(--amber-strong, #a06820);
 }

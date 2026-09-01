@@ -5,6 +5,7 @@
 const STATE_CYCLE = ["unlabeled", "normal", "abnormal"];
 const STATE_LABEL = { unlabeled: "未標記", normal: "正常", abnormal: "異常" };
 
+// 異常標記類別
 const ABNORMAL_TYPES = {
   mite: { label: "蜂蟹蟎成蟲/幼蟲", emoji: "🕷️", code: "mite" },
   dwv: { label: "殘翅/發育不良(DWV)", emoji: "🐝", code: "dwv" },
@@ -12,6 +13,7 @@ const ABNORMAL_TYPES = {
   dead: { label: "死蜂/發黑蜂蛹", emoji: "💀", code: "dead" },
   other: { label: "其他未定義異常", emoji: "❓", code: "other" }
 };
+
 let currentAbnormalType = "mite";
 let currentZoomLevel = 3.0; // ?身?曉之?∪?
 let globalFilter = ""; // ?其?閮??桀??蕪?∪??賂?霈憭折撘瑕憟
@@ -169,7 +171,7 @@ if (btnClearDb) {
     if (confirm("蝣箏?閬??斤汗?冽?唳摮蒂?蔭撠???")) {
       clearIndexedDB();
       clearAllPhotos();
-      showToast("撌脫?蝛箸?唳摮?);
+      showToast("已清空本地快取並重置");
     }
   });
 }
@@ -224,7 +226,7 @@ function openExportModal() {
   const normalTiles = tiles.filter(t => t.state === "normal");
   const abnormalTiles = tiles.filter(t => t.state === "abnormal");
   if (normalTiles.length === 0 && abnormalTiles.length === 0) {
-    showToast("????閮遙雿摮?);
+    showToast("已還原標註進度");
     return;
   }
   if (exportModal) {
@@ -298,11 +300,11 @@ function renderHealthCheckModal(stats) {
 
     let ratioText;
     if (stats.abnormal > 0 && stats.normal > 0) {
-      ratioText = `蝝?${(stats.normal / stats.abnormal).toFixed(1)} : 1嚗迤撣??啣虜嚗;
+      ratioText = "全為異常樣本";
     } else if (stats.normal > 0) {
-      ratioText = "?函甇?虜嚗??∠撣豢見??;
+      ratioText = "全為異常樣本";
     } else if (stats.abnormal > 0) {
-      ratioText = "?函?啣虜嚗??⊥迤撣豢見??;
+      ratioText = "全為正常樣本";
     } else {
       ratioText = "撠璅酉";
     }
@@ -471,7 +473,7 @@ if (btnResetFilters) {
     if (photosContainer) photosContainer.classList.remove("is-sharpen", "is-clahe");
     applyFilters();
     setZoomLevel(3.0);
-    showToast("撌脤?閮剖蔣?漁摨艾?瘥漲?蕪??);
+    showToast("已重設影像濾鏡與亮度");
   });
 }
 
@@ -611,11 +613,11 @@ document.addEventListener("keydown", (e) => {
         if (cp && cp.tiles.length > 0) {
           focusedTileIndex = 0;
           updateTileFocus(cp);
-          showToast("?剁? ?萇撠撌脤??????冽?蝘餃?嚗?/2/0 璅?");
+          showToast("快捷鍵導覽已啟動");
         }
       } else {
         clearTileFocus();
-        showToast("?萇撠撌脤???);
+        showToast("快捷鍵導覽已啟動");
       }
       return;
     }
@@ -771,7 +773,7 @@ async function handleFiles(e) {
         await addPhoto(files[i], rows, cols, overlap);
       } catch (err) {
         console.error(err);
-        showToast(`照片 ${files[i].name} 已存在，已略過`);
+        showToast("標記已重置");
       }
     }
   } finally {
@@ -1011,14 +1013,14 @@ function finalizePhotoDOM(photo, W, H, rows, cols) {
   const markNormalBtn = document.createElement("button");
   markNormalBtn.type = "button";
   markNormalBtn.className = "mini-btn";
-  markNormalBtn.textContent = "?芣??閮剜迤撣?;
-  markNormalBtn.title = "?撐?抒???璅??澆?銝甈∟身?箸迤撣賂??拐???暺?啣虜?澆??;
+  markNormalBtn.textContent = "全設為正常";
+  markNormalBtn.title = "將本照片所有未標記格子一次設為正常 (快捷鍵 N)";
   markNormalBtn.addEventListener("click", () => markPhotoAllNormal(photo));
   const resetBtn = document.createElement("button");
   resetBtn.type = "button";
   resetBtn.className = "mini-btn mini-btn-danger";
   resetBtn.textContent = "皜璅?";
-  resetBtn.title = "?撐?抒???閮?冽?蝛?;
+  resetBtn.title = "清除本照片所有標記 (快捷鍵 R)";
   resetBtn.addEventListener("click", () => resetPhotoLabels(photo));
   actions.appendChild(markNormalBtn);
   actions.appendChild(resetBtn);
@@ -1174,7 +1176,7 @@ function setTileState(tileRecord, tileEl, state, skipUndo = false, newPointData 
 }
 
 function performUndo() {
-  if (undoStack.length === 0) { showToast("瘝??舀?瑞???"); return; }
+  showToast("已複製到剪貼簿");
   const action = undoStack.pop();
   redoStack.push(action);
   action.tile.state = action.oldState;
@@ -1184,7 +1186,7 @@ function performUndo() {
   renderPointMarker(action.tile, action.tile.el);
   updateTileAriaLabel(action.tile);
   updateSummary();
-  showToast("??撌脫??);
+  showToast("已複製到剪貼簿");
 }
 
 function performRedo() {
@@ -1198,13 +1200,13 @@ function performRedo() {
   renderPointMarker(action.tile, action.tile.el);
   updateTileAriaLabel(action.tile);
   updateSummary();
-  showToast("??撌脤???);
+  showToast("標記已重置");
 }
 
 function updateTileAriaLabel(tileRecord) {
   let labelText = STATE_LABEL[tileRecord.state];
   if (tileRecord.state === "abnormal" && tileRecord.abnormalType) {
-    const typeInfo = ABNORMAL_TYPES[tileRecord.abnormalType] || { label: "?啣虜", emoji: "??" };
+    const typeInfo = ABNORMAL_TYPES[tileRecord.abnormalType] || { label: "異常", emoji: "??" };
     labelText += ` [${typeInfo.emoji} ${typeInfo.label}]`;
   }
   tileRecord.el.setAttribute(
@@ -1222,9 +1224,9 @@ function markPhotoAllNormal(photo) {
     }
   }
   if (changed === 0) {
-    showToast("?撐?抒?撌脩?瘝??芣??摮?");
+    showToast("已還原標註進度");
   } else {
-    showToast(`撌脣? ${changed} ?璅摮身?箸迤撣賂?閮???暺?啣虜?嬋);
+    showToast(`已將 ${changed} 個未標記格子設為正常`);
   }
   updateSummary();
 }
@@ -1266,8 +1268,8 @@ function clearAllPhotos() {
   if (photos.length === 0) return;
   const anyLabeled = allTiles().some(t => t.state !== "unlabeled");
   const msg = anyLabeled
-    ? `蝣箏?閬??文??${photos.length} 撘萇??嚗?歇蝬?閮??批捆??雿菟憭晞
-    : `蝣箏?閬??文??${photos.length} 撘萇??嚗;
+    ? `確定要清除全部 ${photos.length} 張照片嗎？已標記的資料也會一併刪除！`
+    : `確定要清除全部 ${photos.length} 張照片嗎？`;
   if (!confirm(msg)) return;
   const ids = photos.map(p => p.id);
   for (const id of ids) removePhoto(id);
@@ -1291,7 +1293,7 @@ function escapeHtml(s) {
 }
 
 function escapeForToast(s) {
-  return s.length > 40 ? `${s.slice(0, 37)}?圳 : s;
+  return s.length > 40 ? `${s.slice(0, 37)}...` : s;
 }
 
 function allTiles() {
@@ -1369,13 +1371,13 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
   const abnormalTiles = tiles.filter(t => t.state === "abnormal");
 
   if (normalTiles.length === 0 && abnormalTiles.length === 0) {
-    showToast("????閮遙雿摮?);
+    showToast("已還原標註進度");
     return;
   }
 
   exportBtn.disabled = true;
   const originalLabel = exportBtn.textContent;
-  exportBtn.textContent = "??銝凌?;
+  exportBtn.textContent = "匯出中...";
 
   try {
     const splitRatio = Math.max(0, Math.min(50, splitPercent)) / 100;
@@ -1542,11 +1544,11 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
       for (const p of photos) {
         const pTiles = p.tiles;
         const row = {
-          "瑼??迂": p.fileName,
-          "蝮賣??: pTiles.length,
-          "甇?虜": pTiles.filter(t => t.state === "normal").length,
-          "?啣虜": pTiles.filter(t => t.state === "abnormal").length,
-          "?芣?": pTiles.filter(t => t.state === "unlabeled").length
+          "照片檔名": p.fileName,
+          "總格數": pTiles.length,
+          "正常": pTiles.filter(t => t.state === "normal").length,
+          "異常": pTiles.filter(t => t.state === "abnormal").length,
+          "未標記": pTiles.filter(t => t.state === "unlabeled").length
         };
         for (const key of abnormalKeys) {
           row[ABNORMAL_TYPES[key].label] = pTiles.filter(t => t.state === "abnormal" && t.abnormalType === key).length;
@@ -1554,15 +1556,15 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
         rows.push(row);
       }
       // ????
-      const totalRow = { "瑼??迂": "??" };
-      for (const col of Object.keys(rows[0]).filter(k => k !== "瑼??迂")) {
+      const totalRow = { "照片檔名": "合計" };
+      for (const col of Object.keys(rows[0]).filter(k => k !== "照片檔名")) {
         totalRow[col] = rows.reduce((sum, r) => sum + (r[col] || 0), 0);
       }
       rows.push(totalRow);
 
       const ws = XLSX.utils.json_to_sheet(rows);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "璅酉蝯梯?");
+      XLSX.utils.book_append_sheet(wb, ws, "標註統計");
       const xlsxData = XLSX.write(wb, { bookType: "xlsx", type: "array" });
       zip.file("report.xlsx", xlsxData);
     }
@@ -1618,10 +1620,10 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
       ? `，已保留 ${testPhotoIds.size} 張作為測試集`
       : (photosWithNormal.length > 0 ? "，無足夠正常樣本切分測試集" : "");
     const maskNote = (format === "patchcore" || format === "both") ? "，並已產生 test/mask 遮罩圖" : "";
-    showToast(`已成功匯出 ${format.toUpperCase()} 資料集 (正常 ${normalTiles.length}，異常 ${abnormalTiles.length}${holdoutNote}${maskNote})`);
+    showToast("標記已重置");
   } catch (err) {
     console.error(err);
-    showToast("?臬憭望?嚗??岫銝甈?);
+    showToast("匯出失敗，請檢查主控台");
   } finally {
     exportBtn.disabled = (normalTiles.length + abnormalTiles.length) === 0;
     exportBtn.textContent = originalLabel;
@@ -1641,7 +1643,7 @@ if (btnImportJson && importJsonInput) {
       const text = await file.text();
       const data = JSON.parse(text);
       if (!data.photos || !Array.isArray(data.photos)) {
-        showToast("JSON ?澆?銝迤蝣綽??曆???photos ???");
+        showToast("匯入失敗: " + (err.message || "JSON 格式錯誤"));
         return;
       }
       let matched = 0, skipped = 0;
@@ -1673,7 +1675,7 @@ if (btnImportJson && importJsonInput) {
       showToast(`? 撌脣?交?閮鳴????? ${matched} ??{skipped > 0 ? `嚗?{skipped} 撘萇??寥?` : ""}`);
     } catch (err) {
       console.error(err);
-      showToast("?臬憭望?嚗? + (err.message || "JSON 閫???航炊"));
+      showToast("匯入失敗: " + (err.message || "JSON 格式錯誤"));
     }
     importJsonInput.value = "";
   });
@@ -1762,7 +1764,7 @@ async function checkAndRestoreProject() {
 
     if (!data || !data.photos || data.photos.length === 0) return;
 
-    showLoading("甇???銝活??閮駁脣漲??);
+    showLoading("正在載入歷史標註進度...");
     await nextFrame();
 
     let restoredCount = 0;
@@ -1771,7 +1773,7 @@ async function checkAndRestoreProject() {
         await rebuildPhotoFromStored(pd);
         restoredCount++;
       } catch (err) {
-        console.error("???抒?憭望?嚗?, pd && pd.fileName, err);
+        console.error("載入進度失敗:", pd && pd.fileName, err);
       }
     }
 
@@ -1967,7 +1969,7 @@ function applyBoxAnnotation(tileRecord, x1n, y1n, x2n, y2n) {
   if (hoveredTileRecord === tileRecord) {
     renderZoomPointMarker(tileRecord);
   }
-  showToast(`已設定標記框大小 (原圖座標 ${origX}, ${origY}，${widthPx}x${heightPx}px)，YOLO 將使用此尺寸`);
+  showToast("標記已重置");
 }
 
 /**
@@ -1997,9 +1999,9 @@ function showZoomPreview(src, tileRecord) {
     zoomPreviewImg.style.webkitFilter = globalFilter;
     if(zoomPreview) zoomPreview.style.webkitFilter = globalFilter;
   }
-  let statusText = STATE_LABEL[tileRecord.state] || "?芣?";
+  let statusText = STATE_LABEL[tileRecord.state] || "未標記";
   if (tileRecord.state === "abnormal" && tileRecord.abnormalType) {
-    const typeInfo = ABNORMAL_TYPES[tileRecord.abnormalType] || { label: "?啣虜", emoji: "??" };
+    const typeInfo = ABNORMAL_TYPES[tileRecord.abnormalType] || { label: "異常", emoji: "??" };
     statusText += ` [${typeInfo.emoji} ${typeInfo.label}]`;
   }
   zoomPreviewCaption.textContent = `${tileRecord.photoName}_r${String(tileRecord.row).padStart(2, "0")}_c${String(tileRecord.col).padStart(2, "0")}  (${statusText})`;
@@ -2113,15 +2115,15 @@ function dateStamp() {
 function buildAnomalibConfigYaml(abnormalFolders, hasPointMasks = false) {
   const abnormalDirYaml = abnormalFolders.length > 0
     ? `[${abnormalFolders.map(f => `"${f}"`).join(", ")}]`
-    : "null  # ?桀?瘝??啣虜璅?嚗?敺?銝撣豢???啣??;
+    : "null  # 缺乏異常樣本，已略過 mask 目錄設定";
   const maskDirYaml = abnormalFolders.length > 0
     ? `[${abnormalFolders.map(f => `"test/mask/${f}"`).join(", ")}]`
     : "null";
   const maskNote = abnormalFolders.length === 0
-    ? "# ?桀?瘝??啣虜璅?嚗?敺?銝撣豢???啣?箏??雿萇??mask"
+    ? "# mask 建議使用精確標註"
     : (hasPointMasks
-      ? "# mask 銝哨?? Shift+?/暺?蝎曄Ⅱ璅酉?撣豢??箄票?祕?之撠?璈Ｗ?????芣?閮颯?湔璅撣貊??澆???澆??踝?蝎曄Ⅱ摨西?雿?撱箄降?⊿?鋆?嚗?
-      : "# ?桀???撣豢?賣?? Shift+?/暺?蝎曄Ⅱ璅酉嚗ask ??湔憛嚗?隡?image-level 璅酉嚗?撱箄降銋?鋆?蝎曄Ⅱ璅酉隞交???pixel-level 閰摯?????);
+      ? "# mask 建議使用精確標註"
+      : "# 無異常標記，使用預設設定");
   return `# ?梯??寡?璅酉撌亙?芸??Ｙ??瘜?
 #   1. ??獢??函?鞈?憭橘???train/?est/嚗雿極雿??
 #   2. anomalib train --config anomalib_patchcore_config.yaml

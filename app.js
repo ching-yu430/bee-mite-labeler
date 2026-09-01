@@ -1,34 +1,33 @@
-// 相關邏輯
-// 相關邏輯
-// 相關邏輯
+// ???閮餃極??
+// 瘥撐?抒?靘雯?澆????潘????璅?/ 甇?虜 / ?啣虜??敺芰嚗?
+// ?臬??? anomalib / PatchCore ????dataset/train/test 鞈?憭暹撘?
 
 const STATE_CYCLE = ["unlabeled", "normal", "abnormal"];
 const STATE_LABEL = { unlabeled: "未標記", normal: "正常", abnormal: "異常" };
 
-// 相關邏輯
 const ABNORMAL_TYPES = {
-  mite: { label: "擃”??/?質?", emoji: "?玨", code: "mite" },
-  dwv: { label: "畾?/?詨耦蝧?DWV)", emoji: "?直", code: "dwv" },
-  debris: { label: "??/?釭", emoji: "??", code: "debris" },
-  dead: { label: "甇餉?/畾暺?", emoji: "??", code: "dead" },
-  other: { label: "?嗡??舐??啁?", emoji: "??, code: "other" }
+  mite: { label: "蜂蟹蟎成蟲/幼蟲", emoji: "🕷️", code: "mite" },
+  dwv: { label: "殘翅/發育不良(DWV)", emoji: "🐝", code: "dwv" },
+  debris: { label: "異物/蠟屑", emoji: "🗑️", code: "debris" },
+  dead: { label: "死蜂/發黑蜂蛹", emoji: "💀", code: "dead" },
+  other: { label: "其他未定義異常", emoji: "❓", code: "other" }
 };
 let currentAbnormalType = "mite";
-let currentZoomLevel = 3.0; // 相關邏輯
-let globalFilter = ""; // 相關邏輯
+let currentZoomLevel = 3.0; // ?身?曉之?∪?
+let globalFilter = ""; // ?其?閮??桀??蕪?∪??賂?霈憭折撘瑕憟
 
-// 相關邏輯
-// 相關邏輯
-// 相關邏輯
+// Shift+?桃?暺??蝙?函??箏???獢???(px)嚗?翰????亦 Shift+??急?嚗?// ??交?冽??喳?祕?祝擃?銝?甇方身摰??嗚?
+// ?舫?撌亙?矽?湛?瘥活?????嗡??澆??脰府蝑?閮鳴?t.point.boxPx嚗?
+// 銋?隤踵?典?閮剖?銝?敶梢撌脫?閮???璅酉??
 const DEFAULT_POINT_BOX_PX = 20;
 let currentPointBoxPx = DEFAULT_POINT_BOX_PX;
 
-// 相關邏輯
+// Shift+??急????頝撠甇文?蝝潸??箝蝝???????摰偕撖豢獢??嫣噶敹恍??
 const DRAG_THRESHOLD_PX = 6;
 
-// 相關邏輯
-// 相關邏輯
-// 相關邏輯
+// 蝯曹???銝蝑?point 璅酉撖阡?????撖祇?嚗x嚗?
+// ?芸??冽??喟?箇? widthPx/heightPx嚗???閰梧?靘?敹恍????臬?? JSON嚗??boxPx ?孵耦嚗?
+// ?抵瘝?撠梁?典??身?潦? YOLO ?臬?ask 蝜芾ˊ?摮???蝺＊蝷箏?剁?蝣箔?銝?蝞?銝?氬?
 function pointBoxDims(point) {
   if (!point) return { w: DEFAULT_POINT_BOX_PX, h: DEFAULT_POINT_BOX_PX };
   const w = point.widthPx || point.boxPx || DEFAULT_POINT_BOX_PX;
@@ -36,12 +35,12 @@ function pointBoxDims(point) {
   return { w, h };
 }
 
-// 相關邏輯
+// A: ?日/????
 const undoStack = [];
 const redoStack = [];
 const MAX_UNDO = 200;
 
-// 相關邏輯
+// J: ?萇撠
 let keyboardNavActive = false;
 let focusedTileIndex = -1;
 
@@ -59,15 +58,15 @@ let photos = [];
 let photoCounter = 0;
 let currentPhotoIndex = 0;
 
-// 相關邏輯
+// ?憛璅酉?函????
 let isPainting = false;
 let paintState = null;
-// 相關邏輯
+// ?桀?皛????摮?靘?文翰?琿雿輻嚗?
 let hoveredTileRecord = null;
-// 相關邏輯
-// 相關邏輯
+// ?? Shift ??摰憭折嚗??曌???摮宏??曉之???楝銝?
+// ???嗡??澆?閫貊摰? mouseenter嚗??湔憭折?批捆鋡怠????????let zoomLocked = false;
 
-// 相關邏輯
+// DOM ??
 const photoInput = document.getElementById("photo-input");
 const rowsInput = document.getElementById("rows-input");
 const colsInput = document.getElementById("cols-input");
@@ -118,7 +117,7 @@ if (shortcutsModal) {
   });
 }
 
-// 相關邏輯
+// ?臬敶閬???
 const exportModal = document.getElementById("export-modal");
 const modalCloseBtn = document.getElementById("modal-close-btn");
 const modalCancelBtn = document.getElementById("modal-cancel-btn");
@@ -126,14 +125,14 @@ const modalConfirmExportBtn = document.getElementById("modal-confirm-export-btn"
 const modalTestSplit = document.getElementById("modal-test-split");
 const modalAugFlip = document.getElementById("modal-aug-flip");
 
-// 相關邏輯
+// ?臬?????交炎敶閬???
 const healthCheckModal = document.getElementById("health-check-modal");
 const healthCloseBtn = document.getElementById("health-close-btn");
 const healthCancelBtn = document.getElementById("health-cancel-btn");
 const healthConfirmBtn = document.getElementById("health-confirm-btn");
 const healthStatList = document.getElementById("health-stat-list");
 const healthWarnList = document.getElementById("health-warn-list");
-// 相關邏輯
+// 雿輻??交炎閬?????閬匱蝥?箝????瑁??祕??箏?雿?
 let pendingExportAction = null;
 
 const loadingOverlay = document.getElementById("loading-overlay");
@@ -150,7 +149,7 @@ const prevPhotoBtn = document.getElementById("prev-photo-btn");
 const nextPhotoBtn = document.getElementById("next-photo-btn");
 const pagerInfo = document.getElementById("pager-info");
 
-// 相關邏輯
+// 瞈暸?憭折??
 const filterBrightness = document.getElementById("filter-brightness");
 const filterContrast = document.getElementById("filter-contrast");
 const btnResetFilters = document.getElementById("btn-reset-filters");
@@ -161,7 +160,7 @@ const btnClearDb = document.getElementById("btn-clear-db");
 const zoomLevelBtns = document.querySelectorAll(".zoom-level-btn");
 const pointBoxBtns = document.querySelectorAll(".point-box-btn");
 
-// 相關邏輯
+// 鈭辣蝬?
 photoInput.addEventListener("change", handleFiles);
 exportBtn.addEventListener("click", openExportModal);
 
@@ -199,10 +198,10 @@ if (emptyUploadBtn) {
   });
 }
 
-// 相關邏輯
-// 相關邏輯
+// 敹恍???Ｘ?批嚗歇?寧 shortcuts-modal 敶閬?嚗??蝙?刻?????選?
+// shortcutsPanel / shortcutsChevron 撌脩宏?歹?敹恍???寧 shortcutsModal 敶憿舐內
 
-// 相關邏輯
+// 撌血?啣虜憿銝??詨
 if (abnormalTypeSelect) {
   abnormalTypeSelect.addEventListener("change", () => {
     selectAbnormalType(abnormalTypeSelect.value, false);
@@ -219,7 +218,7 @@ function selectAbnormalType(typeKey, syncSelect = true) {
   showToast(`撌脣??撣賊??伐?${typeInfo.emoji} ${typeInfo.label}`);
 }
 
-// 相關邏輯
+// ?臬敶閬?嚗odal嚗?隞嗥?摰?
 function openExportModal() {
   const tiles = allTiles();
   const normalTiles = tiles.filter(t => t.state === "normal");
@@ -254,13 +253,13 @@ if (modalConfirmExportBtn) {
     const shouldAug = modalAugFlip ? modalAugFlip.checked : false;
 
     closeExportModal();
-    // 相關邏輯
+    // 甇??????頝唾????交炎閬?嚗蝙?刻Ⅱ隤????銵??
     openHealthCheckModal(() => doExportDataset(format, splitPercent, shouldAug));
   });
 }
 
-// 相關邏輯
-// 相關邏輯
+// ?臬?????交炎嚗絞閮??啣虜憿撘菜?迤撣??啣虜瘥?嚗?
+// 銝血?璅??賊?撠?<10 撘蛛????交??箄郎???踹?蝺游靘? PatchCore/YOLO 璅∪?銝帘摰?
 const MIN_HEALTHY_SAMPLES = 10;
 
 function computeDatasetHealth() {
@@ -278,14 +277,14 @@ function computeDatasetHealth() {
     const n = byClass[key];
     if (n > 0 && n < MIN_HEALTHY_SAMPLES) {
       const info = ABNORMAL_TYPES[key];
-      warnings.push(`??{info.emoji} ${info.label}????${n} 撘蛛?璅??賊?撠?PatchCore嚗OLO ?賢?????獐撠?鞈?摮詨蝛拙??孵噩嚗遣霅啗?璅?喳? ${MIN_HEALTHY_SAMPLES} 撘萄??臬?);
+      warnings.push(`目錄完全沒有正常樣本，PatchCore 演算法無法訓練，請至少標記一些正常樣本！`);
     }
   }
   if (normal > 0 && normal < MIN_HEALTHY_SAMPLES) {
-    warnings.push(`甇?虜璅??芣? ${normal} ?潘?PatchCore ?閬雲憭?甇?虜璅??撱箇??舫??敺菔??嗅澈嚗遣霅啗撠???${MIN_HEALTHY_SAMPLES} 撘萎誑銝);
+    warnings.push(`目錄完全沒有正常樣本，PatchCore 演算法無法訓練，請至少標記一些正常樣本！`);
   }
   if (normal === 0 && abnormal > 0) {
-    warnings.push(`?桀?摰瘝?甇?虜璅?嚗atchCore ???∠??瘜瘜?蝺湛??喳??閬?閮?鈭迤撣詻摮);
+    warnings.push(`目錄完全沒有正常樣本，PatchCore 演算法無法訓練，請至少標記一些正常樣本！`);
   }
 
   return { normal, abnormal, byClass, warnings };
@@ -294,7 +293,7 @@ function computeDatasetHealth() {
 function renderHealthCheckModal(stats) {
   if (healthStatList) {
     const rows = [];
-    rows.push(`<div class="health-stat-row"><span>✅ 正常</span><span class="health-stat-num">${stats.normal} 張</span></div>`);
+    rows.push(`<div class="health-stat-row"><span>??甇?虜</span><span class="health-stat-num">${stats.normal} ??/span></div>`);
     rows.push(`<div class="health-stat-row"><span>?? ?啣虜??</span><span class="health-stat-num">${stats.abnormal} ??/span></div>`);
 
     let ratioText;
@@ -305,7 +304,7 @@ function renderHealthCheckModal(stats) {
     } else if (stats.abnormal > 0) {
       ratioText = "?函?啣虜嚗??⊥迤撣豢見??;
     } else {
-      ratioText = "無資料";
+      ratioText = "撠璅酉";
     }
     rows.push(`<div class="health-stat-row"><span>?? 甇?虜/?啣虜瘥?</span><span class="health-stat-num">${ratioText}</span></div>`);
 
@@ -355,7 +354,7 @@ if (healthConfirmBtn) {
   });
 }
 
-// 相關邏輯
+// ?曉之?∪?????
 zoomLevelBtns.forEach(btn => {
   btn.addEventListener("click", () => {
     const level = parseFloat(btn.dataset.zoom) || 3.0;
@@ -374,7 +373,7 @@ function setZoomLevel(level) {
   }
 }
 
-// 相關邏輯
+// Shift+暺???獢之撠???敶梢?臬 YOLO ?????獢??瘀?px嚗?
 pointBoxBtns.forEach(btn => {
   btn.addEventListener("click", () => {
     const px = parseFloat(btn.dataset.box) || DEFAULT_POINT_BOX_PX;
@@ -397,7 +396,7 @@ nextPhotoBtn.addEventListener("click", () => {
 });
 sidebarClearAll.addEventListener("click", clearAllPhotos);
 
-// 相關邏輯
+// =================== 敶勗?隤踵瞈暸 (鈭桀漲/撠?/?喳?/撠?憓撥/?身) ===================
 function applyFilters() {
   const bVal = filterBrightness ? parseFloat(filterBrightness.value) : 100;
   const cVal = filterContrast ? parseFloat(filterContrast.value) : 100;
@@ -428,7 +427,7 @@ function applyFilters() {
     if(zoomPreview) zoomPreview.style.webkitFilter = finalFilter;
   }
 
-  // 相關邏輯
+  // 1. ??撱箇????<style id="live-filter-style">嚗誑?擃??閬??????潦之???豢筑?曉之??
   let styleEl = document.getElementById("live-filter-style");
   if (!styleEl) {
     styleEl = document.createElement("style");
@@ -442,7 +441,7 @@ function applyFilters() {
     }
   `;
 
-  // 相關邏輯
+  // 2. ?郊?湔 photosContainer CSS 霈??inline style
   if (photosContainer) {
     photosContainer.style.setProperty("--grid-brightness", (bVal / 100).toFixed(2));
     photosContainer.style.setProperty("--grid-contrast", (cVal / 100).toFixed(2));
@@ -494,14 +493,14 @@ if (btnClahe) {
   });
 }
 
-// 相關邏輯
+// AI ?單??刻? (Tailscale / API)
 if (btnAiPredict) {
   btnAiPredict.addEventListener("click", runAiPrediction);
 }
 
 async function runAiPrediction() {
   if (photos.length === 0) {
-    showToast("操作完成");
+    showToast("隢?銝?抒?");
     return;
   }
   const currentPhoto = photos[currentPhotoIndex];
@@ -510,7 +509,7 @@ async function runAiPrediction() {
   const endpoint = (apiEndpointInput && apiEndpointInput.value.trim()) || "http://localhost:8000/predict";
   const threshold = (anomalyThresholdInput && parseFloat(anomalyThresholdInput.value)) || 0.5;
 
-  showLoading(`甇??? Tailscale API ????刻? (${currentPhoto.fileName})?圳);
+  showLoading(`正在呼叫 API 進行推論 (${currentPhoto.fileName})...`);
 
   try {
     const formData = new FormData();
@@ -527,7 +526,7 @@ async function runAiPrediction() {
       body: formData,
       signal: controller.signal
     }).catch(err => {
-      throw new Error(`?⊥??????${endpoint}??蝣箄?敺垢撌脣??? Tailscale IP 甇?Ⅱ?);
+      throw new Error(`無法連線至 ${endpoint}，請檢查是否已開啟 Tailscale！`);
     });
 
     clearTimeout(timeoutId);
@@ -547,7 +546,7 @@ async function runAiPrediction() {
       if (isAbnormal) abnormalCount++;
     });
 
-    showToast(`AI ?刻?摰?嚗???${abnormalCount} ?撣豢嚗擗身?箸迤撣節);
+    showToast(`AI 推論完成，共發現 ${abnormalCount} 個異常標記，其餘設為正常`);
     updateSummary();
 
   } catch (err) {
@@ -560,7 +559,7 @@ async function runAiPrediction() {
 
 showPhoto(0);
 
-// 相關邏輯
+// ?憛蝯??菜葫嚗??曌?/ 閫豢?虜璅??蝒閬???
 document.addEventListener("pointerup", stopPainting);
 document.addEventListener("pointercancel", stopPainting);
 window.addEventListener("blur", stopPainting);
@@ -570,7 +569,7 @@ document.addEventListener("pointermove", (ev) => {
   }
 });
 
-// 相關邏輯
+// 敹恍??銵?(Q/W/E/R/T 撠? 5 蝔桃撣賊???
 const KEY_TO_ABNORMAL_TYPE = {
   q: "mite", Q: "mite",
   w: "dwv", W: "dwv",
@@ -579,18 +578,18 @@ const KEY_TO_ABNORMAL_TYPE = {
   t: "other", T: "other"
 };
 
-// 相關邏輯
-// 相關邏輯
-// 相關邏輯
+// ?萇敹急?蛛?
+// 1. ?典?嚗? / A 銝?撘萸? / D 銝?撘萸 銝?菔身?芣??箸迤撣詻/W/E/R/T ???啣虜憿
+// 2. 皜豢???澆?銝?嚗?
 //    - 1=甇?虜
-// 相關邏輯
-// 相關邏輯
-// 相關邏輯
+//    - 2=?嗅??詨??撣?
+//    - Q/W/E/R/T=?湔閮剔閰脩摰撣賊??伐?
+//    - 0/Backspace=皜
 document.addEventListener("keydown", (e) => {
   const tag = document.activeElement && document.activeElement.tagName;
   if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
 
-  // 相關邏輯
+  // A: Ctrl+Z ?日 / Ctrl+Y ??
   if ((e.ctrlKey || e.metaKey) && e.key === "z") {
     e.preventDefault();
     performUndo();
@@ -602,7 +601,7 @@ document.addEventListener("keydown", (e) => {
     return;
   }
 
-  // 相關邏輯
+  // J: F ?萄???文??芣芋撘?
   if (e.key === "f" || e.key === "F") {
     if (!e.ctrlKey && !e.metaKey) {
       e.preventDefault();
@@ -612,7 +611,7 @@ document.addEventListener("keydown", (e) => {
         if (cp && cp.tiles.length > 0) {
           focusedTileIndex = 0;
           updateTileFocus(cp);
-          showToast("操作完成");
+          showToast("?剁? ?萇撠撌脤??????冽?蝘餃?嚗?/2/0 璅?");
         }
       } else {
         clearTileFocus();
@@ -622,7 +621,7 @@ document.addEventListener("keydown", (e) => {
     }
   }
 
-  // 相關邏輯
+  // J: ?孵??萄??芸???
   if (keyboardNavActive && photos[currentPhotoIndex]) {
     const cp = photos[currentPhotoIndex];
     const cols = parseInt(cp.blockEl.querySelector(".tile-grid").style.gridTemplateColumns.match(/\d+/)?.[0] || "8");
@@ -639,7 +638,7 @@ document.addEventListener("keydown", (e) => {
       e.preventDefault();
       focusedTileIndex = newIdx;
       updateTileFocus(cp);
-      // 相關邏輯
+      // 霈暺蝑? hoveredTileRecord嚗見 1/2/0 敹急?萄隞亦?交?雿?
       hoveredTileRecord = cp.tiles[focusedTileIndex];
       const focusedTile = cp.tiles[focusedTileIndex];
       showZoomPreview(focusedTile.el.querySelector("img").src, focusedTile);
@@ -667,7 +666,7 @@ document.addEventListener("keydown", (e) => {
     }
   }
 
-  // 相關邏輯
+  // 瑼Ｘ?臬??Q/W/E/R/T ??
   const matchedType = KEY_TO_ABNORMAL_TYPE[e.key];
 
   if (hoveredTileRecord) {
@@ -694,13 +693,13 @@ document.addEventListener("keydown", (e) => {
       return;
     }
   } else if (matchedType) {
-    // 相關邏輯
+    // 皜豢?銝?澆?銝?嚗/W/E/R/T ??撌血?詨??撣賊???
     e.preventDefault();
     selectAbnormalType(matchedType);
   }
 });
 
-// 相關邏輯
+// ?亙歇??閮銝?敹??唳??????嚗歲?箇汗?函Ⅱ隤?蝷?
 window.addEventListener("beforeunload", (e) => {
   if (!allTiles().some(t => t.state !== "unlabeled")) return;
   e.preventDefault();
@@ -712,7 +711,7 @@ function stopPainting() {
   paintState = null;
 }
 
-// 相關邏輯
+// J: ?萇撠頛?賣
 function updateTileFocus(photo) {
   clearTileFocus();
   if (focusedTileIndex >= 0 && focusedTileIndex < photo.tiles.length) {
@@ -767,12 +766,12 @@ async function handleFiles(e) {
   try {
     for (let i = 0; i < files.length; i++) {
       updateLoadingText(`???抒?銝?(${i + 1}/${files.length})嚗?{escapeForToast(files[i].name)}`);
-      await nextFrame(); // 相關邏輯
+      await nextFrame(); // 霈脣漲????箔?嚗??脰??郊???潮?蝞?
       try {
         await addPhoto(files[i], rows, cols, overlap);
       } catch (err) {
         console.error(err);
-        showToast(`??{files[i].name}???仃??撌脩?);
+        showToast(`照片 ${files[i].name} 已存在，已略過`);
       }
     }
   } finally {
@@ -805,7 +804,7 @@ async function addPhoto(file, rows, cols, overlap) {
 
   const photo = { id: photoId, fileName: file.name, tiles: [], originalBlob: null };
 
-  // 相關邏輯
+  // I: 靽????? Blob 靘?隞賢??
   try {
     photo.originalBlob = file.slice();
   } catch (ignored) {}
@@ -867,9 +866,9 @@ async function addPhoto(file, rows, cols, overlap) {
 }
 
 /**
- * 相關邏輯
- * 相關邏輯
- * 相關邏輯
+ * 靘?tileRecord 撱箇??桐??澆? DOM ??嚗????瑯hift+暺?/?蝎曄Ⅱ璅酉??
+ * ?豢筑?曉之?～遝頛芾矽?游?蝑???隞嗥??冽迨蝬?嚗?
+ * 靘銝?抒???IndexedDB ???梁嚗Ⅱ靽??箔??氬?
  */
 function createTileElement(tileRecord) {
   const tileEl = document.createElement("div");
@@ -888,8 +887,8 @@ function createTileElement(tileRecord) {
   updateTileAriaLabel(tileRecord);
   renderPointMarker(tileRecord, tileEl);
 
-  // 相關邏輯
-  // 相關邏輯
+  // ?舀 Shift+??芰?急?嚗票?隞嗅祕?之撠?嚗hift+?桃?暺???摰偕撖詨翰?獢?
+  // 銝? Shift ?銝?砍????/ ???憛
   tileEl.addEventListener("pointerdown", (ev) => {
     if (ev.pointerType === "mouse" && ev.button !== 0) return;
 
@@ -899,14 +898,14 @@ function createTileElement(tileRecord) {
     }
 
     if (ev.pointerType !== "touch") ev.preventDefault();
-    // 相關邏輯
+    // 銝?砍暺????憛
     const next = cycleTile(tileRecord, tileEl);
     isPainting = true;
     paintState = next;
     updateSummary();
   });
   tileEl.addEventListener("pointerenter", (ev) => {
-    // 相關邏輯
+    // ?湔瑼Ｘ嚗?皛?撌阡蝣箏祕?? (ev.buttons === 1) ?????憛嚗甇Ｗ蝝??炊??
     if (ev.buttons === 1 && isPainting && paintState) {
       setTileState(tileRecord, tileEl, paintState);
       updateSummary();
@@ -924,22 +923,22 @@ function createTileElement(tileRecord) {
   });
 
   tileEl.addEventListener("mouseenter", () => {
-    if (zoomLocked) return; // 相關邏輯
+    if (zoomLocked) return; // ?曉之?⊿?摰葉嚗?曌??隞摮??嗉粥?曉之?∪摰?
     cancelHideZoomPreview();
     hoveredTileRecord = tileRecord;
     showZoomPreview(imgEl.src, tileRecord);
   });
   tileEl.addEventListener("mousemove", (ev) => {
-    if (zoomLocked) return; // 相關邏輯
+    if (zoomLocked) return; // ??銝凋?????曌宏??蝵殷?霈蝙?刻蝛拙?蝘駁??駁???
     positionZoomPreview(ev);
   });
   tileEl.addEventListener("mouseleave", () => {
-    if (zoomLocked) return; // 相關邏輯
-    // 相關邏輯
+    if (zoomLocked) return; // ??銝剖蕭?仿??隞塚??踹??曉之?∟◤???
+    // 撱園?梯?嚗?皛????宏?唳憭折銝嚗?曉之敶勗?蝎曄Ⅱ??
     scheduleHideZoomPreview();
   });
 
-  // 相關邏輯
+  // 皛曇憚?湔隤踵?曉之?∪?
   tileEl.addEventListener("wheel", (ev) => {
     ev.preventDefault();
     const delta = ev.deltaY < 0 ? 0.5 : -0.5;
@@ -953,7 +952,7 @@ function createTileElement(tileRecord) {
 }
 
 /**
- * 相關邏輯
+ * 靘?tileRecord.point ?冽摮??怠嚗?蝘駁嚗??脣????移蝣箸?閮???
  */
 function renderPointMarker(tileRecord, tileEl) {
   const old = tileEl.querySelector(".tile-point-marker");
@@ -973,8 +972,8 @@ function renderPointMarker(tileRecord, tileEl) {
 }
 
 /**
- * 相關邏輯
- * 相關邏輯
+ * 靘?tileRecord.point ?祕?祝擃?Shift+??怠?敶ｇ??翰?????箏??寞?嚗?
+ * ?怠??箏 YOLO / mask ????蝭?嚗?雿輻??湔?獢之撠?敶Ｙ??臬????
  */
 function buildPointBoxOutline(tileRecord) {
   const box = document.createElement("div");
@@ -988,9 +987,9 @@ function buildPointBoxOutline(tileRecord) {
 }
 
 /**
- * 相關邏輯
- * 相關邏輯
- * 相關邏輯
+ * 撱箇??抒??雯??DOM ?憛?撌血皜???
+ * photo.tiles 敹?撌脣?憒伐???blob嚗?甇文撘?鋆遣蝻箏???tileEl 銝衣?鋆?Ｕ?
+ * 靘銝?抒? (addPhoto) ??IndexedDB ?芸??? (rebuildPhotoFromStored) ?梁??
  */
 function finalizePhotoDOM(photo, W, H, rows, cols) {
   for (const t of photo.tiles) {
@@ -1004,7 +1003,7 @@ function finalizePhotoDOM(photo, W, H, rows, cols) {
   const head = document.createElement("div");
   head.className = "photo-block-head";
   const heading = document.createElement("h2");
-  heading.textContent = `${photo.fileName}?(${W}?${H}嚗???${rows}?${cols} = ${rows * 相關邏輯
+  heading.textContent = `${photo.fileName}?(${W}?${H}嚗???${rows}?${cols} = ${rows * cols} ??`;
   head.appendChild(heading);
 
   const actions = document.createElement("div");
@@ -1018,7 +1017,7 @@ function finalizePhotoDOM(photo, W, H, rows, cols) {
   const resetBtn = document.createElement("button");
   resetBtn.type = "button";
   resetBtn.className = "mini-btn mini-btn-danger";
-  resetBtn.textContent = "清除標記";
+  resetBtn.textContent = "皜璅?";
   resetBtn.title = "?撐?抒???閮?冽?蝛?;
   resetBtn.addEventListener("click", () => resetPhotoLabels(photo));
   actions.appendChild(markNormalBtn);
@@ -1043,16 +1042,16 @@ function finalizePhotoDOM(photo, W, H, rows, cols) {
   photo.blockEl = block;
   applyFilters();
 
-  // 相關邏輯
+  // --- ?湔?? ---
   const li = document.createElement("li");
   li.className = "sidebar-item";
   li.innerHTML = `
     <img class="sidebar-thumb" src="${photo.thumbUrl || ""}" alt="">
     <div class="sidebar-info">
       <div class="sidebar-name">${escapeHtml(photo.fileName)}</div>
-      <div class="sidebar-progress" data-role="progress">0 / ${rows * 相關邏輯
+      <div class="sidebar-progress" data-role="progress">0 / ${rows * cols} 撌脫?</div>
     </div>
-    <button class="sidebar-remove" title="移除照片" aria-label="移除照片">🗑️</button>
+    <button class="sidebar-remove" title="蝘駁?撐?抒?" aria-label="蝘駁">??/button>
   `;
   li.querySelector(".sidebar-info").addEventListener("click", () => {
     const idx = photos.findIndex(p => p.id === photo.id);
@@ -1077,7 +1076,7 @@ function finalizePhotoDOM(photo, W, H, rows, cols) {
 }
 
 /**
- * 相關邏輯
+ * ??IndexedDB ??????撱箔?撘萇???急?????blob????蝎曄Ⅱ暺???
  */
 async function rebuildPhotoFromStored(pd) {
   if (!pd || !pd.tiles || pd.tiles.length === 0) return;
@@ -1101,7 +1100,7 @@ async function rebuildPhotoFromStored(pd) {
   };
 
   for (const t of pd.tiles) {
-    if (!t.blob) continue; // 相關邏輯
+    if (!t.blob) continue; // 瘝?敶勗?鞈????潛瘜????仿?
     photo.tiles.push({
       row: t.row,
       col: t.col,
@@ -1136,10 +1135,10 @@ function cycleTile(tileRecord, tileEl) {
 
 function setTileState(tileRecord, tileEl, state, skipUndo = false, newPointData = undefined) {
   const oldPoint = tileRecord.point ? { ...tileRecord.point } : null;
-  // 相關邏輯
-  // 相關邏輯
-  // 相關邏輯
-  // 相關邏輯
+  // newPointData === undefined 銵函內?窒?冽??point ?摩??
+  //   - ?ａ? abnormal ????芸?皜璅?暺?
+  //   - ?園???銝雁???祉? point 銝?
+  // newPointData 憿臬??喳?拐辣??null ??隞亥府?潛皞??冽 Shift+暺? / ?臬??嚗?
   let finalPoint;
   if (newPointData !== undefined) {
     finalPoint = newPointData;
@@ -1160,7 +1159,7 @@ function setTileState(tileRecord, tileEl, state, skipUndo = false, newPointData 
       newPoint: finalPoint
     });
     if (undoStack.length > MAX_UNDO) undoStack.shift();
-    redoStack.length = 0; // 相關邏輯
+    redoStack.length = 0; // ?啣?雿?蝛?redo
   }
   tileRecord.state = state;
   tileEl.dataset.state = state;
@@ -1175,7 +1174,7 @@ function setTileState(tileRecord, tileEl, state, skipUndo = false, newPointData 
 }
 
 function performUndo() {
-  if (undoStack.length === 0) { showToast("操作完成"); return; }
+  if (undoStack.length === 0) { showToast("瘝??舀?瑞???"); return; }
   const action = undoStack.pop();
   redoStack.push(action);
   action.tile.state = action.oldState;
@@ -1189,7 +1188,7 @@ function performUndo() {
 }
 
 function performRedo() {
-  if (redoStack.length === 0) { showToast("操作完成"); return; }
+  if (redoStack.length === 0) { showToast("瘝??舫?????"); return; }
   const action = redoStack.pop();
   undoStack.push(action);
   action.tile.state = action.newState;
@@ -1205,7 +1204,7 @@ function performRedo() {
 function updateTileAriaLabel(tileRecord) {
   let labelText = STATE_LABEL[tileRecord.state];
   if (tileRecord.state === "abnormal" && tileRecord.abnormalType) {
-    const typeInfo = ABNORMAL_TYPES[tileRecord.abnormalType] || { label: "異常", emoji: "??" };
+    const typeInfo = ABNORMAL_TYPES[tileRecord.abnormalType] || { label: "?啣虜", emoji: "??" };
     labelText += ` [${typeInfo.emoji} ${typeInfo.label}]`;
   }
   tileRecord.el.setAttribute(
@@ -1223,7 +1222,7 @@ function markPhotoAllNormal(photo) {
     }
   }
   if (changed === 0) {
-    showToast("操作完成");
+    showToast("?撐?抒?撌脩?瘝??芣??摮?");
   } else {
     showToast(`撌脣? ${changed} ?璅摮身?箸迤撣賂?閮???暺?啣虜?嬋);
   }
@@ -1233,7 +1232,7 @@ function markPhotoAllNormal(photo) {
 function resetPhotoLabels(photo) {
   const labeled = photo.tiles.filter(t => t.state !== "unlabeled").length;
   if (labeled === 0) return;
-  if (!confirm(`蝣箏?閬??扎?{photo.fileName}??? ${labeled} ??閮?嚗)) return;
+  if (!confirm(`確定要重置 ${photo.fileName} 中的 ${labeled} 個標記嗎？`)) return;
   for (const t of photo.tiles) {
     setTileState(t, t.el, "unlabeled");
   }
@@ -1333,18 +1332,18 @@ function updateSummary() {
     p.sidebarEl.classList.toggle("is-complete", pLabeled === pTotal && pTotal > 0);
   }
 
-  // 相關邏輯
+  // C: ?湧??脣漲璇??
   const progressPercent = total > 0 ? Math.round((normal + abnormal) / total * 100) : 0;
   const progressPercentEl = document.getElementById("progress-percent");
   const progressFillEl = document.getElementById("progress-fill");
   if (progressPercentEl) progressPercentEl.textContent = `${progressPercent}%`;
   if (progressFillEl) progressFillEl.style.width = `${progressPercent}%`;
 
-  // 相關邏輯
+  // ?芸?閫貊?砍?怠??脣? (?脤??港?憭?
   debounceSaveState();
 }
 
-// 相關邏輯
+// ?Ｙ?蝧餉?鞈?憓撥敶勗?
 async function createFlippedBlob(blob) {
   return new Promise((resolve) => {
     const img = new Image();
@@ -1362,8 +1361,8 @@ async function createFlippedBlob(blob) {
   });
 }
 
-// 相關邏輯
-// 相關邏輯
+// ?舀 PatchCore / YOLO / JSON 憭瑽????臬
+// ?舀 PatchCore / YOLO / JSON 憭瑽????臬
 async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAug = false) {
   const tiles = allTiles();
   const normalTiles = tiles.filter(t => t.state === "normal");
@@ -1384,16 +1383,16 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
     const CLASS_INDEX = { mite: 0, dwv: 1, debris: 2, dead: 3, other: 4 };
     const CLASS_NAMES = ["mite", "dwv", "debris", "dead", "other"];
 
-    // 相關邏輯
-    // 相關邏輯
-    // 相關邏輯
+    // 撱箇? tile -> ?撅祉??id ???扯”嚗?銝隞乓撘萇??桐??? train / test(val)??
+    // ?冽?嚗?銝撘萇???箇??賊?澆?????蝢斤???摨衣隡潘??亙?銝撘萇???澆???
+    // ?箇?刻?蝺湧??葫閰?撽?????鞈?瘣拇?嚗蝙閰摯?瘥祕?蝵脫?璅???
     const tilePhotoId = new Map();
     for (const p of photos) {
       for (const t of p.tiles) tilePhotoId.set(t, p.id);
     }
 
-    // 相關邏輯
-    // 相關邏輯
+    // 隞交撘萇??桐???甇?虜?潭??靘?箸葫閰?撽??函??抒?嚗?
+    // PatchCore ??test/good ??YOLO ??val ?梁???寧??蝣箔??拍車?澆?????頛臭??氬?
     const photosWithNormal = photos.filter(p => p.tiles.some(t => t.state === "normal"));
     const totalNormalCount = photosWithNormal.reduce((sum, p) => sum + p.tiles.filter(t => t.state === "normal").length, 0);
     const targetTestNormalCount = totalNormalCount >= 4 ? Math.max(1, Math.round(totalNormalCount * splitRatio)) : 0;
@@ -1402,16 +1401,16 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
     let accumulatedTestNormal = 0;
     for (const p of shuffledPhotos) {
       if (accumulatedTestNormal >= targetTestNormalCount) break;
-      if (testPhotoIds.size >= photosWithNormal.length - 1) break; // 相關邏輯
+      if (testPhotoIds.size >= photosWithNormal.length - 1) break; // ?喳?靽? 1 撘萇???刻?蝺湧?
       testPhotoIds.add(p.id);
       accumulatedTestNormal += p.tiles.filter(t => t.state === "normal").length;
     }
-    // 相關邏輯
+    // ?抒??詨云撠?銝?函?皜祈岫/撽??抒??????銵嚗OLO ??val ?湔瘝輻 train 鞈?憭橘?
     const hasHoldoutPhotos = testPhotoIds.size > 0;
 
     const zip = new JSZip();
 
-    // 相關邏輯
+    // 1. ?臬 PatchCore ?澆?
     if (format === "patchcore" || format === "both") {
       const trainNormal = normalTiles.filter(t => !testPhotoIds.has(tilePhotoId.get(t)));
       const testNormal = normalTiles.filter(t => testPhotoIds.has(tilePhotoId.get(t)));
@@ -1428,35 +1427,35 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
       for (const t of testNormal) {
         pcRoot.folder("test/good").file(tileFileName(t), t.blob);
       }
-      // 相關邏輯
+      // ?臬?遙雿撣豢?舐 Shift+暺?/?蝎曄Ⅱ璅酉??嚗蔣?蹂???mask 蝎曄Ⅱ摨衣?隤芣???
       let hasPointMasks = false;
       for (const t of abnormalTiles) {
         const subFolder = t.abnormalType ? `abnormal_${t.abnormalType}` : "abnormal";
         pcRoot.folder(`test/${subFolder}`).file(tileFileName(t), t.blob);
 
-        // 相關邏輯
-        // 相關邏輯
+        // ??蝝?ground truth mask嚗?蝎曄Ⅱ???摮??券?摨扳??思?????啣虜???
+        // 瘝?暺?湔璅?啣虜?摮?靽??唳??湔憛嚗???image-level 璅酉嚗移蝣箏漲頛?嚗?
         if (t.point) hasPointMasks = true;
         const maskBlob = await createMaskBlob(t);
         pcRoot.folder(`test/mask/${subFolder}`).file(maskFileName(t), maskBlob);
       }
 
-      // 相關邏輯
+      // ???舐?亥? anomalib 雿輻??PatchCore 閮毀閮剖?瑼?class_path/init_args ?舐??anomalib CLI ?身摰撘?
       const usedAbnormalFolders = [...new Set(abnormalTiles.map(t => t.abnormalType ? `abnormal_${t.abnormalType}` : "abnormal"))];
       pcRoot.file("anomalib_patchcore_config.yaml", buildAnomalibConfigYaml(usedAbnormalFolders, hasPointMasks));
     }
 
-    // 相關邏輯
+    // 2. ?臬 YOLO ?澆? (??data.yaml ??labels/*.txt 摨扳?璅酉)
     if (format === "yolo" || format === "both") {
       const yoloRoot = format === "both" ? zip.folder("yolo_dataset") : zip;
 
-      // 相關邏輯
-      // 相關邏輯
+      // data.yaml嚗al 雿輻銝靘撘萇???箇??函?撽???
+      // ?抒??訾?頞喃誑??????窒??train 鞈?憭橘???PatchCore ??hasHoldoutPhotos ?斗銝?湛?
       const valImgDir = hasHoldoutPhotos ? "images/val" : "images/train";
       const yamlContent = `path: ./dataset\ntrain: images/train\nval: ${valImgDir}\nnc: 5\nnames: ['mite', 'dwv', 'debris', 'dead', 'other']\n`;
       yoloRoot.file("data.yaml", yamlContent);
 
-      // 相關邏輯
+      // ?撅斤?銋?YOLO 璅惜????靘?撅祉??? train ??val嚗??撘萇?楊????瘣拇?嚗?
       for (const t of [...normalTiles, ...abnormalTiles]) {
         const base = tileFileName(t).replace(/\.jpg$/, "");
         const isVal = hasHoldoutPhotos && testPhotoIds.has(tilePhotoId.get(t));
@@ -1468,7 +1467,7 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
           const classId = CLASS_INDEX[t.abnormalType] ?? 0;
           let txtLine;
           if (t.point) {
-            // 相關邏輯
+            // 蝎曄Ⅱ璅酉嚗誑銝剖?暺皞???Shift+?撖阡?獢?祝擃??翰?????箏??寞?嚗????嚗?蝞???芾澈?迤閬?摨扳?嚗?
             const { w: boxW, h: boxH } = pointBoxDims(t.point);
             const xCenter = clamp01(t.point.normX);
             const yCenter = clamp01(t.point.normY);
@@ -1476,17 +1475,17 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
             const hNorm = clamp01(boxH / t.h);
             txtLine = `${classId} ${xCenter.toFixed(6)} ${yCenter.toFixed(6)} ${wNorm.toFixed(6)} ${hNorm.toFixed(6)}\n`;
           } else {
-            // 相關邏輯
+            // ?芣?暺?瘝輻??祈澈?迤閬???獢?(蝵桐葉?刻???
             txtLine = `${classId} 0.500000 0.500000 1.000000 1.000000\n`;
           }
           yoloRoot.folder(labelFolder).file(`${base}.txt`, txtLine);
         } else {
-          // 相關邏輯
+          // 甇?虜璅?靽?蝛?txt 瑼誑蝚血? YOLO ?鞎見?祈?蝭?
           yoloRoot.folder(labelFolder).file(`${base}.txt`, "");
         }
       }
 
-      // 相關邏輯
+      // ?游撐憭批??典??漣璅???YOLO 璅酉瑼?(靘撘萄之??亙? YOLO 閮毀)
       for (const p of photos) {
         const pAbnormals = p.tiles.filter(t => t.state === "abnormal");
         const lines = [];
@@ -1494,7 +1493,7 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
           const classId = CLASS_INDEX[t.abnormalType] ?? 0;
           let xCenter, yCenter, widthNorm, heightNorm;
           if (t.point) {
-            // 相關邏輯
+            // 蝎曄Ⅱ璅酉嚗誑??蝯???摨扳??箔葉敹???Shift+?撖阡?獢?祝擃??翰?????箏??寞?嚗????
             const { w: boxW, h: boxH } = pointBoxDims(t.point);
             const origX = t.point.origX ?? (t.left + t.point.normX * t.w);
             const origY = t.point.origY ?? (t.top + t.point.normY * t.h);
@@ -1503,7 +1502,7 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
             widthNorm = clamp01(boxW / t.origW);
             heightNorm = clamp01(boxH / t.origH);
           } else {
-            // 相關邏輯
+            // ?芣?暺?瘝輻?游??潛????粹???
             xCenter = (t.left + t.w / 2) / t.origW;
             yCenter = (t.top + t.h / 2) / t.origH;
             widthNorm = t.w / t.origW;
@@ -1515,7 +1514,7 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
       }
     }
 
-    // 相關邏輯
+    // 3. Classification 鈭?憿撘?
     if (format === "classification" || format === "both") {
       const clsRoot = format === "both" ? zip.folder("classification_dataset") : zip.folder("dataset");
       for (const t of normalTiles) {
@@ -1526,7 +1525,7 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
       }
     }
 
-    // 相關邏輯
+    // I: ???遢
     const shouldBackup = document.getElementById("modal-backup-originals");
     if (shouldBackup && shouldBackup.checked) {
       for (const p of photos) {
@@ -1536,39 +1535,39 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
       }
     }
 
-    // 相關邏輯
+    // G: ?臬蝯梯??梯” Excel (.xlsx)
     if (typeof XLSX !== "undefined") {
       const rows = [];
       const abnormalKeys = Object.keys(ABNORMAL_TYPES);
       for (const p of photos) {
         const pTiles = p.tiles;
         const row = {
-          "照片檔名": p.fileName,
+          "瑼??迂": p.fileName,
           "蝮賣??: pTiles.length,
-          "正常": pTiles.filter(t => t.state === "normal").length,
-          "異常": pTiles.filter(t => t.state === "abnormal").length,
-          "未標記": pTiles.filter(t => t.state === "unlabeled").length
+          "甇?虜": pTiles.filter(t => t.state === "normal").length,
+          "?啣虜": pTiles.filter(t => t.state === "abnormal").length,
+          "?芣?": pTiles.filter(t => t.state === "unlabeled").length
         };
         for (const key of abnormalKeys) {
           row[ABNORMAL_TYPES[key].label] = pTiles.filter(t => t.state === "abnormal" && t.abnormalType === key).length;
         }
         rows.push(row);
       }
-      // 相關邏輯
-      const totalRow = { "照片檔名": "合計" };
-      for (const col of Object.keys(rows[0]).filter(k => k !== "照片檔名")) {
+      // ????
+      const totalRow = { "瑼??迂": "??" };
+      for (const col of Object.keys(rows[0]).filter(k => k !== "瑼??迂")) {
         totalRow[col] = rows.reduce((sum, r) => sum + (r[col] || 0), 0);
       }
       rows.push(totalRow);
 
       const ws = XLSX.utils.json_to_sheet(rows);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "標註統計");
+      XLSX.utils.book_append_sheet(wb, ws, "璅酉蝯梯?");
       const xlsxData = XLSX.write(wb, { bookType: "xlsx", type: "array" });
       zip.file("report.xlsx", xlsxData);
     }
 
-    // 相關邏輯
+    // 3. ? JSON 璅酉瑼?(?怎移蝣箏?蝝?甇???漣璅?
     const jsonMetadata = {
       dataset_version: "2.0",
       created_at: new Date().toISOString(),
@@ -1595,7 +1594,7 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
             width_px: pointBoxDims(t.point).w,
             height_px: pointBoxDims(t.point).h,
             yolo_box: {
-              box_px: t.point.boxPx || DEFAULT_POINT_BOX_PX, // 相關邏輯
+              box_px: t.point.boxPx || DEFAULT_POINT_BOX_PX, // ???詨捆甈?嚗???max(width_px, height_px)
               x_center_norm: +(t.point.origX / t.origW).toFixed(6),
               y_center_norm: +(t.point.origY / t.origH).toFixed(6),
               width_norm: +clamp01(pointBoxDims(t.point).w / t.origW).toFixed(6),
@@ -1616,10 +1615,10 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
     URL.revokeObjectURL(url);
 
     const holdoutNote = hasHoldoutPhotos
-      ? `嚗葫閰?撽????${testPhotoIds.size} 撘萇?
-      : (photosWithNormal.length > 0 ? "嚗?憭芸??芸??箇蝡葫閰?撽??? : "");
-    const maskNote = (format === "patchcore" || format === "both") ? "嚗歇?? test/mask ??蝝蝵? : "";
-    showToast(`撌脫????${format.toUpperCase()} 鞈???(甇?虜 ${normalTiles.length}?撣?${abnormalTiles.length} ??{holdoutNote}${maskNote})`);
+      ? `，已保留 ${testPhotoIds.size} 張作為測試集`
+      : (photosWithNormal.length > 0 ? "，無足夠正常樣本切分測試集" : "");
+    const maskNote = (format === "patchcore" || format === "both") ? "，並已產生 test/mask 遮罩圖" : "";
+    showToast(`已成功匯出 ${format.toUpperCase()} 資料集 (正常 ${normalTiles.length}，異常 ${abnormalTiles.length}${holdoutNote}${maskNote})`);
   } catch (err) {
     console.error(err);
     showToast("?臬憭望?嚗??岫銝甈?);
@@ -1629,7 +1628,7 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
   }
 }
 
-// 相關邏輯
+// F: ?臬?Ｘ?璅酉 JSON
 const btnImportJson = document.getElementById("btn-import-json");
 const importJsonInput = document.getElementById("import-json-input");
 
@@ -1642,7 +1641,7 @@ if (btnImportJson && importJsonInput) {
       const text = await file.text();
       const data = JSON.parse(text);
       if (!data.photos || !Array.isArray(data.photos)) {
-        showToast("操作完成");
+        showToast("JSON ?澆?銝迤蝣綽??曆???photos ???");
         return;
       }
       let matched = 0, skipped = 0;
@@ -1660,7 +1659,7 @@ if (btnImportJson && importJsonInput) {
                   origX: jt.point.orig_x,
                   origY: jt.point.orig_y,
                   boxPx: jt.point.yolo_box ? jt.point.yolo_box.box_px : undefined,
-                  // 相關邏輯
+                  // 頛????JSON 瘝? width_px/height_px嚗? box_px ?嗆迤?孵耦??
                   widthPx: jt.point.width_px ?? (jt.point.yolo_box ? jt.point.yolo_box.box_px : undefined),
                   heightPx: jt.point.height_px ?? (jt.point.yolo_box ? jt.point.yolo_box.box_px : undefined)
                 }
@@ -1680,7 +1679,7 @@ if (btnImportJson && importJsonInput) {
   });
 }
 
-// 相關邏輯
+// --- ? IndexedDB ?砍撠??芸??怠??Ｗ儔璈 ---
 let saveTimeout = null;
 function debounceSaveState() {
   clearTimeout(saveTimeout);
@@ -1748,7 +1747,7 @@ async function clearIndexedDB() {
   }
 }
 
-// 相關邏輯
+// ?????炎?乩蒂???怠?嚗祕??撱箇?摮?閮餌???蝎曄Ⅱ璅?暺?
 async function checkAndRestoreProject() {
   try {
     const db = await openDB();
@@ -1791,8 +1790,8 @@ async function checkAndRestoreProject() {
 
 checkAndRestoreProject();
 
-// 相關邏輯
-// 相關邏輯
+// ?曉之?⊥瘚桅?閬賜??辣?脤???塚?霈蝙?刻隞交?皛?敺摮宏?唳憭折銝?
+// ?冽?雿?Shift ??亙??曉之?⊥頨怎移蝣粹???暺??????箸?曌?恍?摮停鋡恍???
 let zoomHideTimer = null;
 function scheduleHideZoomPreview() {
   clearTimeout(zoomHideTimer);
@@ -1806,7 +1805,7 @@ function cancelHideZoomPreview() {
   clearTimeout(zoomHideTimer);
 }
 
-// 相關邏輯
+// ?典? Shift ?????? Shift ???曉之?∪????暸???蝎曄Ⅱ??嚗?銝阡＊蝷箸?蝷箏噬蝡?
 let shiftKeyActive = false;
 function setShiftUIState(active) {
   if (shiftKeyActive === active) return;
@@ -1815,12 +1814,12 @@ function setShiftUIState(active) {
   if (zoomShiftHint) zoomShiftHint.hidden = !(active && hoveredTileRecord);
 
   if (active && hoveredTileRecord) {
-    // 相關邏輯
-    // 相關邏輯
+    // ?? Shift ??摰?＊蝷箇??曉之?∴??批捆??蝵桅?箏?嚗?
+    // 霈蝙?刻隞交敹?皛?蝘駁??駁???銝?鋡怠隞摮? hover ???
     cancelHideZoomPreview();
     zoomLocked = true;
   } else if (!active) {
-    // 相關邏輯
+    // ?暸? Shift 敺圾?日?摰??Ｗ儔頝皛? hover ???祈???
     zoomLocked = false;
   }
 }
@@ -1836,8 +1835,8 @@ if (zoomPreviewImg) {
   zoomPreviewImg.addEventListener("mouseenter", cancelHideZoomPreview);
   zoomPreviewImg.addEventListener("mouseleave", scheduleHideZoomPreview);
 
-  // 相關邏輯
-  // 相關邏輯
+  // ?冽憭折?憭批蔣?? Shift+?嚗???摮???急????詨?雿蔭嚗?
+  // 雿??箇?Ｚ◤?曉之嚗蝙?刻隞交?敺皞Ⅱ嚗蝝?Shift+暺?隞?摰偕撖詨翰?獢?
   zoomPreviewImg.addEventListener("pointerdown", (ev) => {
     if (!ev.shiftKey || !hoveredTileRecord) return;
     if (ev.pointerType === "mouse" && ev.button !== 0) return;
@@ -1846,13 +1845,13 @@ if (zoomPreviewImg) {
 }
 
 /**
- * 相關邏輯
- * 相關邏輯
- * 相關邏輯
- * 相關邏輯
- * 相關邏輯
- * 相關邏輯
- * 相關邏輯
+ * ?梁??Shift+暺?嚗hift+?鈭??摩嚗??澆??祈澈?憭折敶勗??梁嚗?
+ * - ??敺?曌宏???Ｗ???DRAG_THRESHOLD_PX嚗蝝???嚗???摰偕撖豢獢?銝剖??喲?????
+ * - ??敺??＊?嚗??箄??冽?曌????汗獢??暸???撖阡??蝭??Ｙ??拙耦璅酉??
+ * @param {*} tileRecord 閬?閮餌??澆?
+ * @param {HTMLElement} coordEl ?其?閮?皛??詨?摨扳???蝝??澆??祈澈嚗??曉之?∠? img嚗?
+ * @param {PointerEvent} downEvent pointerdown 鈭辣
+ * @param {HTMLElement} previewContainer ???汗獢????啣?捆?剁?? position:relative嚗?撠箏站??coordEl 銝?湛?
  */
 function startDragAnnotation(tileRecord, coordEl, downEvent, previewContainer) {
   downEvent.preventDefault();
@@ -1901,7 +1900,7 @@ function startDragAnnotation(tileRecord, coordEl, downEvent, previewContainer) {
     previewEl.remove();
 
     if (!moved) {
-      // 相關邏輯
+      // ?桃?暺?嚗???摰偕撖豢獢?銝剖??喲???嚗翰??嚗?
       const normX = rect.width > 0 ? startX / rect.width : 0.5;
       const normY = rect.height > 0 ? startY / rect.height : 0.5;
       applyPointAnnotation(tileRecord, normX, normY);
@@ -1919,8 +1918,8 @@ function startDragAnnotation(tileRecord, coordEl, downEvent, previewContainer) {
 }
 
 /**
- * 相關邏輯
- * 相關邏輯
+ * 靘?normX/normY嚗?~1嚗撠??芾澈嚗????tileRecord 銝蝵桃移蝣箸?閮駁?嚗?
+ * ?郊?湔?澆??祈澈?憭折銝剔?閬死璅????澆??湔暺??憭折暺??梁??
  */
 function applyPointAnnotation(tileRecord, normX, normY) {
   normX = clamp01(normX);
@@ -1944,9 +1943,9 @@ function applyPointAnnotation(tileRecord, normX, normY) {
 }
 
 /**
- * 相關邏輯
- * 相關邏輯
- * 相關邏輯
+ * 靘?Shift+??怠?敶Ｙ???x1n/y1n/x2n/y2n嚗??箇撠閰脫摮? 0~1 甇???漣璅?
+ * ?Ｙ?蝎曄Ⅱ璅酉嚗祝擃?亙????喳?祕?之撠?銝?撘瑕甇?敶Ｕ?
+ * 靘摮?交??唾??曉之?⊥??喳?具?
  */
 function applyBoxAnnotation(tileRecord, x1n, y1n, x2n, y2n) {
   x1n = clamp01(x1n); x2n = clamp01(x2n);
@@ -1960,7 +1959,7 @@ function applyBoxAnnotation(tileRecord, x1n, y1n, x2n, y2n) {
   const tileY = normY * tileRecord.h;
   const origX = Math.round(tileRecord.left + tileX);
   const origY = Math.round(tileRecord.top + tileY);
-  // 相關邏輯
+  // boxPx 靽?蝯西???撘Ⅳ嚗?亦摰寧嚗??潮??撖阡??臬銝敺 widthPx/heightPx
   const boxPx = Math.max(widthPx, heightPx);
 
   setTileState(tileRecord, tileRecord.el, "abnormal", false, { normX, normY, origX, origY, boxPx, widthPx, heightPx });
@@ -1968,11 +1967,11 @@ function applyBoxAnnotation(tileRecord, x1n, y1n, x2n, y2n) {
   if (hoveredTileRecord === tileRecord) {
     renderZoomPointMarker(tileRecord);
   }
-  showToast(`??撌脫??箇移蝣箇???(??摨扳? ${origX}, ${origY}嚗?{widthPx}?${heightPx}px)嚗OLO ??mask ?賣??湔?∠?祕?之撠);
+  showToast(`已設定標記框大小 (原圖座標 ${origX}, ${origY}，${widthPx}x${heightPx}px)，YOLO 將使用此尺寸`);
 }
 
 /**
- * 相關邏輯
+ * ?冽憭折?汗?抒?綽??宏?歹??摮??詨??移蝣箸?閮?嚗靘蹂蝙?刻憭扳撠?蝵柴?
  */
 function renderZoomPointMarker(tileRecord) {
   if (!zoomPreviewImgWrap) return;
@@ -1998,9 +1997,9 @@ function showZoomPreview(src, tileRecord) {
     zoomPreviewImg.style.webkitFilter = globalFilter;
     if(zoomPreview) zoomPreview.style.webkitFilter = globalFilter;
   }
-  let statusText = STATE_LABEL[tileRecord.state] || "未標記";
+  let statusText = STATE_LABEL[tileRecord.state] || "?芣?";
   if (tileRecord.state === "abnormal" && tileRecord.abnormalType) {
-    const typeInfo = ABNORMAL_TYPES[tileRecord.abnormalType] || { label: "異常", emoji: "??" };
+    const typeInfo = ABNORMAL_TYPES[tileRecord.abnormalType] || { label: "?啣虜", emoji: "??" };
     statusText += ` [${typeInfo.emoji} ${typeInfo.label}]`;
   }
   zoomPreviewCaption.textContent = `${tileRecord.photoName}_r${String(tileRecord.row).padStart(2, "0")}_c${String(tileRecord.col).padStart(2, "0")}  (${statusText})`;
@@ -2062,18 +2061,18 @@ function tileFileName(t, suffix = "") {
   return `${t.photoName}_r${String(t.row).padStart(2, "0")}_c${String(t.col).padStart(2, "0")}${suffix}.jpg`;
 }
 
-// 相關邏輯
+// mask 瑼??????啣虜?澆?瑼????舀????.png嚗??嫣噶 anomalib 靘???撠??? mask
 function maskFileName(t) {
   return tileFileName(t).replace(/\.jpg$/i, ".png");
 }
 
 /**
- * 相關邏輯
- * 相關邏輯
- * 相關邏輯
- * 相關邏輯
- * 相關邏輯
- * 相關邏輯
+ * ?Ｙ???蝝???ground truth mask嚗撣詨????賬擗?暺?嚗? anomalib ??
+ * pixel-level AUROC / 摰?閰摯雿輻嚗偕撖貉?閰脫?臬????t.w ? t.h嚗??氬?
+ * - ?移蝣箸?閮鳴?Shift+??怠?拙耦嚗? Shift+暺??摰獢?嚗誑銝剖?暺皞?
+ *   靘祕?祝擃銝??交岷??瘥摰?敶Ｘ鞎潸??獢??撖衣隞嗉憚撱??瑕祝瘥?
+ * - 瘝?蝎曄Ⅱ璅酉??湔璅?啣虜嚗瘜??亦Ⅱ??蝵殷?靽??唳??湔憛嚗?
+ *   pixel-level ??隞??雿移蝣箏漲頛?嚗遣霅啁???Shift+??急???
  */
 async function createMaskBlob(t) {
   const canvas = document.createElement("canvas");
@@ -2105,11 +2104,11 @@ function dateStamp() {
 }
 
 /**
- * 相關邏輯
- * 相關邏輯
- * 相關邏輯
- * 相關邏輯
- * 相關邏輯
+ * ?Ｙ??舐?交??anomalib ?桀? CLI 雿輻??PatchCore 閮毀閮剖?瑼?class_path/init_args ?澆?嚗?
+ * 鞈?憭曄?瑽???箇? dataset/嚗? both 璅∪?銝? patchcore_dataset/嚗?train/good?est/good?est/abnormal_*?est/mask/abnormal_*??
+ * ?曉瘥?test/abnormal_* ?賡????? test/mask/abnormal_* ??蝝蝵抬??迨 task 閮剔 segmentation嚗?
+ * ?臭誑?湔蝞?pixel-level AUROC嚗ask ?移蝣箏漲閬?閮餅??臬??Shift+??急???嚗?銝閮餉圾嚗?
+ * anomalib ?身摰?schema ??隤踵嚗?蝺游?隢??典?鞈???銝甈∠Ⅱ隤?雿?虫??詨捆??
  */
 function buildAnomalibConfigYaml(abnormalFolders, hasPointMasks = false) {
   const abnormalDirYaml = abnormalFolders.length > 0
@@ -2119,7 +2118,7 @@ function buildAnomalibConfigYaml(abnormalFolders, hasPointMasks = false) {
     ? `[${abnormalFolders.map(f => `"test/mask/${f}"`).join(", ")}]`
     : "null";
   const maskNote = abnormalFolders.length === 0
-    ? "# 目錄結構中缺乏異常樣本，已跳過"
+    ? "# ?桀?瘝??啣虜璅?嚗?敺?銝撣豢???啣?箏??雿萇??mask"
     : (hasPointMasks
       ? "# mask 銝哨?? Shift+?/暺?蝎曄Ⅱ璅酉?撣豢??箄票?祕?之撠?璈Ｗ?????芣?閮颯?湔璅撣貊??澆???澆??踝?蝎曄Ⅱ摨西?雿?撱箄降?⊿?鋆?嚗?
       : "# ?桀???撣豢?賣?? Shift+?/暺?蝎曄Ⅱ璅酉嚗ask ??湔憛嚗?隡?image-level 璅酉嚗?撱箄降銋?鋆?蝎曄Ⅱ璅酉隞交???pixel-level 閰摯?????);

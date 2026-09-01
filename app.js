@@ -17,6 +17,12 @@ let currentAbnormalType = "mite";
 let currentZoomLevel = 3.0; // 預設放大鏡倍率
 let globalFilter = ""; // 用來記錄目前的濾鏡參數，讓放大鏡強制套用
 
+// Shift+點擊精確打點時，自動以該點為中心產生的 YOLO 邊界框邊長 (px)。
+// 可透過工具列調整，每次打點會把當下的值存進該筆標註（t.point.boxPx），
+// 之後調整全域設定不會影響已標記過的舊標註。
+const DEFAULT_POINT_BOX_PX = 20;
+let currentPointBoxPx = DEFAULT_POINT_BOX_PX;
+
 // A: 撤銷/重做堆疊
 const undoStack = [];
 const redoStack = [];
@@ -131,6 +137,7 @@ const btnClahe = document.getElementById("btn-clahe");
 const btnAiPredict = document.getElementById("btn-ai-predict");
 const btnClearDb = document.getElementById("btn-clear-db");
 const zoomLevelBtns = document.querySelectorAll(".zoom-level-btn");
+const pointBoxBtns = document.querySelectorAll(".point-box-btn");
 
 // 事件綁定
 photoInput.addEventListener("change", handleFiles);
@@ -246,6 +253,21 @@ function setZoomLevel(level) {
   if (zoomPreview) {
     zoomPreview.style.width = `${Math.round(100 * currentZoomLevel + 20)}px`;
   }
+}
+
+// Shift+點擊打點框大小切換（影響匯出 YOLO 時產生的邊界框邊長，px）
+pointBoxBtns.forEach(btn => {
+  btn.addEventListener("click", () => {
+    const px = parseFloat(btn.dataset.box) || DEFAULT_POINT_BOX_PX;
+    setPointBoxPx(px);
+  });
+});
+
+function setPointBoxPx(px) {
+  currentPointBoxPx = Math.max(4, Math.min(200, px));
+  pointBoxBtns.forEach(b => {
+    b.classList.toggle("is-active", Math.abs(parseFloat(b.dataset.box) - currentPointBoxPx) < 0.1);
+  });
 }
 
 prevPhotoBtn.addEventListener("click", () => {
@@ -822,14 +844,32 @@ function createTileElement(tileRecord) {
 function renderPointMarker(tileRecord, tileEl) {
   const old = tileEl.querySelector(".tile-point-marker");
   if (old) old.remove();
+  const oldBox = tileEl.querySelector(".tile-point-box");
+  if (oldBox) oldBox.remove();
   if (!tileRecord.point) return;
   const marker = document.createElement("div");
   marker.className = "tile-point-marker";
   marker.style.left = `${(tileRecord.point.normX * 100).toFixed(2)}%`;
   marker.style.top = `${(tileRecord.point.normY * 100).toFixed(2)}%`;
-  marker.title = `精確標註點（原圖座標 ${tileRecord.point.origX}, ${tileRecord.point.origY}）`;
+  const boxPx = tileRecord.point.boxPx || DEFAULT_POINT_BOX_PX;
+  marker.title = `精確標註點（原圖座標 ${tileRecord.point.origX}, ${tileRecord.point.origY}，邊界框 ${boxPx}×${boxPx}px）`;
   marker.innerHTML = `<span class="point-ring"></span><span class="point-pin">📍</span>`;
   tileEl.appendChild(marker);
+  tileEl.appendChild(buildPointBoxOutline(tileRecord));
+}
+
+/**
+ * 依 tileRecord.point.boxPx 畫出實際會匯出到 YOLO 的邊界框範圍，讓使用者能直接看到框大小是否合理。
+ */
+function buildPointBoxOutline(tileRecord) {
+  const box = document.createElement("div");
+  box.className = "tile-point-box";
+  const boxPx = tileRecord.point.boxPx || DEFAULT_POINT_BOX_PX;
+  box.style.left = `${(tileRecord.point.normX * 100).toFixed(2)}%`;
+  box.style.top = `${(tileRecord.point.normY * 100).toFixed(2)}%`;
+  box.style.width = `${clamp01(boxPx / tileRecord.w) * 100}%`;
+  box.style.height = `${clamp01(boxPx / tileRecord.h) * 100}%`;
+  return box;
 }
 
 /**
@@ -1229,14 +1269,37 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
     const CLASS_INDEX = { mite: 0, dwv: 1, debris: 2, dead: 3, other: 4 };
     const CLASS_NAMES = ["mite", "dwv", "debris", "dead", "other"];
 
+    // 建立 tile -> 所屬照片 id 的對照表，供下面以「整張照片」為單位切分 train / test(val)。
+    // 用意：同一張照片切出的相鄰格子光線、蜂群狀態高度相似，若同一張照片的格子同時
+    // 出現在訓練集與測試/驗證集會造成資料洩漏，使評估分數比實際部署時樂觀。
+    const tilePhotoId = new Map();
+    for (const p of photos) {
+      for (const t of p.tiles) tilePhotoId.set(t, p.id);
+    }
+
+    // 以整張照片為單位、依正常格數量比例抽出測試/驗證用的照片，
+    // PatchCore 的 test/good 與 YOLO 的 val 共用同一批照片，確保兩種格式的切分邏輯一致。
+    const photosWithNormal = photos.filter(p => p.tiles.some(t => t.state === "normal"));
+    const totalNormalCount = photosWithNormal.reduce((sum, p) => sum + p.tiles.filter(t => t.state === "normal").length, 0);
+    const targetTestNormalCount = totalNormalCount >= 4 ? Math.max(1, Math.round(totalNormalCount * splitRatio)) : 0;
+    const shuffledPhotos = [...photosWithNormal].sort(() => Math.random() - 0.5);
+    const testPhotoIds = new Set();
+    let accumulatedTestNormal = 0;
+    for (const p of shuffledPhotos) {
+      if (accumulatedTestNormal >= targetTestNormalCount) break;
+      if (testPhotoIds.size >= photosWithNormal.length - 1) break; // 至少保留 1 張照片留在訓練集
+      testPhotoIds.add(p.id);
+      accumulatedTestNormal += p.tiles.filter(t => t.state === "normal").length;
+    }
+    // 照片數太少切不出獨立測試/驗證照片時，退回舊行為（YOLO 的 val 直接沿用 train 資料夾）
+    const hasHoldoutPhotos = testPhotoIds.size > 0;
+
     const zip = new JSZip();
 
     // 1. 匯出 PatchCore 格式
     if (format === "patchcore" || format === "both") {
-      const shuffled = [...normalTiles].sort(() => Math.random() - 0.5);
-      const testCount = normalTiles.length >= 4 ? Math.max(1, Math.round(normalTiles.length * splitRatio)) : 0;
-      const testNormal = shuffled.slice(0, testCount);
-      const trainNormal = shuffled.slice(testCount);
+      const trainNormal = normalTiles.filter(t => !testPhotoIds.has(tilePhotoId.get(t)));
+      const testNormal = normalTiles.filter(t => testPhotoIds.has(tilePhotoId.get(t)));
 
       const pcRoot = format === "both" ? zip.folder("patchcore_dataset") : zip.folder("dataset");
 
@@ -1254,42 +1317,49 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
         const subFolder = t.abnormalType ? `abnormal_${t.abnormalType}` : "abnormal";
         pcRoot.folder(`test/${subFolder}`).file(tileFileName(t), t.blob);
       }
+
+      // 附上可直接讓 anomalib 使用的 PatchCore 訓練設定檔（class_path/init_args 是目前 anomalib CLI 的設定格式）
+      const usedAbnormalFolders = [...new Set(abnormalTiles.map(t => t.abnormalType ? `abnormal_${t.abnormalType}` : "abnormal"))];
+      pcRoot.file("anomalib_patchcore_config.yaml", buildAnomalibConfigYaml(usedAbnormalFolders));
     }
 
     // 2. 匯出 YOLO 格式 (含 data.yaml 與 labels/*.txt 座標標註)
     if (format === "yolo" || format === "both") {
       const yoloRoot = format === "both" ? zip.folder("yolo_dataset") : zip;
 
-      // data.yaml
-      const yamlContent = `path: ./dataset\ntrain: images/train\nval: images/train\nnc: 5\nnames: ['mite', 'dwv', 'debris', 'dead', 'other']\n`;
+      // data.yaml：val 使用上面依「整張照片」切出的獨立驗證集，
+      // 照片數不足以切分時才退回沿用 train 資料夾（與 PatchCore 的 hasHoldoutPhotos 判斷一致）
+      const valImgDir = hasHoldoutPhotos ? "images/val" : "images/train";
+      const yamlContent = `path: ./dataset\ntrain: images/train\nval: ${valImgDir}\nnc: 5\nnames: ['mite', 'dwv', 'debris', 'dead', 'other']\n`;
       yoloRoot.file("data.yaml", yamlContent);
 
-      // POINT_BOX_PX：Shift+點擊精確打點時，自動以該點為中心產生的邊界框邊長 (px)
-      const POINT_BOX_PX = 20;
-
-      // 切格層級之 YOLO 標籤與圖片
+      // 切格層級之 YOLO 標籤與圖片（依所屬照片分配到 train 或 val，避免同張照片跨集合造成洩漏）
       for (const t of [...normalTiles, ...abnormalTiles]) {
         const base = tileFileName(t).replace(/\.jpg$/, "");
-        yoloRoot.folder("images/train").file(`${base}.jpg`, t.blob);
+        const isVal = hasHoldoutPhotos && testPhotoIds.has(tilePhotoId.get(t));
+        const imgFolder = isVal ? "images/val" : "images/train";
+        const labelFolder = isVal ? "labels/val" : "labels/train";
+        yoloRoot.folder(imgFolder).file(`${base}.jpg`, t.blob);
 
         if (t.state === "abnormal") {
           const classId = CLASS_INDEX[t.abnormalType] ?? 0;
           let txtLine;
           if (t.point) {
-            // 精確打點：以點擊處為中心，產生 20×20px 精準框（換算成切格自身的正規化座標）
+            // 精確打點：以點擊處為中心，用該筆標註當初設定的框大小產生邊界框（換算成切格自身的正規化座標）
+            const boxPx = t.point.boxPx || DEFAULT_POINT_BOX_PX;
             const xCenter = clamp01(t.point.normX);
             const yCenter = clamp01(t.point.normY);
-            const wNorm = clamp01(POINT_BOX_PX / t.w);
-            const hNorm = clamp01(POINT_BOX_PX / t.h);
+            const wNorm = clamp01(boxPx / t.w);
+            const hNorm = clamp01(boxPx / t.h);
             txtLine = `${classId} ${xCenter.toFixed(6)} ${yCenter.toFixed(6)} ${wNorm.toFixed(6)} ${hNorm.toFixed(6)}\n`;
           } else {
             // 未打點：沿用切格本身的正規化邊界框 (置中全覆蓋)
             txtLine = `${classId} 0.500000 0.500000 1.000000 1.000000\n`;
           }
-          yoloRoot.folder("labels/train").file(`${base}.txt`, txtLine);
+          yoloRoot.folder(labelFolder).file(`${base}.txt`, txtLine);
         } else {
           // 正常樣本保留空 txt 檔以符合 YOLO 背景負樣本規範
-          yoloRoot.folder("labels/train").file(`${base}.txt`, "");
+          yoloRoot.folder(labelFolder).file(`${base}.txt`, "");
         }
       }
 
@@ -1301,13 +1371,14 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
           const classId = CLASS_INDEX[t.abnormalType] ?? 0;
           let xCenter, yCenter, widthNorm, heightNorm;
           if (t.point) {
-            // 精確打點：以原圖絕對像素座標為中心，產生 20×20px 精準框
+            // 精確打點：以原圖絕對像素座標為中心，用該筆標註當初設定的框大小產生邊界框
+            const boxPx = t.point.boxPx || DEFAULT_POINT_BOX_PX;
             const origX = t.point.origX ?? (t.left + t.point.normX * t.w);
             const origY = t.point.origY ?? (t.top + t.point.normY * t.h);
             xCenter = origX / t.origW;
             yCenter = origY / t.origH;
-            widthNorm = clamp01(POINT_BOX_PX / t.origW);
-            heightNorm = clamp01(POINT_BOX_PX / t.origH);
+            widthNorm = clamp01(boxPx / t.origW);
+            heightNorm = clamp01(boxPx / t.origH);
           } else {
             // 未打點：沿用整個切格範圍作為邊界框
             xCenter = (t.left + t.w / 2) / t.origW;
@@ -1398,11 +1469,12 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
             orig_y: t.point.origY,
             tile_norm_x: t.point.normX,
             tile_norm_y: t.point.normY,
-            yolo_box_20x20: {
+            yolo_box: {
+              box_px: t.point.boxPx || DEFAULT_POINT_BOX_PX,
               x_center_norm: +(t.point.origX / t.origW).toFixed(6),
               y_center_norm: +(t.point.origY / t.origH).toFixed(6),
-              width_norm: +clamp01(20 / t.origW).toFixed(6),
-              height_norm: +clamp01(20 / t.origH).toFixed(6)
+              width_norm: +clamp01((t.point.boxPx || DEFAULT_POINT_BOX_PX) / t.origW).toFixed(6),
+              height_norm: +clamp01((t.point.boxPx || DEFAULT_POINT_BOX_PX) / t.origH).toFixed(6)
             }
           } : null
         }))
@@ -1418,7 +1490,10 @@ async function doExportDataset(format = "patchcore", splitPercent = 10, shouldAu
     a.click();
     URL.revokeObjectURL(url);
 
-    showToast(`已成功匯出 ${format.toUpperCase()} 資料集！(正常 ${normalTiles.length}、異常 ${abnormalTiles.length} 格)`);
+    const holdoutNote = hasHoldoutPhotos
+      ? `，測試/驗證集抽出 ${testPhotoIds.size} 張照片`
+      : (photosWithNormal.length > 0 ? "，照片數太少未切出獨立測試/驗證集" : "");
+    showToast(`已成功匯出 ${format.toUpperCase()} 資料集！(正常 ${normalTiles.length}、異常 ${abnormalTiles.length} 格${holdoutNote})`);
   } catch (err) {
     console.error(err);
     showToast("匯出失敗，請再試一次");
@@ -1653,12 +1728,12 @@ function applyPointAnnotation(tileRecord, normX, normY) {
   const origX = Math.round(tileRecord.left + tileX);
   const origY = Math.round(tileRecord.top + tileY);
 
-  setTileState(tileRecord, tileRecord.el, "abnormal", false, { normX, normY, origX, origY });
+  setTileState(tileRecord, tileRecord.el, "abnormal", false, { normX, normY, origX, origY, boxPx: currentPointBoxPx });
   updateSummary();
   if (hoveredTileRecord === tileRecord) {
     renderZoomPointMarker(tileRecord);
   }
-  showToast(`📍 已標記精確點 (原圖座標 ${origX}, ${origY})，匯出 YOLO 時將以此為中心產生 20×20px 邊界框`);
+  showToast(`📍 已標記精確點 (原圖座標 ${origX}, ${origY})，匯出 YOLO 時將以此為中心產生 ${currentPointBoxPx}×${currentPointBoxPx}px 邊界框`);
 }
 
 /**
@@ -1668,6 +1743,8 @@ function renderZoomPointMarker(tileRecord) {
   if (!zoomPreviewImgWrap) return;
   const old = zoomPreviewImgWrap.querySelector(".tile-point-marker");
   if (old) old.remove();
+  const oldBox = zoomPreviewImgWrap.querySelector(".tile-point-box");
+  if (oldBox) oldBox.remove();
   if (!tileRecord || !tileRecord.point) return;
   const marker = document.createElement("div");
   marker.className = "tile-point-marker";
@@ -1675,6 +1752,7 @@ function renderZoomPointMarker(tileRecord) {
   marker.style.top = `${(tileRecord.point.normY * 100).toFixed(2)}%`;
   marker.innerHTML = `<span class="point-ring"></span><span class="point-pin">📍</span>`;
   zoomPreviewImgWrap.appendChild(marker);
+  zoomPreviewImgWrap.appendChild(buildPointBoxOutline(tileRecord));
 }
 
 function showZoomPreview(src, tileRecord) {
@@ -1753,4 +1831,50 @@ function dateStamp() {
   const d = new Date();
   const pad = n => String(n).padStart(2, "0");
   return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+}
+
+/**
+ * 產生可直接搭配 anomalib 目前 CLI 使用的 PatchCore 訓練設定檔（class_path/init_args 格式）。
+ * 資料夾結構對應匯出的 dataset/（或 both 模式下的 patchcore_dataset/）：train/good、test/good、test/abnormal_*。
+ * 目前沒有像素級 mask，所以 task 設為 classification；未來若匯出 mask（見 mask_dir）可以改成 segmentation。
+ * anomalib 的設定 schema 會隨版本調整，訓練前請先用小資料集跑一次確認欄位是否仍相容。
+ */
+function buildAnomalibConfigYaml(abnormalFolders) {
+  const abnormalDirYaml = abnormalFolders.length > 0
+    ? `[${abnormalFolders.map(f => `"${f}"`).join(", ")}]`
+    : "null  # 目前沒有異常樣本，之後補上異常格再重新匯出";
+  return `# 由蜂蟹蟎標註工具自動產生。用法：
+#   1. 把這個檔案所在的資料夾（含 train/、test/）當作工作目錄
+#   2. anomalib train --config anomalib_patchcore_config.yaml
+# 欄位對應 anomalib 目前的 Folder datamodule + LightningCLI 設定格式，
+# 隨你安裝的 anomalib 版本可能略有差異，正式訓練前建議先小規模跑一次確認可用。
+model:
+  class_path: anomalib.models.Patchcore
+  init_args:
+    backbone: wide_resnet50_2
+    layers: ["layer2", "layer3"]
+    coreset_sampling_ratio: 0.1
+    num_neighbors: 9
+data:
+  class_path: anomalib.data.Folder
+  init_args:
+    name: "bee_mite"
+    root: "."
+    normal_dir: "train/good"
+    abnormal_dir: ${abnormalDirYaml}
+    normal_test_dir: "test/good"
+    extensions: [".jpg"]
+    image_size: [256, 256]
+    train_batch_size: 32
+    eval_batch_size: 8
+    num_workers: 4
+    task: classification
+    test_split_mode: from_dir
+    val_split_mode: same_as_test
+    val_split_ratio: 0.5
+    seed: 42
+trainer:
+  max_epochs: 1
+  accelerator: auto
+`;
 }

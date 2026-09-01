@@ -201,7 +201,8 @@ body {
   align-items: center;
 }
 
-.zoom-level-btn {
+.zoom-level-btn,
+.point-box-btn {
   background: none;
   border: none;
   border-radius: 4px;
@@ -217,11 +218,13 @@ body {
   transition: all 0.1s ease;
 }
 
-.zoom-level-btn:hover {
+.zoom-level-btn:hover,
+.point-box-btn:hover {
   color: var(--amber-strong);
 }
 
-.zoom-level-btn.is-active {
+.zoom-level-btn.is-active,
+.point-box-btn.is-active {
   background: var(--amber);
   color: #fff;
   font-weight: 700;
@@ -1719,4 +1722,17 @@ main#main-workbench {
 @keyframes pointPinBob {
   0%, 100% { transform: translate(-50%, calc(-100% - 3px)) translateY(0); }
   50% { transform: translate(-50%, calc(-100% - 3px)) translateY(-2px); }
+}
+
+/* 顯示 Shift+點擊打點實際會匯出的 YOLO 邊界框範圍（隨「點框大小」設定縮放） */
+.tile-point-box {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  min-width: 6px;
+  min-height: 6px;
+  border: 1.5px dashed #ff6b4a;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.55);
+  pointer-events: none;
+  z-index: 7;
 }

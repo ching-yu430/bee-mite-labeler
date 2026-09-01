@@ -52,6 +52,19 @@
 
       <div class="toolbar-separator"></div>
 
+      <!-- Shift+點擊打點的邊界框大小，決定匯出 YOLO 時產生的框邊長 (px) -->
+      <div class="zoom-controls" title="Shift+點擊精確打點時，匯出 YOLO 產生的邊界框邊長 (px)；依蟎蟲在照片中的實際大小調整">
+        <span class="toolbar-label">📍 框</span>
+        <div class="zoom-btn-group">
+          <button class="point-box-btn" data-box="12">12</button>
+          <button class="point-box-btn is-active" data-box="20">20</button>
+          <button class="point-box-btn" data-box="28">28</button>
+          <button class="point-box-btn" data-box="40">40</button>
+        </div>
+      </div>
+
+      <div class="toolbar-separator"></div>
+
       <!-- 暫時鎖定的 AI 辨識按鈕 -->
       <button id="btn-ai-predict" class="ai-predict-btn is-locked" disabled title="⚡ AI 辨識功能串聯中，即將推出">
         <span>⚡ AI 辨識</span>
